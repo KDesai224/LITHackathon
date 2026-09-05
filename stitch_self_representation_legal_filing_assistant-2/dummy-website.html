@@ -92,6 +92,14 @@ tailwind.config = {
           <span class="material-symbols-outlined text-[20px]">arrow_back</span>
           <span class="hidden md:inline font-label-md text-label-md">Back</span>
         </button>
+        <!-- Demo-only shortcut: jumps straight to the next page in the main flow without
+             needing to fill in or submit anything, so the flow can be demoed quickly.
+             Bypasses the same submit-gating the eligibility check and claim form's own
+             Submit buttons enforce — see FLOW_SEQUENCE/updateSkipButton() below. -->
+        <button class="hidden flex items-center gap-space-2xs px-space-xs py-space-2xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors flex-shrink-0" id="global-skip-btn" title="Skip ahead without filling anything in (demo shortcut)" type="button">
+          <span class="hidden md:inline font-label-md text-label-md">Skip Ahead</span>
+          <span class="material-symbols-outlined text-[20px]">fast_forward</span>
+        </button>
         <div class="flex flex-col">
           <span class="font-label-sm text-label-sm text-primary tracking-wider uppercase font-bold">Prototype</span>
           <span class="font-headline-md text-headline-md text-on-surface tracking-tight font-bold">CLAIMREADY DEMO</span>
@@ -1152,6 +1160,22 @@ tailwind.config = {
     backBtn.classList.toggle("hidden", viewHistory.length <= 1);
   }
 
+  // "Skip Ahead" (demo shortcut): a fixed linear ordering of the main flow, independent
+  // of viewHistory (which can be walked backwards/forwards in any order). Only shown
+  // when the current page has a next step in this list — e.g. hidden on Resources/FAQs,
+  // which aren't part of the flow this demo is meant to be walked through.
+  const FLOW_SEQUENCE = ["assessment", "eligibility-check", "sct-portal", "prefiling-form", "after-filing"];
+  const skipBtn = document.getElementById("global-skip-btn");
+
+  function updateSkipButton() {
+    const idx = FLOW_SEQUENCE.indexOf(viewHistory[viewHistory.length - 1]);
+    skipBtn.classList.toggle("hidden", idx === -1 || idx >= FLOW_SEQUENCE.length - 1);
+  }
+  skipBtn.addEventListener("click", () => {
+    const idx = FLOW_SEQUENCE.indexOf(viewHistory[viewHistory.length - 1]);
+    if (idx !== -1 && idx < FLOW_SEQUENCE.length - 1) showPage(FLOW_SEQUENCE[idx + 1]);
+  });
+
   function showPage(view, opts) {
     opts = opts || {};
     pages.forEach((p) => p.classList.toggle("hidden", p.dataset.page !== view));
@@ -1163,6 +1187,7 @@ tailwind.config = {
       viewHistory.push(view);
     }
     updateBackButton();
+    updateSkipButton();
 
     // Keep the ClaimReady overlay's content in step with which page it's shown on:
     // hidden on the mock form (Page 2, which has its own inline (i) help instead),
@@ -1199,6 +1224,7 @@ tailwind.config = {
     });
   });
   setActiveNav("assessment");
+  updateSkipButton(); // show "Skip Ahead" from the very first page load, not just after showPage() first runs
 
   // The ClaimReady widget (claimready-overlay.js) dispatches this once its mocked
   // "approximate my route" flow finishes, handing off navigation to the host page.
