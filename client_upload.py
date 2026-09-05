@@ -51,11 +51,12 @@ Usage
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Callable, Literal, TypeAlias
+from typing import Literal, TypeAlias
 
 # --------------------------------------------------------------------------- #
 # SCT domain constants
@@ -107,7 +108,7 @@ def _to_decimal(value: str, field: str) -> Decimal:
         )
     try:
         amount = Decimal(cleaned).quantize(Decimal("0.01"))
-    except Exception as exc:  # noqa: BLE001 - surface a friendly message
+    except Exception as exc:
         raise ValueError(
             f"{field}: extractor returned non-numeric amount {value!r}."
         ) from exc

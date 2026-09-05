@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Any
+from typing import Any, cast
 
 import requests
 from dotenv import load_dotenv
@@ -277,7 +277,7 @@ def _parse_tool_result(response_json: dict[str, Any]) -> dict[str, str]:
 
     # ---- Schema-mismatch fallback: the JSON object shape must hold ------- #
     if not isinstance(parsed, dict):
-        raise ValueError(
+        raise TypeError(
             "model returned JSON "
             f"{type(parsed).__name__} arguments; contract requires a JSON object."
         )
@@ -289,7 +289,7 @@ def _parse_tool_result(response_json: dict[str, Any]) -> dict[str, str]:
             result[key] = ""
             continue
         if not isinstance(value, str):
-            raise ValueError(
+            raise TypeError(
                 f"model returned non-string for {key!r}: {value!r} "
                 "(contract requires dict[str, str])."
             )
@@ -460,7 +460,7 @@ def _run_smoke_test() -> None:
             base_url=base_url,
             api_key=api_key,
             model="stub-model",
-            session=session,
+            session=cast(requests.Session, session),
         )
         return session
 
@@ -502,7 +502,7 @@ def _run_smoke_test() -> None:
         "out-of-enum nature_of_dispute",
     )
     _expect_raises(
-        ValueError,
+        TypeError,
         lambda: _parse_tool_result(_completion(_tool_message("[1, 2]"))),
         "non-object arguments",
     )
