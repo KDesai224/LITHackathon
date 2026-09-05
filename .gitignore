@@ -2,6 +2,7 @@ __pycache__/
 *.py[cod]
 .venv/
 .coverage
+.vscode/
 .env
 .env.*
 !.env.example
