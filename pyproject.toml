@@ -25,6 +25,7 @@ dev = [
 
 [tool.basedpyright]
 typeCheckingMode = "standard"
+exclude = ["**/ocr_engine"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
