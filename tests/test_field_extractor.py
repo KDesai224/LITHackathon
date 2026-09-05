@@ -1,4 +1,4 @@
-"""Unit tests for ``field_extractor`` (schema, payloads, parsing, env wiring)."""
+"""Unit tests for ``sct_intake.extraction`` (schema, payloads, parsing, env)."""
 
 from __future__ import annotations
 
@@ -8,19 +8,12 @@ from typing import Any
 import pytest
 import requests
 
-import field_extractor as fe
-from client_upload import NATURE_OF_DISPUTE_CHOICES
+import sct_intake.extraction as fe
+from sct_intake import NATURE_OF_DISPUTE_CHOICES, config
+from sct_intake.config import DEFAULT_BASE_URL, DEFAULT_MODEL
+from tests.helpers import completion, sample_arguments, tool_message
 
-# Reusable module-level test builders shipped with the module itself.
-SAMPLE_ARGUMENTS = fe._sample_arguments()
-
-
-def completion(message: dict[str, Any]) -> dict[str, Any]:
-    return fe._completion(message)
-
-
-def tool_message(arguments: str) -> dict[str, Any]:
-    return fe._tool_message(arguments)
+SAMPLE_ARGUMENTS = sample_arguments()
 
 
 def no_tool_completion() -> dict[str, Any]:
@@ -318,28 +311,28 @@ def test_parse_tool_result_arguments_not_string() -> None:
 
 
 def test_parse_tool_result_wrong_tool_name() -> None:
-    message = fe._tool_message(SAMPLE_ARGUMENTS)
+    message = tool_message(SAMPLE_ARGUMENTS)
     message["tool_calls"][0]["function"]["name"] = "other_tool"
     with pytest.raises(fe.FieldExtractionError):
         fe._parse_tool_result(completion(message))
 
 
 def test_parse_tool_result_missing_function_key() -> None:
-    message = fe._tool_message(SAMPLE_ARGUMENTS)
+    message = tool_message(SAMPLE_ARGUMENTS)
     del message["tool_calls"][0]["function"]
     with pytest.raises(fe.FieldExtractionError):
         fe._parse_tool_result(completion(message))
 
 
 def test_parse_tool_result_function_not_object() -> None:
-    message = fe._tool_message(SAMPLE_ARGUMENTS)
+    message = tool_message(SAMPLE_ARGUMENTS)
     message["tool_calls"][0]["function"] = "nope"
     with pytest.raises(fe.FieldExtractionError):
         fe._parse_tool_result(completion(message))
 
 
 def test_parse_tool_result_tool_call_not_object() -> None:
-    message = fe._tool_message(SAMPLE_ARGUMENTS)
+    message = tool_message(SAMPLE_ARGUMENTS)
     message["tool_calls"][0] = "nope"
     with pytest.raises(fe.FieldExtractionError):
         fe._parse_tool_result(completion(message))
@@ -424,14 +417,14 @@ def test_openai_compatible_extract_explicit_extra_body(make_stub) -> None:
 
 
 def test_extract_fields_requires_api_key(monkeypatch) -> None:
-    monkeypatch.setattr(fe, "load_dotenv", lambda *a, **k: None)
+    monkeypatch.setattr(config, "_dotenv_loaded", True)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     with pytest.raises(fe.FieldExtractionError):
         fe.extract_fields("doc")
 
 
 def test_extract_fields_wires_env_to_extract(monkeypatch) -> None:
-    monkeypatch.setattr(fe, "load_dotenv", lambda *a, **k: None)
+    monkeypatch.setattr(config, "_dotenv_loaded", True)
     monkeypatch.setenv("OPENAI_API_KEY", "key")
     monkeypatch.setenv("OPENAI_BASE_URL", "https://example.test/v1")
     monkeypatch.setenv("OPENAI_MODEL", "model-x")
@@ -453,7 +446,7 @@ def test_extract_fields_wires_env_to_extract(monkeypatch) -> None:
 
 
 def test_extract_fields_env_defaults(monkeypatch) -> None:
-    monkeypatch.setattr(fe, "load_dotenv", lambda *a, **k: None)
+    monkeypatch.setattr(config, "_dotenv_loaded", True)
     monkeypatch.setenv("OPENAI_API_KEY", "key")
     monkeypatch.delenv("OPENAI_BASE_URL", raising=False)
     monkeypatch.delenv("OPENAI_MODEL", raising=False)
@@ -467,13 +460,13 @@ def test_extract_fields_env_defaults(monkeypatch) -> None:
 
     monkeypatch.setattr(fe, "openai_compatible_extract", fake_extract)
     fe.extract_fields("doc")
-    assert captured[0]["base_url"] == fe.DEFAULT_BASE_URL
-    assert captured[0]["model"] == fe.DEFAULT_MODEL
+    assert captured[0]["base_url"] == DEFAULT_BASE_URL
+    assert captured[0]["model"] == DEFAULT_MODEL
     assert captured[0]["extra_body"] == {}
 
 
 def test_extract_fields_rejects_malformed_extra_body_env(monkeypatch) -> None:
-    monkeypatch.setattr(fe, "load_dotenv", lambda *a, **k: None)
+    monkeypatch.setattr(config, "_dotenv_loaded", True)
     monkeypatch.setenv("OPENAI_API_KEY", "key")
     monkeypatch.setenv("OPENAI_CHAT_EXTRA_BODY", "{not json")
     with pytest.raises(fe.FieldExtractionError):

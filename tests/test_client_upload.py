@@ -11,10 +11,12 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from client_upload import (
+from sct_intake import (
     NATURE_OF_DISPUTE_CHOICES,
-    FieldExtractor,
     SCTCase,
+)
+from sct_intake.case import (
+    FieldExtractor,
     _fetch_extractor_answers,
     _to_datetime,
     _to_decimal,

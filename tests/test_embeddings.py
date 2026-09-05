@@ -54,3 +54,13 @@ def test_bge_accepts_batch_inputs(embedding_model: SentenceTransformer) -> None:
     )
     assert len(vectors) == 2
     assert all(len(vector) == EMBEDDING_MODEL_DIMENSION for vector in vectors)
+
+
+def test_package_local_embedder_adapter_dimension() -> None:
+    """The sct_intake adapter produces 384-dim vectors through the real model."""
+    from sct_intake.embedders import SentenceTransformerEmbeddingModel
+
+    model = SentenceTransformerEmbeddingModel()
+    vectors = model.embed([SAMPLE_TEXT])
+    assert len(vectors) == 1
+    assert len(vectors[0]) == EMBEDDING_MODEL_DIMENSION

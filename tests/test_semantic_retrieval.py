@@ -1,4 +1,4 @@
-"""Unit tests for ``semantic_retrieval`` (chunking, vectors, retrieval, HTTP)."""
+"""Unit tests for ``sct_intake.retrieval`` + ``sct_intake.embedders``."""
 
 from __future__ import annotations
 
@@ -9,10 +9,13 @@ from typing import Any
 import numpy as np
 import pytest
 import requests
-from hypothesis import assume, given, settings
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
-import semantic_retrieval as sr
+import sct_intake.embedders as se
+import sct_intake.retrieval as sr
+from sct_intake.embedders import HTTPEmbeddingModel
+from tests.helpers import KeywordHashEmbedder
 
 SCT_TEXT = (
     "John Doe (NRIC G2677383R) sold his sofa to Jane Ong for $10,000.00. "
@@ -130,28 +133,40 @@ def test_cosine_similarity_mismatched_dimensions() -> None:
         sr._cosine_similarity([1.0, 0.0], [1.0, 0.0, 0.0])
 
 
-_finite_vector = st.lists(
-    st.floats(
-        min_value=-10,
-        max_value=10,
-        allow_nan=False,
-        allow_infinity=False,
-    ).filter(lambda v: v == 0.0 or abs(v) >= 1e-6),
-    min_size=2,
-    max_size=8,
-)
+@st.composite
+def _vector_pair(draw: Any) -> tuple[list[float], list[float]]:
+    length = draw(st.integers(min_value=2, max_value=8))
+    magnitudes_a = draw(
+        st.lists(
+            st.floats(min_value=1e-3, max_value=10, allow_nan=False, allow_infinity=False),
+            min_size=length,
+            max_size=length,
+        )
+    )
+    magnitudes_b = draw(
+        st.lists(
+            st.floats(min_value=1e-3, max_value=10, allow_nan=False, allow_infinity=False),
+            min_size=length,
+            max_size=length,
+        )
+    )
+    signs = draw(st.lists(st.booleans(), min_size=length, max_size=length))
+    return (
+        [value if sign else -value for value, sign in zip(magnitudes_a, signs)],
+        magnitudes_b,
+    )
 
 
-@given(_finite_vector, _finite_vector)
+@given(_vector_pair())
 @settings(max_examples=50)
-def test_cosine_similarity_matches_numpy_formula(a: list[float], b: list[float]) -> None:
-    assume(len(a) == len(b))
+def test_cosine_similarity_matches_numpy_formula(
+    pair: tuple[list[float], list[float]],
+) -> None:
+    a, b = pair
     result = sr._cosine_similarity(a, b)
     norm_a = float(np.linalg.norm(a))
     norm_b = float(np.linalg.norm(b))
-    if norm_a == 0.0 or norm_b == 0.0:
-        assert result == 0.0
-        return
+    assert norm_a > 0.0 and norm_b > 0.0
     expected = float(np.dot(a, b)) / (norm_a * norm_b)
     assert result == pytest.approx(expected)
 
@@ -249,7 +264,7 @@ def test_build_oversized_without_embedder_raises() -> None:
 def test_build_prunes_and_keeps_relevant_facts() -> None:
     text = sr.build_extraction_text(
         [SCT_TEXT, NOISE_TEXT],
-        embedder=sr._KeywordHashEmbedder(),
+        embedder=KeywordHashEmbedder(),
         max_chars=1500,
     )
     assert len(text) <= 1500
@@ -291,7 +306,7 @@ def test_build_defensive_when_chunking_returns_nothing(monkeypatch) -> None:
     monkeypatch.setattr(sr, "_chunk_documents", lambda _docs: [])
     with pytest.raises(ValueError):
         sr.build_extraction_text(
-            [SCT_TEXT, NOISE_TEXT], embedder=sr._KeywordHashEmbedder(), max_chars=100
+            [SCT_TEXT, NOISE_TEXT], embedder=KeywordHashEmbedder(), max_chars=100
         )
 
 
@@ -306,7 +321,7 @@ def _embedding_body(vector: list[float]) -> dict[str, Any]:
 
 def test_http_embedding_payload_and_auth(make_stub) -> None:
     session = make_stub(_embedding_body([1.0, 2.0]))
-    model = sr.HTTPEmbeddingModel(
+    model = HTTPEmbeddingModel(
         "http://127.0.0.1:8000/v1",
         api_key="secret",
         model="local-model",
@@ -322,7 +337,7 @@ def test_http_embedding_payload_and_auth(make_stub) -> None:
 
 def test_http_embedding_no_model_no_auth(make_stub) -> None:
     session = make_stub(_embedding_body([1.0, 2.0]))
-    model = sr.HTTPEmbeddingModel("http://127.0.0.1:8000/v1", session=session)
+    model = HTTPEmbeddingModel("http://127.0.0.1:8000/v1", session=session)
     model.embed(["alpha"])
     call = session.calls[0]
     assert "model" not in call["json"]
@@ -330,11 +345,11 @@ def test_http_embedding_no_model_no_auth(make_stub) -> None:
 
 
 def test_http_embedding_batches(monkeypatch, make_stub) -> None:
-    monkeypatch.setattr(sr, "EMBED_BATCH", 2)
+    monkeypatch.setattr(se, "EMBED_BATCH", 2)
     first = {"model": "m", "data": [{"embedding": [0.1], "index": 0}, {"embedding": [0.2], "index": 1}]}
     second = {"model": "m", "data": [{"embedding": [0.3], "index": 0}]}
     session = make_stub([first, second])
-    model = sr.HTTPEmbeddingModel("http://127.0.0.1:8000/v1", model="m", session=session)
+    model = HTTPEmbeddingModel("http://127.0.0.1:8000/v1", model="m", session=session)
     vectors = model.embed(["a", "b", "c"])
     assert vectors == [[0.1], [0.2], [0.3]]
     assert len(session.calls) == 2
@@ -343,34 +358,34 @@ def test_http_embedding_batches(monkeypatch, make_stub) -> None:
 
 
 def test_http_embedding_empty_input(make_stub) -> None:
-    model = sr.HTTPEmbeddingModel("http://127.0.0.1:8000/v1", session=make_stub())
+    model = HTTPEmbeddingModel("http://127.0.0.1:8000/v1", session=make_stub())
     assert model.embed([]) == []
     assert model.embed(()) == []
 
 
 def test_http_embedding_count_mismatch(make_stub) -> None:
     body = {"model": "m", "data": [{"embedding": [1.0], "index": 0}]}
-    model = sr.HTTPEmbeddingModel("http://127.0.0.1:8000/v1", session=make_stub(body))
+    model = HTTPEmbeddingModel("http://127.0.0.1:8000/v1", session=make_stub(body))
     with pytest.raises(sr.EmbeddingError):
         model.embed(["a", "b"])
 
 
 def test_http_embedding_item_not_object(make_stub) -> None:
     body = {"model": "m", "data": ["nope"]}
-    model = sr.HTTPEmbeddingModel("http://127.0.0.1:8000/v1", session=make_stub(body))
+    model = HTTPEmbeddingModel("http://127.0.0.1:8000/v1", session=make_stub(body))
     with pytest.raises(sr.EmbeddingError):
         model.embed(["a"])
 
 
 def test_http_embedding_missing_embedding_list(make_stub) -> None:
     body = {"model": "m", "data": [{"index": 0}]}
-    model = sr.HTTPEmbeddingModel("http://127.0.0.1:8000/v1", session=make_stub(body))
+    model = HTTPEmbeddingModel("http://127.0.0.1:8000/v1", session=make_stub(body))
     with pytest.raises(sr.EmbeddingError):
         model.embed(["a"])
 
 
 def test_http_embedding_http_error(make_stub) -> None:
-    model = sr.HTTPEmbeddingModel(
+    model = HTTPEmbeddingModel(
         "http://127.0.0.1:8000/v1", session=make_stub({"error": "boom"}, status_code=500)
     )
     with pytest.raises(sr.EmbeddingError):
@@ -378,13 +393,13 @@ def test_http_embedding_http_error(make_stub) -> None:
 
 
 def test_http_embedding_bad_json(make_stub) -> None:
-    model = sr.HTTPEmbeddingModel("http://127.0.0.1:8000/v1", session=make_stub("nope"))
+    model = HTTPEmbeddingModel("http://127.0.0.1:8000/v1", session=make_stub("nope"))
     with pytest.raises(sr.EmbeddingError):
         model.embed(["a"])
 
 
 def test_http_embedding_json_decode_error(make_stub) -> None:
-    model = sr.HTTPEmbeddingModel(
+    model = HTTPEmbeddingModel(
         "http://127.0.0.1:8000/v1", session=make_stub("irrelevant", json_error=True)
     )
     with pytest.raises(sr.EmbeddingError):
@@ -392,7 +407,7 @@ def test_http_embedding_json_decode_error(make_stub) -> None:
 
 
 def test_http_embedding_transport_error(make_stub) -> None:
-    model = sr.HTTPEmbeddingModel(
+    model = HTTPEmbeddingModel(
         "http://127.0.0.1:8000/v1",
         session=make_stub(error=requests.ConnectionError("down")),
     )
@@ -401,34 +416,12 @@ def test_http_embedding_transport_error(make_stub) -> None:
 
 
 # --------------------------------------------------------------------------- #
-# default_embedding_model + stub embedder
+# Hash embedder double (test helper)
 # --------------------------------------------------------------------------- #
 
 
-def test_default_embedding_model_reads_env(monkeypatch) -> None:
-    monkeypatch.setattr(sr, "load_dotenv", lambda *a, **k: None)
-    monkeypatch.setenv("OPENAI_EMBEDDING_BASE_URL", "http://localhost:9999/v1")
-    monkeypatch.setenv("OPENAI_EMBEDDING_API_KEY", "k")
-    monkeypatch.setenv("OPENAI_EMBEDDING_MODEL", "local")
-    model = sr.default_embedding_model()
-    assert model._base_url == "http://localhost:9999/v1"
-    assert model._api_key == "k"
-    assert model._model == "local"
-
-
-def test_default_embedding_model_falls_back_to_constant(monkeypatch) -> None:
-    monkeypatch.setattr(sr, "load_dotenv", lambda *a, **k: None)
-    monkeypatch.delenv("OPENAI_EMBEDDING_BASE_URL", raising=False)
-    monkeypatch.delenv("OPENAI_EMBEDDING_API_KEY", raising=False)
-    monkeypatch.delenv("OPENAI_EMBEDDING_MODEL", raising=False)
-    model = sr.default_embedding_model()
-    assert model._base_url == sr.DEFAULT_EMBEDDING_BASE_URL
-    assert model._api_key == ""
-    assert model._model == ""
-
-
 def test_keyword_hash_embedder_deterministic_and_dimensional() -> None:
-    embedder = sr._KeywordHashEmbedder()
+    embedder = KeywordHashEmbedder()
     first = embedder.embed(["hello world"])
     second = embedder.embed(["hello world"])
     assert first == second
@@ -436,7 +429,7 @@ def test_keyword_hash_embedder_deterministic_and_dimensional() -> None:
 
 
 def test_keyword_hash_embedder_ranked_by_overlap() -> None:
-    embedder = sr._KeywordHashEmbedder()
+    embedder = KeywordHashEmbedder()
     query = ["claimant Jane Ong dispute contract"]
     relevant = ["Jane Ong contract dispute claimant"]
     unrelated = ["pasta basil parmesan pine nuts pesto"]
