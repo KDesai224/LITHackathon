@@ -26,8 +26,7 @@ from pydantic import BaseModel, Field
 
 from backend.pdf_generator import generate_prefiling_pdf
 from backend.tone_detector import ToneCheckResult, check_tone
-from client_upload import SCTCase
-from field_extractor import FieldExtractionError, extract_fields
+from sct_intake import FieldExtractionError, SCTCase, extract_fields
 
 PORT = 8743
 STATIC_ROOT = Path(__file__).resolve().parent / "stitch_self_representation_legal_filing_assistant-2"
@@ -268,7 +267,7 @@ def api_generate_pdf(payload: ClaimFormData) -> Response:
         )
 
     try:
-        pdf_bytes = generate_prefiling_pdf(payload.dict())
+        pdf_bytes = generate_prefiling_pdf(payload.model_dump())
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

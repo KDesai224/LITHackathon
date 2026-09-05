@@ -248,7 +248,7 @@ def test_build_rejects_empty_or_blank_corpus(docs: list[str]) -> None:
 
 def test_build_rejects_non_string_document() -> None:
     with pytest.raises(TypeError):
-        sr.build_extraction_text(["ok", 42])  # type: ignore[list-item]
+        sr.build_extraction_text(["ok", 42])  # type: ignore[list-item, ty:invalid-argument-type]
 
 
 def test_build_rejects_non_positive_budget() -> None:

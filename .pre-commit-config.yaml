@@ -6,9 +6,9 @@ repos:
         entry: uv run ruff check
         language: system
         types_or: [python, pyi]
-      - id: basedpyright
-        name: basedpyright
-        entry: uv run basedpyright
+      - id: ty
+        name: ty type check
+        entry: uv run ty check --no-progress
         language: system
         types: [python]
         pass_filenames: false

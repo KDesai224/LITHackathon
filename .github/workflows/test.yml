@@ -34,3 +34,9 @@ jobs:
 
       - name: Run tests
         run: uv run pytest
+
+      # basedpyright is the project's conservative type checker; it runs here on
+      # every push (and pull request) instead of in the local pre-commit hook,
+      # which uses the faster `ty` checker.
+      - name: Type check (basedpyright)
+        run: uv run basedpyright
