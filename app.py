@@ -6,6 +6,7 @@ Serves the mock portal frontend and exposes REST APIs for:
 3. Full Claim Data Validation (/api/validate-claim)
 4. Pre-Filing Claim PDF Generation (/api/generate-pdf)
 5. Health check (/api/health)
+6. PDF / scanned-document ingestion and extraction (/api/extract-document)
 """
 
 from __future__ import annotations
@@ -18,7 +19,7 @@ from pathlib import Path
 from typing import Any
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Response, status
+from fastapi import FastAPI, File, HTTPException, Response, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -30,6 +31,10 @@ from sct_intake import FieldExtractionError, SCTCase, extract_fields
 
 PORT = 8743
 STATIC_ROOT = Path(__file__).resolve().parent / "stitch_self_representation_legal_filing_assistant-2"
+
+DOCUMENT_EXTENSIONS = {"pdf", "png", "jpg", "jpeg", "tif", "tiff", "bmp", "webp"}
+MAX_DOCUMENT_FILES = 10
+MAX_DOCUMENT_BYTES = 10 * 1024 * 1024
 
 _FIELD_META: dict[str, tuple[str, str, str]] = {
     "claimantName": ("claimant_name", "Your full name (Claimant)", "Enter your name as it appears on your identification document."),
@@ -212,17 +217,22 @@ def health_check() -> dict[str, Any]:
     }
 
 
-@app.post("/api/extract-fields")
-def api_extract_fields(payload: ExtractRequest) -> dict[str, Any]:
-    text = payload.text.strip()
+def _field_help_from_text(text: str) -> dict[str, dict[str, Any]]:
+    """Run field extraction over a claim narrative and map to UI help fields."""
+    case = SCTCase.from_text(text, extractor=extract_fields)
+    return build_field_help(case.to_dict())
+
+
+def _field_help_or_http_raise(text: str) -> dict[str, dict[str, Any]]:
+    """Run extraction, translating known failures into HTTP errors."""
+    text = text.strip()
     if not text:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="A non-empty claim narrative is required.",
         )
     try:
-        case = SCTCase.from_text(text, extractor=extract_fields)
-        answers = case.to_dict()
+        return _field_help_from_text(text)
     except (ValueError, TypeError) as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except FieldExtractionError as exc:
@@ -233,7 +243,99 @@ def api_extract_fields(payload: ExtractRequest) -> dict[str, Any]:
             detail="Unable to analyse the claim narrative.",
         ) from exc
 
-    return {"field_help": build_field_help(answers)}
+
+def _serialize_document_result(document: Any) -> dict[str, Any]:
+    """Serialise an ocr_engine DocumentResult for the API response."""
+    return {
+        "filename": document.filename,
+        "full_text": document.full_text,
+        "pages": [
+            {"page": page.page, "text": page.text, "source": page.source}
+            for page in document.pages
+        ],
+        "warnings": list(document.warnings),
+    }
+
+
+def _read_upload(upload: UploadFile) -> bytes:
+    """Read an uploaded file, enforcing the per-file size cap."""
+    data = upload.file.read(MAX_DOCUMENT_BYTES + 1)
+    if len(data) > MAX_DOCUMENT_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File '{upload.filename}' exceeds the {MAX_DOCUMENT_BYTES // (1024 * 1024)}MB limit.",
+        )
+    return data
+
+
+def _document_extension(filename: str | None) -> str:
+    if not filename or "." not in filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded files must have a filename with an extension.",
+        )
+    extension = filename.rsplit(".", 1)[1].lower()
+    if extension not in DOCUMENT_EXTENSIONS:
+        allowed = ", ".join(sorted(DOCUMENT_EXTENSIONS))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported file type '.{extension}'. Allowed: {allowed}.",
+        )
+    return extension
+
+
+@app.post("/api/extract-fields")
+def api_extract_fields(payload: ExtractRequest) -> dict[str, Any]:
+    return {"field_help": _field_help_or_http_raise(payload.text)}
+
+
+@app.post("/api/extract-document")
+def api_extract_document(
+    files: list[UploadFile] = File(...),  # noqa: B008 - FastAPI multipart marker
+) -> dict[str, Any]:
+    """Ingest PDFs and scanned images, then extract SCT case fields.
+
+    Born-digital PDFs use their embedded text layer; scanned pages and raster
+    images are recognised by the bundled rapidocr engine. The combined text is
+    run through the same field-extraction pipeline as :func:`api_extract_fields`.
+    """
+    if not files:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one file is required.",
+        )
+    if len(files) > MAX_DOCUMENT_FILES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"At most {MAX_DOCUMENT_FILES} files per request.",
+        )
+
+    from ocr_engine import OCRUnavailableError, extract_text_from_bytes
+
+    documents = []
+    full_texts: list[str] = []
+    for upload in files:
+        _document_extension(upload.filename)
+        content = _read_upload(upload)
+        try:
+            result = extract_text_from_bytes(content, upload.filename or "document")
+        except OCRUnavailableError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"OCR engine unavailable: {exc}",
+            ) from exc
+        documents.append(_serialize_document_result(result))
+        if result.full_text.strip():
+            full_texts.append(result.full_text)
+
+    combined = "\n\n".join(full_texts).strip()
+    if not combined:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="No readable text was found in the uploaded document(s).",
+        )
+
+    return {"field_help": _field_help_or_http_raise(combined), "documents": documents}
 
 
 @app.post("/api/check-tone")
