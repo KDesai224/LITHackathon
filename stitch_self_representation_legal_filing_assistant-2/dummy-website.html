@@ -83,7 +83,15 @@ tailwind.config = {
   </div>
   <header class="h-16 bg-surface-container-lowest border-b border-outline-variant/40">
     <div class="h-16 max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop flex items-center justify-between">
-      <div class="flex items-center gap-space-md">
+      <div class="flex items-center gap-space-sm md:gap-space-md">
+        <!-- Global back button: walks the client-side view-history stack maintained in
+             showPage() below, so any page reached during the demo (including Page 2/3,
+             which aren't in the top nav) can be backed out of. Hidden when there's
+             nowhere to go back to. -->
+        <button class="hidden flex items-center gap-space-2xs px-space-xs py-space-2xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors flex-shrink-0" id="global-back-btn" title="Back" type="button">
+          <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+          <span class="hidden md:inline font-label-md text-label-md">Back</span>
+        </button>
         <div class="flex flex-col">
           <span class="font-label-sm text-label-sm text-primary tracking-wider uppercase font-bold">Prototype</span>
           <span class="font-headline-md text-headline-md text-on-surface tracking-tight font-bold">CLAIMREADY DEMO</span>
@@ -700,11 +708,28 @@ tailwind.config = {
     });
   }
 
-  function showPage(view) {
+  // Client-side view-history stack, so a global "Back" control works from any page —
+  // including Page 2/3, which aren't reachable from the top nav. This is a simple LIFO
+  // stack (not the real browser history/URL), kept only so the demo can be freely
+  // walked backwards regardless of how a page was reached.
+  const viewHistory = ["assessment"];
+  const backBtn = document.getElementById("global-back-btn");
+
+  function updateBackButton() {
+    backBtn.classList.toggle("hidden", viewHistory.length <= 1);
+  }
+
+  function showPage(view, opts) {
+    opts = opts || {};
     pages.forEach((p) => p.classList.toggle("hidden", p.dataset.page !== view));
     setActiveNav(view);
     syncChromeOffset();
     window.scrollTo({ top: 0, behavior: "smooth" });
+
+    if (!opts.skipHistory && viewHistory[viewHistory.length - 1] !== view) {
+      viewHistory.push(view);
+    }
+    updateBackButton();
 
     // Keep the ClaimReady overlay's content in step with which page it's shown on:
     // hidden on the mock form (Page 2, which has its own inline (i) help instead),
@@ -720,6 +745,14 @@ tailwind.config = {
     if (view === "after-filing") renderAfterFilingRef();
   }
   let lastOverlayContext = "route"; // matches the widget's own default mode on load
+
+  function goBack() {
+    if (viewHistory.length <= 1) return;
+    viewHistory.pop(); // drop the current view
+    const previous = viewHistory[viewHistory.length - 1];
+    showPage(previous, { skipHistory: true });
+  }
+  backBtn.addEventListener("click", goBack);
 
   navLinks.forEach((a) => {
     a.addEventListener("click", (e) => {
