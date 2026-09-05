@@ -97,26 +97,67 @@ Interactive API documentation (Swagger UI) is available at:
 
 ## 🧪 Demo Walkthrough
 
-### Scenario 1: Test the Hostile Language Detector
-1. Open the portal and click **"Start Assessment"** to navigate to Page 2 (Pre-filing Claim Form).
-2. Scroll to **Field 8 ("Brief statement of claim")**.
-3. Enter or paste an aggressive or generalizing draft:
-   ```
-   i want my money back these young people are always like this useless money stealing youth.
-   ```
-4. Observe the intervention:
-   - The text area activates an **amber warning border**.
-   - An advisory box slides in: *"Are you sure you wish to proceed with this wording?"*
-   - Real court mediation statistics explain the risk to the claimant's case.
-   - Click **"Use recommended fix"** to instantly replace the statement with an objective, court-admissible version!
+The whole demo runs from the single **Pre-Filing Assessment** page: a floating
+**ClaimReady** widget (bottom-right of the page) drives route triage, document
+upload, and the after-filing checklist. Follow the exact click-path in
+[`scripts/manual-acceptance.md`](scripts/manual-acceptance.md) for a live,
+end-to-end rehearsal.
 
-### Scenario 2: Test Field Extraction
-1. On Page 1, type an incident description:
+### Scenario 1: Find my route, auto-fill & per-field help
+1. On the page, open the floating **ClaimReady** guide and choose
+   **"Let us approximate your route for you"**.
+2. In **"Tell us briefly what happened"**, describe the dispute — as typed text,
+   attached documents, or both:
    ```
-   I hired ABC Renovations on 15 Feb 2025 and paid $3,500. They abandoned work and haven't refunded.
+   I paid ABC Renovations $3,500 on 15 February 2025 to renovate my bathroom.
+   After taking the deposit they abandoned the work and have not refunded me.
    ```
-2. Click **"Start Assessment"**.
-3. View the generated form fields and click any `(i)` info icon to view the source excerpts and citations.
+   Optionally click **Attach documents** to add PDFs or photos. Born-digital
+   PDFs are read from their text layer; scanned pages go through the built-in
+   OCR engine.
+3. Click **"Get an approximate route"**. The widget calls the live extraction
+   service and returns a *suggestion* readout — e.g. it may flag this as a
+   **Contract for Provision of Services** dispute under the Small Claims
+   Tribunal — plus the other fields it spotted. It is framed as a starting
+   point only, with a link to the official eligibility rules.
+4. Click **"Continue to pre-filing form"**. The form opens with fields the
+   assistant is confident about **already filled**; anything you typed yourself
+   is never overwritten.
+5. Click the **(i)** info icon beside any question to open its help popup: the
+   suggested value and its source, or an honest *"No suggestion is available
+   yet"* state — citations are never fabricated. **Use this suggestion** applies
+   the value to the field.
+6. (Optional) After clicking **Save answers**, use **Add more documents** to
+   reopen the widget's upload panel with everything already attached preserved;
+   **Continue to questionnaire** restores your saved answers and merges any new
+   suggestions.
+
+### Scenario 2: Hostile-language protection & the PDF hand-off
+1. In the Pre-Filing Form, replace the **9. Brief statement of claim** wording
+   with an angry, generalising draft:
+   ```
+   These young people are always like this useless money stealing youth — I gave
+   them a $1,200 deposit for a sofa in January and they never delivered it or
+   refunded me.
+   ```
+   Complete the remaining fields (auto-filled values or typed) so all 9 show as
+   done — only then does **Submit** appear.
+2. Click **Submit**. The form is validated against the backend rules first; any
+   problems (NRIC/FIN format, amount within SCT limits, 2-year limitation, …)
+   open a *"Please review the form"* dialog.
+3. A statement that trips the hostile-tone check raises an **amber advisory**:
+   *"Your statement may read as hostile or escalating."* You stay in control:
+   - **Revise statement** — dismiss the advisory and edit your own wording, or
+   - **Use the suggested wording** — swap in the factual, court-admissible
+     rewrite, or
+   - **Continue anyway** — keep your original wording and proceed.
+4. Once the statement is clean (or you continue anyway), the **pre-filing PDF**
+   downloads and the page moves to the After-Filing screen, which shows the
+   **server-generated reference number** (taken from the PDF response's
+   `X-Reference-Number` header — never a mocked `CLAIMREADY-DEMO-…` value).
+5. Click **"Show me what to do next"** to reopen the widget in its after-filing
+   mode: a service-of-documents checklist (serve within 7 days, keep proof,
+   file the Declaration of Service) with links to the official guidance.
 
 ---
 
@@ -131,5 +172,6 @@ uv run pytest -m slow    # embedding model + real-OCR integration tests (CI runs
 ---
 
 ## 📄 Key Documentation
-- [PRD.md](file:///C:/Users/kiara_qi2p9x4/LITHackathon/PRD.md) — Complete product requirements and statutory tribunal specifications.
-- [DESIGN.md](file:///C:/Users/kiara_qi2p9x4/LITHackathon/stitch_self_representation_legal_filing_assistant-2/DESIGN.md) — Civic Justice Portal design system tokens, typography, and component specifications.
+- [PRD.md](PRD.md) — Complete product requirements and statutory tribunal specifications.
+- [DESIGN.md](stitch_self_representation_legal_filing_assistant-2/DESIGN.md) — Civic Justice Portal design system tokens, typography, and component specifications.
+- [scripts/manual-acceptance.md](scripts/manual-acceptance.md) — step-by-step demo click-path and curl smoke tests.
