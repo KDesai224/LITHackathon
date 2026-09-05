@@ -17,13 +17,8 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 import requests
-from dotenv import load_dotenv
 
-load_dotenv()
-
-DEFAULT_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
-DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-DEFAULT_TIMEOUT = int(os.getenv("OPENAI_TIMEOUT_SECONDS", "30"))
+from sct_intake.config import get_config
 
 PUNCHY_COURT_DISCLAIMER = (
     "Court mediation data shows that personal insults and generalizations drastically reduce your chances "
@@ -181,21 +176,22 @@ def check_tone_llm(
     text: str,
     *,
     api_key: str | None = None,
-    base_url: str = DEFAULT_BASE_URL,
-    model: str = DEFAULT_MODEL,
-    timeout: int = DEFAULT_TIMEOUT,
+    base_url: str | None = None,
+    model: str | None = None,
+    timeout: int | None = None,
 ) -> ToneCheckResult:
     """Evaluate tone with an OpenAI-compatible model with fallback to heuristics."""
-    key = (api_key or os.getenv("OPENAI_API_KEY", "")).strip()
+    cfg = get_config()
+    key = (api_key or cfg.api_key or "").strip()
     if not key:
         return check_tone_heuristics(text)
 
     try:
         resp = requests.post(
-            f"{base_url.rstrip('/')}/chat/completions",
+            f"{base_url or cfg.base_url}".rstrip("/") + "/chat/completions",
             headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
             json={
-                "model": model,
+                "model": model or cfg.model,
                 "temperature": 0.1,
                 "messages": [
                     {"role": "system", "content": _LLM_PROMPT},
@@ -203,7 +199,7 @@ def check_tone_llm(
                 ],
                 "response_format": {"type": "json_object"},
             },
-            timeout=timeout,
+            timeout=timeout or int(os.environ.get("OPENAI_TIMEOUT_SECONDS", "30")),
         )
         if resp.status_code != 200:
             return check_tone_heuristics(text)
@@ -226,9 +222,10 @@ def check_tone_llm(
 
 def check_tone(text: str) -> ToneCheckResult:
     """Public interface: checks tone using Tier 2 (LLM) if available, with Tier 1 heuristic fallback."""
+    cfg = get_config()
     # Run Tier 1 first for immediate detection
     heuristic_res = check_tone_heuristics(text)
     # If API key exists, enhance with LLM for context-specific rewrite
-    if os.getenv("OPENAI_API_KEY", "").strip():
+    if cfg.api_key and cfg.api_key.strip():
         return check_tone_llm(text)
     return heuristic_res
