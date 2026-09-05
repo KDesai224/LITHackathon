@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any
 
 import uvicorn
-from fastapi import FastAPI, File, HTTPException, Response, UploadFile, status
+from fastapi import FastAPI, File, Form, HTTPException, Response, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -35,6 +35,7 @@ STATIC_ROOT = Path(__file__).resolve().parent / "stitch_self_representation_lega
 DOCUMENT_EXTENSIONS = {"pdf", "png", "jpg", "jpeg", "tif", "tiff", "bmp", "webp"}
 MAX_DOCUMENT_FILES = 10
 MAX_DOCUMENT_BYTES = 10 * 1024 * 1024
+MAX_TEXT_CHARS = 250_000
 
 _FIELD_META: dict[str, tuple[str, str, str]] = {
     "claimantName": ("claimant_name", "Your full name (Claimant)", "Enter your name as it appears on your identification document."),
@@ -200,13 +201,19 @@ app = FastAPI(
     version="1.0.0",
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS is only needed when the frontend is served from a different origin.
+# By default the app serves both the API and the static site (same origin), so
+# no CORS middleware is added. Set CORS_ORIGINS to a comma-separated allow-list
+# when hosting the frontend separately.
+_cors_origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()]
+if _cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 @app.get("/api/health")
@@ -292,12 +299,15 @@ def api_extract_fields(payload: ExtractRequest) -> dict[str, Any]:
 @app.post("/api/extract-document")
 def api_extract_document(
     files: list[UploadFile] = File(...),  # noqa: B008 - FastAPI multipart marker
+    text: str = Form(""),  # optional typed narrative appended to the OCR text
 ) -> dict[str, Any]:
     """Ingest PDFs and scanned images, then extract SCT case fields.
 
     Born-digital PDFs use their embedded text layer; scanned pages and raster
     images are recognised by the bundled rapidocr engine. The combined text is
     run through the same field-extraction pipeline as :func:`api_extract_fields`.
+    An optional ``text`` form field may carry typed incident narrative that is
+    appended after the document text.
     """
     if not files:
         raise HTTPException(
@@ -308,6 +318,12 @@ def api_extract_document(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"At most {MAX_DOCUMENT_FILES} files per request.",
+        )
+    narrative = text.strip()
+    if len(narrative) > MAX_TEXT_CHARS:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"Typed text exceeds the {MAX_TEXT_CHARS // 1000}K character limit.",
         )
 
     from ocr_engine import OCRUnavailableError, extract_text_from_bytes
@@ -328,11 +344,13 @@ def api_extract_document(
         if result.full_text.strip():
             full_texts.append(result.full_text)
 
+    if narrative:
+        full_texts.append(narrative)
     combined = "\n\n".join(full_texts).strip()
     if not combined:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="No readable text was found in the uploaded document(s).",
+            detail="No readable text was found in the uploaded document(s) or typed narrative.",
         )
 
     return {"field_help": _field_help_or_http_raise(combined), "documents": documents}
@@ -385,6 +403,7 @@ def api_generate_pdf(payload: ClaimFormData) -> Response:
         headers={
             "Content-Disposition": f'attachment; filename="{filename}"',
             "Content-Length": str(len(pdf_bytes)),
+            "X-Reference-Number": ref,
         },
     )
 

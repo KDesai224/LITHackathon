@@ -127,3 +127,39 @@ def test_extract_document_ocr_image_uses_ocr_path(
     body = response.json()
     assert body["documents"][0]["pages"][0]["source"] == "ocr"
     assert "10000" in body["field_help"]["claimAmount"]["suggestion"]
+
+
+def test_extract_document_appends_typed_text(client: TestClient) -> None:
+    response = client.post(
+        "/api/extract-document",
+        files={"files": ("claim.pdf", _text_pdf_bytes("Jane owes file text."), "application/pdf")},
+        data={"text": "the typed narrative mentions a sofa"},
+    )
+    assert response.status_code == 200, response.text
+    suggestion = response.json()["field_help"]["claimStatement"]["suggestion"]
+    assert "file text" in suggestion
+    assert "typed narrative mentions a sofa" in suggestion
+
+
+def _valid_claim_payload() -> dict[str, str]:
+    return {
+        "claimant_name": "John Doe",
+        "claimant_nric": "S1234567A",
+        "claimant_email": "john@example.com",
+        "respondent_name": "Jane Ong",
+        "respondent_address": "88 Jurong Road, Singapore 619123",
+        "nature_of_dispute": "Contract for Sale of Goods",
+        "claim_amount": "10000",
+        "date_of_cause_of_action": "2026-03-01",
+        "particulars": "The respondent did not deliver the goods that I paid for in full on time.",
+    }
+
+
+def test_generate_pdf_returns_reference_header(client: TestClient) -> None:
+    response = client.post("/api/generate-pdf", json=_valid_claim_payload())
+    assert response.status_code == 200, response.text
+    reference = response.headers.get("x-reference-number")
+    assert reference is not None
+    assert reference.startswith("DRAFT-")
+    assert response.headers["content-type"] == "application/pdf"
+    assert response.content[:4] == b"%PDF"
