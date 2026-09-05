@@ -279,7 +279,7 @@ tailwind.config = {
       </div>
 
       <div class="lg:col-span-6 flex flex-col gap-space-lg">
-        <section class="bg-surface-container-lowest rounded-lg shadow-sm p-space-lg md:p-space-xl space-y-space-lg">
+        <section class="bg-surface-container-lowest rounded-lg shadow-sm p-space-lg md:p-space-xl space-y-space-lg" id="doc-upload-section">
           <div class="flex items-center justify-between pb-space-xs">
             <div class="flex items-center gap-space-xs">
               <div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary">
@@ -292,6 +292,26 @@ tailwind.config = {
             </div>
             <span class="font-label-sm text-label-sm text-secondary bg-surface-container-low px-2 py-0.5 rounded">First-Time Intake</span>
           </div>
+
+          <!-- Resume-flow banner: only shown once the user has saved their Page 2 answers
+               and come back here via "Add more documents". Lists what's already uploaded
+               (not just a small note that some exist) so it's obvious what still needs
+               adding, plus a way straight back to the questionnaire. -->
+          <div class="hidden flex-col gap-space-sm bg-primary-fixed/40 border border-primary-container/40 rounded-lg p-space-md" id="resume-upload-banner">
+            <div class="flex items-start gap-space-sm">
+              <span class="material-symbols-outlined text-primary text-[20px] mt-0.5">check_circle</span>
+              <div class="flex flex-col gap-space-2xs flex-1">
+                <span class="font-label-md text-label-md text-on-surface font-bold">Your answers are saved for this session</span>
+                <p class="font-body-sm text-body-sm text-on-surface-variant">You're adding to what's already uploaded below — no need to re-upload anything you added before.</p>
+                <ul class="space-y-space-2xs mt-space-2xs" id="resume-upload-file-list"></ul>
+              </div>
+            </div>
+            <button class="self-start flex items-center gap-space-xs px-space-md py-space-2xs bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors" id="resume-to-form-btn" type="button">
+              <span>Continue to questionnaire</span>
+              <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </button>
+          </div>
+
           <div class="bg-surface-container-low hover:bg-surface-container/60 rounded-lg p-space-xl flex flex-col items-center justify-center text-center cursor-pointer transition-colors group" id="drop-zone">
             <input accept=".pdf,.docx,.jpg,.png" class="hidden" id="file-upload-input" multiple type="file" />
             <div class="w-14 h-14 rounded-full bg-surface-container-lowest text-primary flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform mb-space-sm">
@@ -450,6 +470,25 @@ tailwind.config = {
       <div class="flex items-center justify-between flex-wrap gap-space-xs">
         <h2 class="font-headline-md text-headline-md text-on-surface">Claim Details</h2>
         <span class="font-label-sm text-label-sm text-secondary" id="pf-progress">0 of 8 fields completed</span>
+      </div>
+
+      <!-- Save & resume (frontend-only mock): "Save answers" snapshots the current field
+           values into memory for this browser tab only — nothing is written to an account
+           or a server. Once saved, "Add more documents" takes the user back to the Page 1
+           upload bay (which will clearly show what's already been uploaded) without losing
+           their answers here. -->
+      <div class="bg-surface-container-low rounded-lg p-space-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-sm">
+        <p class="font-body-sm text-body-sm text-secondary" id="pf-save-status">Not saved yet — your answers will be lost if you close this tab.</p>
+        <div class="flex items-center gap-space-xs flex-shrink-0">
+          <button class="flex items-center gap-space-xs px-space-md py-space-2xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg font-label-md text-label-md transition-colors" id="pf-save-btn" type="button">
+            <span class="material-symbols-outlined text-[16px]">save</span>
+            <span>Save answers</span>
+          </button>
+          <button class="hidden flex items-center gap-space-xs px-space-md py-space-2xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg font-label-md text-label-md transition-colors" id="pf-add-docs-btn" type="button">
+            <span class="material-symbols-outlined text-[16px]">upload_file</span>
+            <span>Add more documents</span>
+          </button>
+        </div>
       </div>
 
       <form class="space-y-space-lg" id="pf-form" novalidate>
@@ -956,6 +995,11 @@ tailwind.config = {
   }
 
   function renderQueue() {
+    // renderResumeBanner() lives further down in this file (Page 2 resume-flow
+    // section) but is safe to call from here: function declarations are hoisted
+    // across this whole closure, and renderQueue() is only ever invoked from user
+    // event handlers, never during the script's initial synchronous pass.
+    renderResumeBanner();
     docCount.textContent = uploadedFiles.length + " item" + (uploadedFiles.length === 1 ? "" : "s");
     if (uploadedFiles.length === 0) {
       docQueue.innerHTML = "";
@@ -1114,9 +1158,12 @@ tailwind.config = {
     },
     claimAmount: {
       label: "Amount claimed (SGD)",
-      excerpt: "“Total amount paid: $4,500.00, received in full on 12 Jan 2025”",
-      citation: "Payment Receipt.jpg",
-      suggestion: "4500"
+      // No excerpt/citation/suggestion here on purpose: hasInsufficientInfo is a
+      // reusable flag any question's entry could set, meaning the mocked
+      // document-analysis backend couldn't find enough information to suggest a
+      // value. Wired up only for this question for the demo; openFieldHelp()
+      // branches on this flag generically, not on the field key.
+      hasInsufficientInfo: true
     },
     claimDate: {
       label: "Date the dispute arose",
@@ -1136,17 +1183,34 @@ tailwind.config = {
     const help = FIELD_HELP[fieldKey];
     if (!help) return;
     modalTitle.textContent = "Help: " + help.label;
-    modalBody.innerHTML =
-      '<div class="space-y-space-sm">' +
-      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">From your uploaded documents (mocked)</span>' +
-      '<p class="font-body-md text-body-md text-on-surface italic mt-space-2xs">' + help.excerpt + '</p></div>' +
-      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Citation</span>' +
-      '<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + help.citation + '</p></div>' +
-      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Suggested value</span>' +
-      '<p class="font-body-md text-body-md text-primary font-semibold mt-space-2xs">' + help.suggestion + '</p></div>' +
-      '<button type="button" class="w-full mt-space-xs px-space-md py-space-xs bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors" id="pf-use-suggestion" data-field="' + fieldKey + '">Use this suggestion</button>' +
-      '<p class="font-body-sm text-body-sm text-secondary">Mocked output — always fact-check against your real documents and the official form instructions before relying on it.</p>' +
-      '</div>';
+    if (help.hasInsufficientInfo) {
+      // Reassuring alternate state: the mocked document-analysis backend has
+      // nothing precise to offer for this question. Deliberately no error
+      // styling/icon and no "Use this suggestion" button — this is a normal,
+      // expected outcome, not a failure, and the user is free to answer from
+      // their own knowledge.
+      modalBody.innerHTML =
+        '<div class="space-y-space-sm">' +
+        '<div class="flex items-start gap-space-sm">' +
+        '<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5">search_off</span>' +
+        '<p class="font-body-md text-body-md text-on-surface">We couldn’t find enough information in your uploaded documents to suggest a precise value for this question. That’s completely normal — not every document set will cover every field.</p>' +
+        '</div>' +
+        '<p class="font-body-md text-body-md text-on-surface-variant">You’re welcome to answer this one using your own knowledge of the situation.</p>' +
+        '<p class="font-body-sm text-body-sm text-secondary">Mocked output — a real document-analysis backend may find this elsewhere; always double-check against your own records.</p>' +
+        '</div>';
+    } else {
+      modalBody.innerHTML =
+        '<div class="space-y-space-sm">' +
+        '<div><span class="font-label-sm text-label-sm text-secondary uppercase">From your uploaded documents (mocked)</span>' +
+        '<p class="font-body-md text-body-md text-on-surface italic mt-space-2xs">' + help.excerpt + '</p></div>' +
+        '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Citation</span>' +
+        '<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + help.citation + '</p></div>' +
+        '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Suggested value</span>' +
+        '<p class="font-body-md text-body-md text-primary font-semibold mt-space-2xs">' + help.suggestion + '</p></div>' +
+        '<button type="button" class="w-full mt-space-xs px-space-md py-space-xs bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors" id="pf-use-suggestion" data-field="' + fieldKey + '">Use this suggestion</button>' +
+        '<p class="font-body-sm text-body-sm text-secondary">Mocked output — always fact-check against your real documents and the official form instructions before relying on it.</p>' +
+        '</div>';
+    }
     lastFocused = document.activeElement;
     backdrop.classList.remove("hidden");
     document.getElementById("modal-close").focus();
@@ -1201,6 +1265,75 @@ tailwind.config = {
     // Mocked latency only — no real submission happens; a production build
     // would POST the form here and only navigate on a successful response.
     window.setTimeout(() => showPage("after-filing"), 900);
+  });
+
+  /* ------------------------------------------------------------------
+   * Pre-filing form (Page 2): save-for-this-session + resume-to-upload.
+   * There's no account/server here, so "saving" just snapshots the current
+   * field values into an in-memory object that lasts only as long as this
+   * browser tab stays open — consistent with how uploadedFiles etc. are
+   * already handled elsewhere in this file (plain in-memory JS, no
+   * localStorage/sessionStorage anywhere in this codebase).
+   * ------------------------------------------------------------------ */
+  let formSaved = false;
+  let savedFormAnswers = null;
+  const pfSaveBtn = document.getElementById("pf-save-btn");
+  const pfSaveStatus = document.getElementById("pf-save-status");
+  const pfAddDocsBtn = document.getElementById("pf-add-docs-btn");
+  const resumeBanner = document.getElementById("resume-upload-banner");
+  const resumeFileList = document.getElementById("resume-upload-file-list");
+  const resumeToFormBtn = document.getElementById("resume-to-form-btn");
+
+  function fieldKeyOf(el) {
+    return el.id.replace(/^field-/, "");
+  }
+
+  pfSaveBtn.addEventListener("click", () => {
+    savedFormAnswers = {};
+    pfFields.forEach((f) => { savedFormAnswers[fieldKeyOf(f)] = f.value; });
+    formSaved = true;
+    pfSaveStatus.textContent = "Saved for this session — your answers will stay filled in as long as this tab stays open.";
+    pfAddDocsBtn.classList.remove("hidden");
+  });
+
+  pfAddDocsBtn.addEventListener("click", () => {
+    showPage("assessment");
+    renderResumeBanner();
+    // Scroll after showPage's own smooth-scroll-to-top has had a beat to run,
+    // so this one actually wins and lands on the upload bay, not the page top.
+    window.setTimeout(() => {
+      document.getElementById("doc-upload-section").scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
+  });
+
+  // Rebuilds the resume banner's file list straight from the live uploadedFiles
+  // array (never a stale copy) — called on every renderQueue() so the list stays
+  // in sync if the user adds/removes files while the banner is visible, and again
+  // when the banner is first revealed via "Add more documents".
+  function renderResumeBanner() {
+    resumeBanner.classList.toggle("hidden", !formSaved);
+    if (!formSaved) return;
+    resumeFileList.innerHTML = uploadedFiles.length
+      ? uploadedFiles
+          .map(
+            (f) =>
+              '<li class="flex items-center gap-space-2xs font-body-sm text-body-sm text-on-surface">' +
+              '<span class="material-symbols-outlined text-primary text-[16px]">' + iconFor(f.ext) + '</span>' +
+              '<span class="truncate">' + f.name + '</span></li>'
+          )
+          .join("")
+      : '<li class="font-body-sm text-body-sm text-secondary">No documents uploaded yet — anything you add now will still be here when you continue.</li>';
+  }
+
+  resumeToFormBtn.addEventListener("click", () => {
+    if (savedFormAnswers) {
+      pfFields.forEach((f) => {
+        const key = fieldKeyOf(f);
+        if (key in savedFormAnswers) f.value = savedFormAnswers[key];
+      });
+      updatePfProgress();
+    }
+    showPage("prefiling-form");
   });
 
   /* ------------------------------------------------------------------
