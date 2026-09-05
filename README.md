@@ -14,7 +14,7 @@ ClaimBuddy (represented by the **ClaimReady** prototype) is an AI-assisted compa
    - **Human in Control:** Explicit choice between adopting the recommended factual wording or proceeding with original text.
 
 2. **Automated SCT Field Extraction & Grounded Tooltips**
-   - Ingests incident narratives and maps them to the 8 statutory SCT intake fields (Claimant Name, NRIC, Respondent Name, Address, Dispute Nature, Claim Amount, Dispute Date, Statement of Claim).
+   - Ingests incident narratives and uploaded PDFs/scans and maps them to the SCT intake fields (Claimant Name, NRIC, Email, Respondent Name, Address, Dispute Nature, Claim Amount, Dispute Date, Statement of Claim).
    - Validates dispute categories against the closed statutory set: *Contract for Sale of Goods*, *Provision of Services*, *Damage to Property*, *Tenancy ≤ 2 years*.
 
 3. **Civic Justice Design System (DESIGN.md)**
@@ -30,23 +30,29 @@ ClaimBuddy (represented by the **ClaimReady** prototype) is an AI-assisted compa
 
 ```
 [ Frontend: dummy-website.html + claimready-overlay.js ]
-                         │
-                         │ HTTP / JSON
-                         ▼
+          │  same origin, relative /api calls (no CORS needed)
+          ▼
 [ FastAPI Application (app.py:8743) ]
-  ├── GET  /api/health            -> Status & OpenAI key verification
-  ├── POST /api/check-tone        -> Tone detection & factual rewrite engine
-  ├── POST /api/extract-fields    -> SCT field extraction via OpenAI tool calls
-  └── StaticFiles /               -> Serves portal UI, icons, and styles
+  ├── GET  /api/health              -> Status & OpenAI key verification
+  ├── POST /api/extract-fields      -> SCT field extraction from typed text
+  ├── POST /api/extract-document    -> PDF/scanned-image OCR + field extraction
+  ├── POST /api/check-tone          -> Tone detection & factual rewrite engine
+  ├── POST /api/validate-claim      -> Full form validation (fields + tone)
+  ├── POST /api/generate-pdf        -> Pre-filing PDF with reference number
+  └── StaticFiles /                 -> Serves portal UI, icons, and styles
 ```
 
 ### Backend Components
-* **`app.py`**: Async FastAPI application and static asset server.
+* **`app.py`**: FastAPI application, static asset server, and the same-origin API the served
+  frontend calls.
 * **`backend/tone_detector.py`**:
   * **Tier 1 (<5ms local regex rule bank):** Catches generalizations, criminal accusations, insults, and threats offline with zero API dependency.
-  * **Tier 2 (LLM Contextual Analyzer):** Enhances with `gpt-4o-mini` via OpenAI-compatible endpoints when an API key is provided.
-* **`client_upload.py`**: SCT intake domain model (`SCTCase`) enforcing Decimal currency, ISO dates, and SCT dispute categories.
-* **`field_extractor.py`**: OpenAI-compatible tool call wrapper for structured claim intake extraction.
+  * **Tier 2 (LLM Contextual Analyzer):** Enhances via an OpenAI-compatible endpoint (e.g. DeepSeek) when an API key is provided in `.env`.
+* **`sct_intake/`**: SCT intake domain package (`SCTCase`) enforcing Decimal currency, ISO dates,
+  and SCT dispute categories; config, retrieval/embeddings, and the tool-call extraction wrapper.
+  (Top-level `client_upload.py` / `field_extractor.py` are compat shims re-exporting it.)
+* **`ocr_engine/`**: Cross-platform document ingestion (PyMuPDF text layer + rapidocr/onnxruntime
+  OCR for scanned pages).
 * **`backend/field_evidence.py`**: Evidence provenance, citation verification, and 5-component confidence scoring.
 
 ---
@@ -54,30 +60,31 @@ ClaimBuddy (represented by the **ClaimReady** prototype) is an AI-assisted compa
 ## 🚀 Quick Start
 
 ### 1. Prerequisites
-- Python **3.11+** installed.
+- Python **3.11+** (the project is managed with [uv](https://docs.astral.sh/uv/)).
 - Git.
 
 ### 2. Install Dependencies
-Run the following in your terminal:
 ```bash
-pip install fastapi uvicorn pydantic python-dotenv requests
+uv sync --dev
 ```
-*(Or if using pyproject.toml: `pip install -e .`)*
 
-### 3. (Optional) Configure OpenAI API Key
-Create a `.env` file in the project root:
+### 3. Configure the AI endpoint
+Create a `.env` file in the project root (copy `.env.example`). Example for DeepSeek:
 ```env
-OPENAI_API_KEY=your_openai_api_key_here
-# Optional overrides:
-# OPENAI_BASE_URL=https://api.openai.com/v1
-# OPENAI_MODEL=gpt-4o-mini
+OPENAI_BASE_URL=https://api.deepseek.com
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=deepseek-v4-flash
+# Optional: comma-separated origins allowed when the frontend is hosted separately:
+# CORS_ORIGINS=http://localhost:3000
 ```
-> **Note:** Even without an API key, the app runs completely offline in fallback mode using Tier 1 heuristics and pre-configured responses.
+> **Note:** The app runs and the demo UI works without a key for the tone heuristics and OCR
+> paths, but field extraction and PDF generation need a working key.
 
 ### 4. Start the Application
 ```bash
-python app.py
+uv run python app.py
 ```
+or double-click `stitch_self_representation_legal_filing_assistant-2/run-demo.command` (macOS).
 
 Open your browser to:
 👉 **[http://127.0.0.1:8743/dummy-website.html](http://127.0.0.1:8743/dummy-website.html)**
@@ -113,14 +120,13 @@ Interactive API documentation (Swagger UI) is available at:
 
 ---
 
-## 🔬 Running Unit Tests
+## 🔬 Running Tests
 
-Run the automated test suite with Python's built-in test runner:
+Run the automated test suite with uv + pytest:
 ```bash
-python -m unittest discover -s tests -p "test_*.py"
+uv run pytest            # fast unit + endpoint tests
+uv run pytest -m slow    # embedding model + real-OCR integration tests (CI runs these on push)
 ```
-
-All tests for tone detection, heuristic fallbacks, and evidence scoring will execute.
 
 ---
 
