@@ -151,6 +151,12 @@
 .cr-brand span.cr-brand-sub { display: block; font-size: 12px; line-height: 18px; font-weight: 400; color: var(--cr-on-surface-variant); }
 .cr-brand-text { display: flex; flex-direction: column; }
 .cr-icon-badge { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 9999px; background: var(--cr-surface-container); color: var(--cr-primary); flex: none; }
+/* Header brand mark: the real logo already has its own maroon rounded-square
+   background baked in, so it skips the circular tint background above (that
+   would double up two clashing shapes/colors) but keeps the same 28x28
+   footprint, just with a couple of px of breathing room around the image. */
+.cr-icon-badge--logo { background: transparent; }
+.cr-icon-badge--logo img { display: block; width: 24px; height: 24px; border-radius: 6px; }
 #cr-close {
   flex: none;
   width: 28px; height: 28px;
@@ -308,7 +314,7 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
 <section id="cr-panel" role="dialog" aria-modal="false" aria-label="ClaimReady independent filing guide">
   <div class="cr-header">
     <div class="cr-brand">
-      <span class="cr-icon-badge">${svg("compass", 16)}</span>
+      <span class="cr-icon-badge cr-icon-badge--logo"><img src="assets/images/claimready-icon-mark.svg" alt="ClaimReady logo" width="24" height="24"></span>
       <span class="cr-brand-text">ClaimReady<span class="cr-brand-sub">Independent preparation guide</span></span>
     </div>
     <button type="button" id="cr-close" aria-label="Minimise guide">&#8722;</button>
