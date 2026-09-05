@@ -10,11 +10,17 @@
  * maroon primary, slate neutrals, Public Sans, soft 4px corners, minimal
  * shadows, ghost-border elevation.
  *
- * This build supports three content modes, and does not expose a
+ * This build supports four content modes, and does not expose a
  * tab switcher to the visitor any more:
  *   - "route" — the simplified "Find my route" flow (a single "approximate
  *     my route" option, since every other route option was removed).
- *   - "after" — the "After filing" checklist.
+ *   - "dashboard" — shown on the mock SCT portal (Page 1.75), right after the
+ *     eligibility check. Auto-opens (unlike every other mode, which waits
+ *     for the visitor to tap the launcher) since its whole point is to
+ *     greet the visitor with their pre-filing assessment ID, an overall
+ *     progress meter, and a one-tap "File a Claim" handoff.
+ *   - "after" — the "After filing" checklist. Also shows the same progress
+ *     meter as "dashboard", one step further along.
  *   - "upload" — an in-widget "add more documents" panel, reached from
  *     Page 2's own "Add more documents" button. It reuses this widget's
  *     existing state.files (attached earlier via "approximate my route"),
@@ -24,10 +30,14 @@
  *
  * Which mode is shown, and whether the widget appears at all, is decided
  * by the host page, not by the visitor: call
- *   window.ClaimReadyOverlay.setContext("route" | "after" | "upload" | "hidden")
+ *   window.ClaimReadyOverlay.setContext("route" | "dashboard" | "after" | "upload" | "hidden", data)
  * whenever the host page's own view changes (see dummy-website.html's
- * showPage()). This keeps the widget generic/reusable while letting each
- * host page decide what belongs on screen.
+ * showPage()). `data` is only used by "dashboard"/"after", to hand over
+ * host-page state this widget has no way to know on its own — the pre-filing
+ * assessment ID and how far along the overall flow the visitor is
+ * ({ assessmentId, progressStep, progressTotal, progressLabel }). This keeps
+ * the widget generic/reusable while letting each host page decide what
+ * belongs on screen.
  *
  * All interactions below are wired to real, working state – nothing here
  * is a decorative dead end. The backend (document scanning, real route
@@ -226,6 +236,23 @@
 .cr-warning strong { display: block; margin-bottom: 4px; }
 .cr-note strong { display: block; margin-bottom: 4px; color: var(--cr-on-surface); }
 
+/* "Dashboard"/"after" modes only: pre-filing assessment ID + overall progress meter. */
+.cr-id-badge {
+  display: flex; flex-direction: column; gap: 2px;
+  border: 1px solid var(--cr-outline);
+  border-radius: var(--cr-radius);
+  background: var(--cr-surface-muted);
+  padding: 10px 12px;
+  margin: 0 0 14px;
+}
+.cr-id-badge span { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--cr-secondary); }
+.cr-id-badge strong { font-size: 14px; font-family: 'Courier New', monospace; color: var(--cr-on-surface); }
+
+.cr-progress { margin: 0 0 16px; }
+.cr-progress-track { height: 8px; border-radius: 9999px; background: var(--cr-surface-container); overflow: hidden; }
+.cr-progress-fill { height: 100%; border-radius: 9999px; background: var(--cr-primary); transition: width 200ms ease; }
+.cr-progress-label { font-size: 12px; color: var(--cr-secondary); margin: 6px 0 0; }
+
 .cr-field { display: block; margin: 6px 0 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; color: var(--cr-on-surface-variant); }
 .cr-field input, .cr-field textarea {
   display: block; width: 100%; margin-top: 6px;
@@ -342,13 +369,17 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
 
   function defaultState() {
     return {
-      mode: "route", // "route" | "after" | "upload" — set by the host page via setContext(), not user-switchable
+      mode: "route", // "route" | "dashboard" | "after" | "upload" — set by the host page via setContext(), not user-switchable
       step: "start", // route: "start" -> "approximate"
       incidentText: "",
       files: [], // [{id, name}] — mocked, no real upload/parsing happens here
       approxStatus: "idle", // "idle" | "connecting" | "done"
       approxError: "",
       checks: [false, false, false], // after-filing task checklist
+      assessmentId: "", // handed over by the host page via setContext("dashboard", data) — "dashboard" mode only
+      progressStep: 0, // how far along the overall flow the visitor is — "dashboard"/"after" modes only
+      progressTotal: 0, // 0 means "don't show the progress meter" (route/upload modes never set this)
+      progressLabel: "", // short caption under the progress bar; falls back to "N of M steps complete" if blank
     };
   }
   let state = defaultState();
@@ -373,6 +404,20 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
     `<div class="cr-eyebrow">${small}</div><h3 class="cr-h">${title}</h3>${
       copy ? `<p class="cr-copy">${copy}</p>` : ""
     }`;
+  // Shared by "dashboard" and "after" modes — state.progressTotal is 0 (falsy) for
+  // every other mode, so this quietly renders nothing there.
+  const progressMeter = () => {
+    if (!state.progressTotal) return "";
+    const pct = Math.round((state.progressStep / state.progressTotal) * 100);
+    return (
+      `<div class="cr-progress" role="progressbar" aria-valuenow="${state.progressStep}" aria-valuemin="0" aria-valuemax="${state.progressTotal}">` +
+      `<div class="cr-progress-track"><div class="cr-progress-fill" style="width:${pct}%"></div></div>` +
+      `<p class="cr-progress-label">${
+        state.progressLabel || state.progressStep + " of " + state.progressTotal + " steps complete"
+      }</p>` +
+      `</div>`
+    );
+  };
 
   /* ---------------------------------------------------------------------
    * Render
@@ -394,12 +439,31 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
     const label = root.querySelector("#cr-context-label");
     if (label) {
       label.textContent =
-        state.mode === "after" ? "After filing" : state.mode === "upload" ? "Add documents" : "Find my route";
+        state.mode === "after"
+          ? "After filing"
+          : state.mode === "dashboard"
+          ? "Your dashboard"
+          : state.mode === "upload"
+          ? "Add documents"
+          : "Find my route";
     }
 
     let html = "";
-    if (state.mode === "after") {
+    if (state.mode === "dashboard") {
       html =
+        (state.assessmentId
+          ? `<div class="cr-id-badge"><span>Pre-Filing Assessment ID</span><strong>${state.assessmentId}</strong></div>`
+          : "") +
+        progressMeter() +
+        intro(
+          "NEXT STEP",
+          "File your claim",
+          "Your pre-filing assessment is complete. When you're ready, file your claim with the Small Claims Tribunal — this hands you straight to the claim form."
+        ) +
+        `<button type="button" class="cr-btn cr-primary" data-action="go-to-claim-form">File a Claim &rarr;</button>`;
+    } else if (state.mode === "after") {
+      html =
+        progressMeter() +
         intro(
           "AFTER YOU FILE",
           "There are still steps to complete.",
@@ -559,8 +623,19 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
         return;
       }
       const preservedMode = state.mode;
+      // "Start over" only means "reset the route-finder wizard" — it isn't
+      // meant to also throw away the assessment ID/progress the host page
+      // handed over via setContext(), which this widget has no way to
+      // re-fetch on its own.
+      const preservedDashboardData = {
+        assessmentId: state.assessmentId,
+        progressStep: state.progressStep,
+        progressTotal: state.progressTotal,
+        progressLabel: state.progressLabel,
+      };
       state = defaultState();
       state.mode = preservedMode;
+      if (preservedMode === "dashboard" || preservedMode === "after") Object.assign(state, preservedDashboardData);
       render();
     });
 
@@ -605,6 +680,14 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
         close();
         return;
       }
+      if (action === "go-to-claim-form") {
+        // Dashboard mode's one-tap handoff to the claim form — same
+        // generic-event pattern as the two above, so this widget file
+        // doesn't need to know the host page calls it "prefiling-form".
+        window.dispatchEvent(new CustomEvent("claimready:go-to-claim-form"));
+        close();
+        return;
+      }
       const value = button.dataset.choice;
       if (value === "approximate" && state.step === "start") {
         state.step = "approximate";
@@ -627,7 +710,7 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
     window.ClaimReadyOverlay = {
       open,
       close,
-      setContext(ctx) {
+      setContext(ctx, data) {
         if (ctx === "hidden") {
           root.style.display = "none";
           close();
@@ -643,8 +726,18 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
           return;
         }
         state = defaultState();
-        state.mode = ctx === "after" ? "after" : "route";
+        state.mode = ctx === "after" ? "after" : ctx === "dashboard" ? "dashboard" : "route";
+        if ((ctx === "dashboard" || ctx === "after") && data) {
+          state.assessmentId = data.assessmentId || "";
+          state.progressStep = data.progressStep || 0;
+          state.progressTotal = data.progressTotal || 0;
+          state.progressLabel = data.progressLabel || "";
+        }
         render();
+        // Dashboard mode's whole point is to greet the visitor as soon as they
+        // land on the SCT portal — unlike every other mode, which waits for
+        // them to tap the launcher bubble themselves.
+        if (ctx === "dashboard") open();
       },
     };
 

@@ -595,7 +595,14 @@ tailwind.config = {
      form (Page 2) below via showPage(). Everything else here (other sidebar items, other
      sub-links, other application cards, "Enter one-time reference number") is a non-functional
      placeholder that opens the same "not wired up in this demo" modal as the header's
-     Singpass/account buttons — no dead "#" links. -->
+     Singpass/account buttons — no dead "#" links.
+
+     Unlike the eligibility check/claim form either side of it, the ClaimReady widget reappears
+     here (window.ClaimReadyOverlay.setContext("dashboard", ...)) and auto-opens, acting as a
+     small "what's next" panel: the pre-filing assessment ID generated when the eligibility check
+     was submitted, an overall progress meter, and a "File a Claim" button that's a second,
+     one-tap way to reach the claim form (dispatches "claimready:go-to-claim-form", handled next
+     to the widget's other route-handoff listeners further down). -->
 <div class="hidden" data-page="sct-portal">
   <div class="w-full bg-primary text-on-primary">
     <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop py-space-sm flex items-center justify-between gap-space-md">
@@ -1190,24 +1197,50 @@ tailwind.config = {
     updateSkipButton();
 
     // Keep the ClaimReady overlay's content in step with which page it's shown on:
-    // hidden on the mock form (Page 2, which has its own inline (i) help instead),
+    // hidden on the mock claim form (Page 2, which has its own inline (i) help instead)
+    // and the eligibility check, "dashboard"-mode on the SCT portal (Page 1.75),
     // "after"-mode on Page 3, and the default route-finder everywhere else. setContext()
     // resets the widget's in-progress state, so only call it when the context actually
     // changes — otherwise switching between Home/Resources/FAQs (all "route" mode) would
     // wipe out whatever the visitor had already typed into the widget.
     const nextContext =
-      view === "prefiling-form" || view === "eligibility-check" || view === "sct-portal"
+      view === "prefiling-form" || view === "eligibility-check"
         ? "hidden"
+        : view === "sct-portal"
+        ? "dashboard"
         : view === "after-filing"
         ? "after"
         : "route";
     if (window.ClaimReadyOverlay && nextContext !== lastOverlayContext) {
-      window.ClaimReadyOverlay.setContext(nextContext);
+      // "dashboard"/"after" are the only contexts the widget can't fully render on its
+      // own — it has no way to know the assessment ID or how far along the flow the
+      // visitor is, so the host page computes that here. progressStep/claimFiled are
+      // recomputed fresh on every call (not cached in the data object below) so that
+      // e.g. going Back into the SCT portal after already filing still shows 2 of 3,
+      // not the stale 1 of 3 from the visitor's first time through.
+      const contextData =
+        nextContext === "dashboard"
+          ? {
+              assessmentId: assessmentId,
+              progressStep: claimFiled ? 2 : 1,
+              progressTotal: 3,
+              progressLabel: claimFiled ? "Claim filed — 2 of 3 steps complete" : "Pre-filing assessment complete",
+            }
+          : nextContext === "after"
+          ? { progressStep: 2, progressTotal: 3, progressLabel: "Claim filed — 2 of 3 steps complete" }
+          : undefined;
+      window.ClaimReadyOverlay.setContext(nextContext, contextData);
       lastOverlayContext = nextContext;
     }
     if (view === "after-filing") renderAfterFilingRef();
   }
   let lastOverlayContext = "route"; // matches the widget's own default mode on load
+
+  // Cross-page state the ClaimReady widget has no way to derive on its own — see the
+  // "dashboard"/"after" contextData above. assessmentId is generated once the
+  // eligibility check is submitted; claimFiled flips true once the claim form is.
+  let assessmentId = null;
+  let claimFiled = false;
 
   function goBack() {
     if (viewHistory.length <= 1) return;
@@ -1229,6 +1262,11 @@ tailwind.config = {
   // The ClaimReady widget (claimready-overlay.js) dispatches this once its mocked
   // "approximate my route" flow finishes, handing off navigation to the host page.
   window.addEventListener("claimready:route-complete", () => showPage("eligibility-check"));
+
+  // Dispatched by the widget's "dashboard" mode (SCT portal) when the visitor taps
+  // "File a Claim" — a second, one-tap way to reach the claim form alongside the
+  // portal's own Online Applications > SCT > Claim Form click-path.
+  window.addEventListener("claimready:go-to-claim-form", () => showPage("prefiling-form"));
 
   // Populate FAQ accordion.
   const faqList = document.getElementById("faq-list");
@@ -1717,6 +1755,10 @@ tailwind.config = {
     icon.classList.add("animate-spin");
     // Mocked latency only — no real submission happens; a production build
     // would POST the answers here and only navigate on a successful response.
+    // Generated once per submit, same "CLAIMREADY-x-nnnn" style as the after-filing
+    // reference number below — the SCT portal's dashboard widget reads this back via
+    // showPage()'s "dashboard" contextData.
+    assessmentId = "CLAIMREADY-PFA-" + Math.floor(1000 + Math.random() * 9000);
     // Lands on the mock SCT portal (Page 1.75) rather than the claim form directly —
     // see that view's own comment for how it hands off to the claim form from there.
     window.setTimeout(() => showPage("sct-portal"), 900);
@@ -1899,6 +1941,9 @@ tailwind.config = {
     icon.classList.add("animate-spin");
     // Mocked latency only — no real submission happens; a production build
     // would POST the form here and only navigate on a successful response.
+    // Bumps the overall progress meter shown by the ClaimReady widget's "dashboard"/
+    // "after" modes from 1 of 3 to 2 of 3 steps complete — see showPage()'s contextData.
+    claimFiled = true;
     window.setTimeout(() => showPage("after-filing"), 900);
   });
 
