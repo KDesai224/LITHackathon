@@ -6,6 +6,9 @@ __pycache__/
 .env.*
 !.env.example
 .kilo/
+.pytest_cache/
+.hypothesis/
+.ruff_cache/
 
 # Local ML model artifacts (never commit downloaded weights)
 models/

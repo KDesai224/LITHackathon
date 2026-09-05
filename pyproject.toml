@@ -25,4 +25,4 @@ typeCheckingMode = "standard"
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
-addopts = "--cov=client_upload --cov=field_extractor --cov=semantic_retrieval --cov-report=term-missing"
+addopts = "--cov=sct_intake --cov-report=term-missing"
