@@ -32,9 +32,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from client_upload import SCTCase
-from field_extractor import extract_fields
-from semantic_retrieval import build_extraction_text
+from sct_intake import SCTCase
+from sct_intake.extraction import extract_fields
+from sct_intake.retrieval import build_extraction_text
 
 # Documents mimic two uploaded files describing one SCT claim.
 DOC_A = """\
