@@ -32,8 +32,13 @@ jobs:
       - name: Install dependencies
         run: uv sync --dev
 
-      - name: Run tests
+      - name: Run unit tests (fast)
         run: uv run pytest
+
+      # Embedding model tests load BAAI/bge-small-en-v1.5; run only on push.
+      - name: Run embedding model tests (slow)
+        if: github.event_name == 'push'
+        run: uv run pytest -m slow
 
       # basedpyright is the project's conservative type checker; it runs here on
       # every push (and pull request) instead of in the local pre-commit hook,

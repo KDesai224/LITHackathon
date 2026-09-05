@@ -1,9 +1,9 @@
 """Integration tests for the local ``BAAI/bge-small-en-v1.5`` embedding model.
 
-These tests hit the network on the very first run (the model downloads to
-``~/.cache/huggingface/hub``) and are then served from the local cache. Run the
-whole suite normally; if you are fully offline, deselect this module with
-``uv run pytest -k "not embeddings"``.
+These tests load a real sentence-transformers model (hitting the network on the
+very first run to download weights into ``~/.cache/huggingface/hub``). They are
+marked ``slow`` and skipped by the default run (``uv run pytest``). Run them
+explicitly with ``uv run pytest -m slow``; CI runs them on push.
 """
 
 from __future__ import annotations
@@ -11,9 +11,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
+import pytest
 
 if TYPE_CHECKING:
     from sentence_transformers import SentenceTransformer
+
+pytestmark = pytest.mark.slow
 
 #: Fixed output dimension of BAAI/bge-small-en-v1.5.
 EMBEDDING_MODEL_DIMENSION = 384

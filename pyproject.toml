@@ -34,4 +34,7 @@ exclude = ["ocr_engine"]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
-addopts = "--cov=sct_intake --cov-report=term-missing"
+markers = [
+    "slow: embedding model integration tests (load sentence-transformers / download weights on first use)",
+]
+addopts = "--cov=sct_intake --cov-report=term-missing -m 'not slow'"
