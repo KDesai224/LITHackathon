@@ -229,28 +229,28 @@ tailwind.config = {
 <!-- ============================== PRE-FILING FORM VIEW (Page 2) ==============================
      Reached from the ClaimReady widget's "Let us approximate your route for you" flow
      (claimready-overlay.js dispatches "claimready:route-complete", handled below).
-     Mock pre-filing form: each field has an (i) info button that opens a popup showing a
-     mocked document excerpt, citation, and suggested value — standing in for a future
-     real document-analysis backend. -->
+     Pre-filing form: each field has an (i) info button that opens a popup showing the
+     suggestion the assistant extracted from the user's narrative/documents (field_help),
+     or neutral guidance when no suggestion is available. -->
 <div class="hidden" data-page="prefiling-form">
   <section class="w-full bg-surface-container-lowest shadow-sm">
     <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop py-space-xl">
-      <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider font-semibold">Pre-Filing Form (Prototype)</span>
-      <h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Small Claims Tribunal — Claim Form (Mock)</h1>
-      <p class="font-body-lg text-body-lg text-secondary mt-space-2xs">This imitates a real pre-filing form. Tap the <span class="material-symbols-outlined align-middle text-[16px]">info</span> icon next to any question to see a mocked suggestion drawn from documents you "uploaded" earlier.</p>
+      <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider font-semibold">Pre-Filing Form</span>
+      <h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Small Claims Tribunal — Claim Form</h1>
+      <p class="font-body-lg text-body-lg text-secondary mt-space-2xs">Tap the <span class="material-symbols-outlined align-middle text-[16px]">info</span> icon next to any question to see a suggestion drawn from your documents or typed narrative by the ClaimReady assistant.</p>
     </div>
   </section>
 
   <div class="max-w-layout-content-max-width mx-auto w-full px-layout-margin-mobile md:px-layout-margin-desktop py-space-xl space-y-space-lg">
     <div class="bg-primary-fixed/40 border border-primary-container/40 rounded-lg p-space-md flex items-start gap-space-sm">
       <span class="material-symbols-outlined text-primary text-[20px] mt-0.5">warning</span>
-      <p class="font-body-sm text-body-sm text-on-surface">This is a mocked form for the ClaimReady prototype. No data entered here is submitted anywhere or legally binding — always verify against the real court form and your own documents.</p>
+      <p class="font-body-sm text-body-sm text-on-surface">This is a demo form for the ClaimReady prototype. The assistant analyses what you enter or attach and returns a PDF summary, but nothing here is filed with any court — always verify against the real court form and your own documents.</p>
     </div>
 
     <section class="bg-surface-container-lowest rounded-lg shadow-sm p-space-lg md:p-space-xl space-y-space-lg">
       <div class="flex items-center justify-between flex-wrap gap-space-xs">
         <h2 class="font-headline-md text-headline-md text-on-surface">Claim Details</h2>
-        <span class="font-label-sm text-label-sm text-secondary" id="pf-progress">0 of 8 fields completed</span>
+        <span class="font-label-sm text-label-sm text-secondary" id="pf-progress">0 of 9 fields completed</span>
       </div>
 
       <!-- Save & resume (frontend-only mock): "Save answers" snapshots the current field
@@ -290,8 +290,16 @@ tailwind.config = {
         </div>
 
         <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimantEmail">
+            <span>3. Your email address (for court service notices)</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimantEmail" type="button" aria-label="Help for email address"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimantEmail" type="email" placeholder="e.g. name@example.com" />
+        </div>
+
+        <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-respondentName">
-            <span>3. Respondent's full name or business name</span>
+            <span>4. Respondent's full name or business name</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="respondentName" type="button" aria-label="Help for respondent's name"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-respondentName" type="text" placeholder="Person or business you are claiming against" />
@@ -299,7 +307,7 @@ tailwind.config = {
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-respondentAddress">
-            <span>4. Respondent's address for service</span>
+            <span>5. Respondent's address for service</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="respondentAddress" type="button" aria-label="Help for respondent's address"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <textarea class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" id="field-respondentAddress" placeholder="Where the respondent can be served with claim papers" rows="2"></textarea>
@@ -307,7 +315,7 @@ tailwind.config = {
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimNature">
-            <span>5. Nature of claim</span>
+            <span>6. Nature of claim</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimNature" type="button" aria-label="Help for nature of claim"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <select class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimNature">
@@ -324,7 +332,7 @@ tailwind.config = {
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimAmount">
-            <span>6. Amount claimed (SGD)</span>
+            <span>7. Amount claimed (SGD)</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimAmount" type="button" aria-label="Help for amount claimed"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimAmount" min="0" type="number" placeholder="e.g. 4500" />
@@ -332,7 +340,7 @@ tailwind.config = {
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimDate">
-            <span>7. Date the dispute arose</span>
+            <span>8. Date the dispute arose</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimDate" type="button" aria-label="Help for date the dispute arose"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimDate" type="date" />
@@ -340,7 +348,7 @@ tailwind.config = {
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimStatement">
-            <span>8. Brief statement of claim</span>
+            <span>9. Brief statement of claim</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimStatement" type="button" aria-label="Help for statement of claim"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <textarea class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" id="field-claimStatement" placeholder="What happened, and what you are asking the tribunal to order" rows="4"></textarea>
@@ -351,6 +359,19 @@ tailwind.config = {
             <span id="pf-submit-btn-label">Submit</span>
             <span class="material-symbols-outlined text-[16px]" id="pf-submit-btn-icon">arrow_forward</span>
           </button>
+        </div>
+
+        <div class="hidden" id="tone-advisory">
+          <div class="space-y-space-sm border border-amber-300 bg-amber-50 rounded-lg p-space-md">
+            <div class="flex items-start gap-space-sm">
+              <span class="material-symbols-outlined text-[20px] mt-0.5 text-amber-800">warning</span>
+              <div class="space-y-space-2xs" id="tone-advisory-content"></div>
+            </div>
+            <div class="flex items-center gap-space-xs flex-wrap">
+              <button class="flex items-center gap-space-xs px-space-md py-space-2xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg font-label-md text-label-md transition-colors" id="tone-revise-btn" type="button">Revise statement</button>
+              <button class="flex items-center gap-space-xs px-space-md py-space-2xs bg-primary-container hover:bg-primary text-on-primary rounded-lg font-label-md text-label-md transition-colors" id="tone-continue-btn" type="button">Continue anyway</button>
+            </div>
+          </div>
         </div>
       </form>
     </section>
@@ -375,14 +396,14 @@ tailwind.config = {
       <span class="material-symbols-outlined text-success text-[24px] mt-0.5">check_circle</span>
       <div class="flex flex-col gap-space-2xs">
         <span class="font-headline-md text-headline-md text-success">Mock filing reference: <span id="af-ref-number">—</span></span>
-        <p class="font-body-md text-body-md text-on-surface">Keep this reference for your records in a real filing. In this prototype it is randomly generated and not connected to any court system.</p>
+        <p class="font-body-md text-body-md text-on-surface">This reference is generated by the demo service and is not connected to any court system.</p>
       </div>
     </section>
 
     <section class="bg-surface-container-lowest rounded-lg shadow-sm p-space-lg md:p-space-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md">
       <div class="flex flex-col gap-space-2xs">
         <h2 class="font-headline-md text-headline-md text-on-surface">What happens next?</h2>
-        <p class="font-body-md text-body-md text-on-surface-variant">Open the ClaimReady guide for a mocked after-filing checklist (service of documents, mediation, hearing prep).</p>
+        <p class="font-body-md text-body-md text-on-surface-variant">Open the ClaimReady guide for the after-filing checklist (service of documents, mediation, hearing prep).</p>
       </div>
       <button class="flex items-center gap-space-xs px-space-lg py-space-sm bg-primary-container text-on-primary font-label-md text-label-md rounded-lg hover:bg-primary transition-colors flex-shrink-0" id="af-open-guide-btn" type="button">
         <span class="material-symbols-outlined text-[18px]">support_agent</span>
@@ -522,9 +543,13 @@ tailwind.config = {
   });
   setActiveNav("assessment");
 
-  // The ClaimReady widget (claimready-overlay.js) dispatches this once its mocked
-  // "approximate my route" flow finishes, handing off navigation to the host page.
-  window.addEventListener("claimready:route-complete", () => showPage("prefiling-form"));
+  // The ClaimReady widget dispatches this once its real "approximate my route"
+  // flow finishes, carrying extracted field_help/documents to prefill the form.
+  window.addEventListener("claimready:route-complete", (event) => {
+    storeAnalysis((event && event.detail) || null);
+    prefillFromPayload();
+    showPage("prefiling-form");
+  });
 
   // Populate FAQ accordion.
   const faqList = document.getElementById("faq-list");
@@ -547,9 +572,9 @@ tailwind.config = {
    * dead "#" links.
    * ------------------------------------------------------------------ */
   const MODALS = {
-    privacy: { title: "Privacy Policy (Demo)", body: "<p>This is a non-production demonstration page. No personal data submitted here is stored, transmitted, or retained — all form state lives only in your browser tab and clears on reload.</p>" },
-    terms: { title: "Terms of Service (Demo)", body: "<p>This interface is an illustrative prototype for evaluating layout and interaction design. It is not connected to any court system and creates no legal record.</p>" },
-    vulnerability: { title: "Vulnerability Disclosure (Demo)", body: "<p>This is a static local demo with no live backend, authentication, or data store, so there is no production attack surface to report against.</p>" },
+    privacy: { title: "Privacy (Demo)", body: "<p>This is a demonstration page. What you type or attach is processed locally by the ClaimReady demo service and sent to its configured AI provider for analysis; nothing is stored in a database or retained after your session. Do not enter real personal data for a live demo.</p>" },
+    terms: { title: "Terms of Service (Demo)", body: "<p>This interface is a non-production prototype. The suggested routes, values, and the generated PDF are for demonstration only — they are not connected to any court system and create no legal record.</p>" },
+    vulnerability: { title: "Vulnerability Disclosure (Demo)", body: "<p>This demo runs a local FastAPI service with no authentication or data store, so there is no production attack surface to report against. Do not deploy it with real personal data.</p>" },
     singpass: { title: "Login — Non-Functional Placeholder", body: "<p>This button is a visual placeholder only. It is <strong>not</strong> connected to Singpass or any real government authentication service, and no real login occurs. In a production build, this control would need to hand off to the actual Singpass OIDC flow — that integration is intentionally out of scope for this frontend prototype.</p>" },
     account: { title: "Account — Demo Mode", body: "<p>No account/session backend is wired up in this demo. This is a placeholder for the signed-in user menu (profile, saved assessments, sign out).</p>" }
   };
@@ -583,99 +608,119 @@ tailwind.config = {
   document.getElementById("account-btn").addEventListener("click", () => openModal("account"));
 
   /* ------------------------------------------------------------------
-   * Pre-filing form (Page 2): mocked per-field "document help" popups.
-   * FIELD_HELP stands in for a real document-analysis backend that would
-   * pull excerpts/citations from the files the user attached on Page 1.
+   * Pre-filing form (Page 2): live per-field "document help" popups.
+   * Suggestions come from the ClaimReady widget's analysis payload
+   * (field_help returned by POST /api/extract-fields or /api/extract-document).
+   * When no analysis exists yet the popup says so honestly — no fabricated
+   * excerpts or citations.
    * ------------------------------------------------------------------ */
-  const FIELD_HELP = {
-    claimantName: {
-      label: "Your full name (Claimant)",
-      excerpt: "“This Agreement is made between John Tan Wei Ming (the ‘Buyer’) and Bright Home Furnishings Pte Ltd…”",
-      citation: "Sale Agreement.pdf, page 1",
-      suggestion: "John Tan Wei Ming"
-    },
-    claimantId: {
-      label: "Your NRIC / FIN",
-      excerpt: "“Buyer NRIC: S8712345A”",
-      citation: "Sale Agreement.pdf, page 1",
-      suggestion: "S8712345A"
-    },
-    respondentName: {
-      label: "Respondent's full name or business name",
-      excerpt: "“…supplied by Bright Home Furnishings Pte Ltd (UEN 201812345K)…”",
-      citation: "Sale Agreement.pdf, page 1",
-      suggestion: "Bright Home Furnishings Pte Ltd"
-    },
-    respondentAddress: {
-      label: "Respondent's address for service",
-      excerpt: "“Registered office: 88 Jurong Industrial Road, #03-12, Singapore 619123”",
-      citation: "Demand Letter.pdf, page 1",
-      suggestion: "88 Jurong Industrial Road, #03-12, Singapore 619123"
-    },
-    claimNature: {
-      label: "Nature of claim",
-      excerpt: "“…the Buyer paid in full for a custom sofa set which was never delivered…”",
-      citation: "Sale Agreement.pdf, page 2",
-      suggestion: "Contract for Sale of Goods"
-    },
-    claimAmount: {
-      label: "Amount claimed (SGD)",
-      // No excerpt/citation/suggestion here on purpose: hasInsufficientInfo is a
-      // reusable flag any question's entry could set, meaning the mocked
-      // document-analysis backend couldn't find enough information to suggest a
-      // value. Wired up only for this question for the demo; openFieldHelp()
-      // branches on this flag generically, not on the field key.
-      hasInsufficientInfo: true
-    },
-    claimDate: {
-      label: "Date the dispute arose",
-      excerpt: "“Agreed delivery date: 26 Jan 2025. As of this letter, no delivery has been made.”",
-      citation: "Demand Letter.pdf, page 1",
-      suggestion: "2025-01-26"
-    },
-    claimStatement: {
-      label: "Brief statement of claim",
-      excerpt: "“Despite full payment on 12 Jan 2025, the Respondent has failed to deliver the goods or provide a refund after repeated requests.”",
-      citation: "Demand Letter.pdf, page 1",
-      suggestion: "I paid Bright Home Furnishings Pte Ltd $4,500 in full on 12 Jan 2025 for a custom sofa set. The agreed delivery date of 26 Jan 2025 passed with no delivery, and the respondent has not refunded my payment despite my demand letter dated 2 Feb 2025."
-    }
+  const FIELD_LABELS = {
+    claimantName: "Your full name (Claimant)",
+    claimantId: "Your NRIC / FIN",
+    claimantEmail: "Your email address (for court service notices)",
+    respondentName: "Respondent's full name or business name",
+    respondentAddress: "Respondent's address for service",
+    claimNature: "Nature of claim",
+    claimAmount: "Amount claimed (SGD)",
+    claimDate: "Date the dispute arose",
+    claimStatement: "Brief statement of claim"
   };
 
+  const API_BASE = (window.CLAIMREADY_API_BASE || "/api").replace(/\/+$/, "");
+
+  const esc = (value) =>
+    String(value ?? "").replace(/[&<>"']/g, (ch) => {
+      const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+      return map[ch];
+    });
+
+  let analysisPayload = { field_help: {}, documents: [] };
+
+  function storeAnalysis(payload) {
+    const p = payload || {};
+    analysisPayload = {
+      field_help: p.field_help || {},
+      documents: p.documents || []
+    };
+  }
+
+  function prefillFromPayload() {
+    // Fills only fields that are still empty, using suggestions the extractor
+    // marked as available. Never overwrites something the user typed.
+    Object.keys(analysisPayload.field_help || {}).forEach((key) => {
+      const entry = analysisPayload.field_help[key];
+      if (!entry || !entry.available || !entry.suggestion) return;
+      const field = document.getElementById("field-" + key);
+      if (field && field.value.trim() === "") {
+        field.value = entry.suggestion;
+        field.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    });
+  }
+
+  async function apiFetch(path, options) {
+    let response;
+    try {
+      response = await fetch(`${API_BASE}${path}`, options);
+    } catch (_err) {
+      throw new Error("Cannot reach the assistant service. Check that the app is running, then try again.");
+    }
+    if (!response.ok) {
+      let message = `Request failed (${response.status}).`;
+      try {
+        const body = await response.json();
+        const detail = body && body.detail;
+        if (typeof detail === "string") message = detail;
+        else if (detail && detail.message) message = detail.message;
+      } catch (_err) {
+        /* keep the status-based message */
+      }
+      throw new Error(message);
+    }
+    return response;
+  }
+
+  function showTextModal(title, bodyHtml) {
+    modalTitle.textContent = title;
+    modalBody.innerHTML = bodyHtml;
+    lastFocused = document.activeElement;
+    backdrop.classList.remove("hidden");
+    document.getElementById("modal-close").focus();
+  }
+
   function openFieldHelp(fieldKey) {
-    const help = FIELD_HELP[fieldKey];
-    if (!help) return;
-    modalTitle.textContent = "Help: " + help.label;
-    if (help.hasInsufficientInfo) {
-      // Reassuring alternate state: the mocked document-analysis backend has
-      // nothing precise to offer for this question. Deliberately no error
-      // styling/icon and no "Use this suggestion" button — this is a normal,
-      // expected outcome, not a failure, and the user is free to answer from
-      // their own knowledge.
+    const entry = (analysisPayload.field_help || {})[fieldKey];
+    const label = (entry && entry.label) || FIELD_LABELS[fieldKey] || fieldKey;
+    modalTitle.textContent = "Help: " + label;
+    if (!entry || !entry.available || !entry.suggestion) {
+      // Honest empty state: no fabricated excerpts or citations.
       modalBody.innerHTML =
         '<div class="space-y-space-sm">' +
         '<div class="flex items-start gap-space-sm">' +
         '<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5">search_off</span>' +
-        '<p class="font-body-md text-body-md text-on-surface">We couldn’t find enough information in your uploaded documents to suggest a precise value for this question. That’s completely normal — not every document set will cover every field.</p>' +
+        '<p class="font-body-md text-body-md text-on-surface">No suggestion is available for this question yet. Describe what happened or attach documents in the ClaimReady assistant to get a suggested value.</p>' +
         '</div>' +
         '<p class="font-body-md text-body-md text-on-surface-variant">You’re welcome to answer this one using your own knowledge of the situation.</p>' +
-        '<p class="font-body-sm text-body-sm text-secondary">Mocked output — a real document-analysis backend may find this elsewhere; always double-check against your own records.</p>' +
         '</div>';
-    } else {
-      modalBody.innerHTML =
-        '<div class="space-y-space-sm">' +
-        '<div><span class="font-label-sm text-label-sm text-secondary uppercase">From your uploaded documents (mocked)</span>' +
-        '<p class="font-body-md text-body-md text-on-surface italic mt-space-2xs">' + help.excerpt + '</p></div>' +
-        '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Citation</span>' +
-        '<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + help.citation + '</p></div>' +
-        '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Suggested value</span>' +
-        '<p class="font-body-md text-body-md text-primary font-semibold mt-space-2xs">' + help.suggestion + '</p></div>' +
-        '<button type="button" class="w-full mt-space-xs px-space-md py-space-xs bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors" id="pf-use-suggestion" data-field="' + fieldKey + '">Use this suggestion</button>' +
-        '<p class="font-body-sm text-body-sm text-secondary">Mocked output — always fact-check against your real documents and the official form instructions before relying on it.</p>' +
-        '</div>';
+      lastFocused = document.activeElement;
+      backdrop.classList.remove("hidden");
+      document.getElementById("modal-close").focus();
+      return;
     }
-    lastFocused = document.activeElement;
-    backdrop.classList.remove("hidden");
-    document.getElementById("modal-close").focus();
+
+    const explanation = esc(entry.explanation || entry.why_this_helps || "");
+    const source = esc(entry.source || "Suggested by the ClaimReady assistant");
+    const bodyHtml =
+      '<div class="space-y-space-sm">' +
+      (explanation ? '<p class="font-body-md text-body-md text-on-surface">' + explanation + '</p>' : "") +
+      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Suggested value</span>' +
+      '<p class="font-body-md text-body-md text-primary font-semibold mt-space-2xs">' + esc(entry.suggestion) + '</p></div>' +
+      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Source</span>' +
+      '<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + source + '</p></div>' +
+      '<button type="button" class="w-full mt-space-xs px-space-md py-space-xs bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors" id="pf-use-suggestion" data-field="' + fieldKey + '">Use this suggestion</button>' +
+      '<p class="font-body-sm text-body-sm text-secondary">Always fact-check against your real documents and the official form instructions before relying on it.</p>' +
+      '</div>';
+    showTextModal("Help: " + label, bodyHtml);
   }
 
   document.querySelectorAll(".field-info-btn").forEach((btn) => {
@@ -686,22 +731,31 @@ tailwind.config = {
     const useBtn = e.target.closest("#pf-use-suggestion");
     if (!useBtn) return;
     const field = document.getElementById("field-" + useBtn.dataset.field);
-    const help = FIELD_HELP[useBtn.dataset.field];
-    if (field && help) {
-      field.value = help.suggestion;
+    const entry = (analysisPayload.field_help || {})[useBtn.dataset.field];
+    if (field && entry && entry.available && entry.suggestion) {
+      field.value = entry.suggestion;
       field.dispatchEvent(new Event("input", { bubbles: true }));
     }
     closeModal();
   });
 
   /* ------------------------------------------------------------------
-   * Pre-filing form (Page 2): progress tracking + submit.
-   * "Complete" is judged by best-guess validation for a prototype: every
-   * field must simply be non-empty (no format/regex checks).
+   * Pre-filing form (Page 2): progress tracking + real submit flow.
+   * Submit validates against the backend (POST /api/validate-claim), shows
+   * an amber advisory when the statement trips the hostile-tone check, and
+   * only then generates and downloads the pre-filing PDF
+   * (POST /api/generate-pdf), navigating to Page 3 with the server-generated
+   * reference number.
    * ------------------------------------------------------------------ */
   const pfFields = document.querySelectorAll(".pf-field");
   const pfProgress = document.getElementById("pf-progress");
   const pfSubmitBtn = document.getElementById("pf-submit-btn");
+  const pfSubmitLabel = document.getElementById("pf-submit-btn-label");
+  const pfSubmitIcon = document.getElementById("pf-submit-btn-icon");
+  const toneAdvisory = document.getElementById("tone-advisory");
+  const toneContent = document.getElementById("tone-advisory-content");
+  let pendingPdfPayload = null;
+  let pendingToneData = null;
 
   function updatePfProgress() {
     const total = pfFields.length;
@@ -717,16 +771,162 @@ tailwind.config = {
   });
   updatePfProgress();
 
-  pfSubmitBtn.addEventListener("click", () => {
-    const label = document.getElementById("pf-submit-btn-label");
-    const icon = document.getElementById("pf-submit-btn-icon");
-    pfSubmitBtn.disabled = true;
-    label.textContent = "Submitting…";
-    icon.textContent = "progress_activity";
-    icon.classList.add("animate-spin");
-    // Mocked latency only — no real submission happens; a production build
-    // would POST the form here and only navigate on a successful response.
-    window.setTimeout(() => showPage("after-filing"), 900);
+  function setBusy(busy, label) {
+    pfSubmitBtn.disabled = busy;
+    pfSubmitLabel.textContent = label || (busy ? "Working…" : "Submit");
+    if (busy) {
+      pfSubmitIcon.textContent = "progress_activity";
+      pfSubmitIcon.classList.add("animate-spin");
+    } else {
+      pfSubmitIcon.textContent = "arrow_forward";
+      pfSubmitIcon.classList.remove("animate-spin");
+    }
+  }
+
+  function readFormPayload() {
+    const value = (id) => {
+      const el = document.getElementById("field-" + id);
+      return el ? (el.value || "").trim() : "";
+    };
+    return {
+      claimant_name: value("claimantName"),
+      claimant_nric: value("claimantId").toUpperCase(),
+      claimant_email: value("claimantEmail"),
+      respondent_name: value("respondentName"),
+      respondent_address: value("respondentAddress"),
+      nature_of_dispute: value("claimNature"),
+      claim_amount: value("claimAmount"),
+      date_of_cause_of_action: value("claimDate"),
+      particulars: value("claimStatement")
+    };
+  }
+
+  function downloadPdfBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename || "SCT_PreFiling_Claim.pdf";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+  async function generateAndFinish(payload) {
+    const response = await apiFetch("/generate-pdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const blob = await response.blob();
+    const ref = response.headers.get("X-Reference-Number") || "";
+    const disposition = response.headers.get("Content-Disposition") || "";
+    const filenameMatch = disposition.match(/filename="?([^"]+)"?/i);
+    downloadPdfBlob(blob, filenameMatch ? filenameMatch[1] : null);
+    pendingReference = ref;
+    afRefRendered = false;
+    setBusy(false);
+    showPage("after-filing");
+  }
+
+  async function submitClaim(payload) {
+    setBusy(true, "Checking your form…");
+    try {
+      const validation = await apiFetch("/validate-claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).then((res) => res.json());
+
+      if (!validation.valid) {
+        setBusy(false);
+        const errors = validation.errors || {};
+        const keys = Object.keys(errors);
+        const rows = keys
+          .map((key) => {
+            const label = FIELD_LABELS[key] || key;
+            return '<li class="font-body-sm text-body-sm text-on-surface">' + esc(label) + ': ' + esc(errors[key]) + "</li>";
+          })
+          .join("");
+        showTextModal(
+          "Please review the form",
+          '<p class="font-body-md text-body-md text-on-surface-variant mb-space-xs">The following fields need your attention before a PDF can be generated:</p><ul class="list-disc list-inside space-y-space-2xs">' + rows + "</ul>"
+        );
+        return;
+      }
+
+      const tone = validation.tone;
+      if (tone && tone.flagged) {
+        pendingPdfPayload = payload;
+        pendingToneData = tone;
+        setBusy(false);
+        pfSubmitBtn.disabled = true;
+        const snippet = tone.flagged_snippet ? "<p>Detected: “" + esc(tone.flagged_snippet) + "”</p>" : "";
+        toneContent.innerHTML =
+          '<p class="font-label-md text-label-md font-semibold text-amber-900">Your statement may read as hostile or escalating.</p>' +
+          snippet +
+          '<p class="font-body-sm text-body-sm text-amber-900">Courts expect measured, factual wording. You can revise your statement and resubmit, or continue anyway.' +
+          (tone.suggested_clean_rewrite
+            ? ' <button type="button" class="underline hover:no-underline text-amber-900 font-semibold" id="tone-rewrite-btn">Use the suggested wording</button>.'
+            : "") +
+          "</p>";
+        toneAdvisory.classList.remove("hidden");
+        toneAdvisory.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      await generateAndFinish(payload);
+    } catch (error) {
+      setBusy(false);
+      showTextModal(
+        "Unable to submit",
+        '<p class="font-body-md text-body-md text-on-surface">' + esc(error && error.message ? error.message : "Something went wrong. Please try again.") + "</p>"
+      );
+    }
+  }
+
+  pfSubmitBtn.addEventListener("click", () => submitClaim(readFormPayload()));
+
+  document.getElementById("tone-revise-btn").addEventListener("click", () => {
+    toneAdvisory.classList.add("hidden");
+    pendingPdfPayload = null;
+    pendingToneData = null;
+    pfSubmitBtn.disabled = false;
+    document.getElementById("field-claimStatement").focus();
+  });
+
+  document.getElementById("tone-continue-btn").addEventListener("click", async () => {
+    toneAdvisory.classList.add("hidden");
+    pendingToneData = null;
+    const payload = pendingPdfPayload;
+    pendingPdfPayload = null;
+    if (payload) {
+      setBusy(true, "Generating your PDF…");
+      try {
+        await generateAndFinish(payload);
+      } catch (error) {
+        setBusy(false);
+        showTextModal(
+          "Unable to generate PDF",
+          '<p class="font-body-md text-body-md text-on-surface">' + esc(error && error.message ? error.message : "Something went wrong. Please try again.") + "</p>"
+        );
+      }
+    }
+  });
+
+  toneContent.addEventListener("click", (e) => {
+    const rewriteBtn = e.target.closest("#tone-rewrite-btn");
+    if (!rewriteBtn) return;
+    const statement = document.getElementById("field-claimStatement");
+    if (statement && pendingToneData) {
+      statement.value = pendingToneData.suggested_clean_rewrite || "";
+      statement.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    toneAdvisory.classList.add("hidden");
+    pendingToneData = null;
+    pendingPdfPayload = null;
+    pfSubmitBtn.disabled = false;
+    statement.focus();
   });
 
   /* ------------------------------------------------------------------
@@ -766,28 +966,34 @@ tailwind.config = {
 
   // Dispatched by the widget's "upload" mode when the visitor taps "Continue
   // to questionnaire" — restores whatever was saved before they went to add
-  // more documents, then hands the widget back its normal Page 2 "hidden"
-  // context. Mirrors how "claimready:route-complete" hands off the other way.
-  window.addEventListener("claimready:resume-to-form", () => {
+  // more documents, merges any fresh extraction payload, then hands the widget
+  // back its normal Page 2 "hidden" context.
+  window.addEventListener("claimready:resume-to-form", (event) => {
     if (savedFormAnswers) {
       pfFields.forEach((f) => {
         const key = fieldKeyOf(f);
         if (key in savedFormAnswers) f.value = savedFormAnswers[key];
       });
-      updatePfProgress();
     }
+    storeAnalysis((event && event.detail) || null);
+    prefillFromPayload();
+    updatePfProgress();
     if (window.ClaimReadyOverlay) window.ClaimReadyOverlay.setContext("hidden");
   });
 
   /* ------------------------------------------------------------------
-   * After-filing view (Page 3): mocked reference number + reopen widget.
+   * After-filing view (Page 3): server-generated reference + reopen widget.
+   * The reference comes from the X-Reference-Number header on the PDF
+   * response; if the page is reached without a submission it shows a
+   * fallback marker instead of a fake number.
    * ------------------------------------------------------------------ */
+  let pendingReference = "";
   let afRefRendered = false;
   function renderAfterFilingRef() {
     if (afRefRendered) return;
     afRefRendered = true;
-    const refNum = Math.floor(1000 + Math.random() * 9000);
-    document.getElementById("af-ref-number").textContent = "CLAIMREADY-DEMO-" + refNum;
+    const ref = pendingReference || "not-generated";
+    document.getElementById("af-ref-number").textContent = ref;
   }
   document.getElementById("af-open-guide-btn").addEventListener("click", () => {
     if (window.ClaimReadyOverlay) window.ClaimReadyOverlay.open();

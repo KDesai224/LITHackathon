@@ -30,9 +30,10 @@
  * host page decide what belongs on screen.
  *
  * All interactions below are wired to real, working state – nothing here
- * is a decorative dead end. The backend (document scanning, real route
- * classification, account state, etc.) is intentionally out of scope;
- * every place that would need it is clearly labelled as mocked/illustrative.
+ * is a decorative dead end. The "approximate my route" and "add documents"
+ * flows call the ClaimReady FastAPI backend on the same origin
+ * (POST /api/extract-fields, /api/extract-document) and hand the extracted
+ * field_help/documents back to the host page as event payloads.
  * -----------------------------------------------------------------------
  */
 (() => {
@@ -345,14 +346,86 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
       mode: "route", // "route" | "after" | "upload" — set by the host page via setContext(), not user-switchable
       step: "start", // route: "start" -> "approximate"
       incidentText: "",
-      files: [], // [{id, name}] — mocked, no real upload/parsing happens here
+      files: [], // [{id, name, file}] — real File objects picked from <input type="file">
       approxStatus: "idle", // "idle" | "connecting" | "done"
       approxError: "",
+      analysis: null, // latest {field_help, documents} from the backend (null = none yet)
+      dirty: false, // inputs changed since the last successful analysis
       checks: [false, false, false], // after-filing task checklist
     };
   }
   let state = defaultState();
   let nextFileId = 1;
+
+  /* ---------------------------------------------------------------------
+   * Backend client
+   * ------------------------------------------------------------------- */
+  const API_BASE = (window.CLAIMREADY_API_BASE || "/api").replace(/\/+$/, "");
+
+  // UI labels of the four dispute categories the SCT handles (matching the
+  // backend's _UI_NATURES mapping used for field_help.claimNature.suggestion).
+  const SCT_NATURES = new Set([
+    "Contract for Sale of Goods",
+    "Contract for Provision of Services",
+    "Damage to Property",
+    "Tenancy / Residential Lease",
+  ]);
+
+  const esc = (value) =>
+    String(value ?? "").replace(/[&<>"']/g, (ch) => {
+      const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+      return map[ch];
+    });
+
+  async function apiFetch(path, options) {
+    let response;
+    try {
+      response = await fetch(`${API_BASE}${path}`, options);
+    } catch (_err) {
+      throw new Error("Cannot reach the assistant service. Check that the app is running, then try again.");
+    }
+    if (!response.ok) {
+      let message = `Request failed (${response.status}).`;
+      try {
+        const body = await response.json();
+        const detail = body && body.detail;
+        if (typeof detail === "string") message = detail;
+        else if (detail && detail.message) message = detail.message;
+      } catch (_err) {
+        /* keep the status-based message */
+      }
+      throw new Error(message);
+    }
+    return response;
+  }
+
+  async function extractFields(text) {
+    const response = await apiFetch("/extract-fields", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    return response.json();
+  }
+
+  async function extractDocument(files, text) {
+    const formData = new FormData();
+    files.forEach((entry) => formData.append("files", entry.file, entry.name));
+    if (text && text.trim()) formData.append("text", text);
+    const response = await apiFetch("/extract-document", { method: "POST", body: formData });
+    return response.json();
+  }
+
+  async function analyse(text) {
+    // Runs field extraction over typed text and/or uploaded documents and
+    // stores the result on state.analysis.
+    const trimmed = text ? text.trim() : "";
+    if (state.files.length === 0) {
+      return extractFields(trimmed);
+    }
+    return extractDocument(state.files, trimmed);
+  }
+
 
   /* ---------------------------------------------------------------------
    * Small HTML builder helpers
@@ -380,8 +453,30 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
   let root, screen;
 
   function renderApproxDone() {
+    const fieldHelp = (state.analysis && state.analysis.field_help) || {};
+    const entry = (key) => fieldHelp[key] || {};
+    const nature = entry("claimNature").available ? entry("claimNature").suggestion : "";
+    const detected = [];
+    const addDetected = (key) => {
+      const e = entry(key);
+      if (e.available && e.suggestion) detected.push(esc(e.suggestion));
+    };
+    addDetected("claimantName");
+    addDetected("respondentName");
+    addDetected("claimAmount");
+    addDetected("claimDate");
+
+    const readout = nature
+      ? SCT_NATURES.has(nature)
+        ? `Based on what you described, this may be a <strong>${esc(nature)}</strong> dispute, which is usually handled by the Small Claims Tribunal (SCT).`
+        : `Based on what you described, this may be a <strong>${esc(nature)}</strong> dispute. Double-check whether it falls under the Small Claims Tribunal's jurisdiction.`
+      : "We could not confidently identify a dispute category yet. You can still continue to the form and review the suggestions for each field.";
+    const spotted = detected.length
+      ? `<p class="cr-copy">We also spotted: ${detected.join(" · ")}.</p>`
+      : "";
+
     return (
-      `<div class="cr-note"><strong>Approximate suggestion (mocked)</strong><p>Based on what you described, this may resemble a contract or purchase-related dispute, often handled by the Small Claims Tribunal (SCT). No real analysis has run — this is placeholder output for the prototype.</p></div>` +
+      `<div class="cr-note"><strong>Suggestion</strong><p>${readout}</p>${spotted}</div>` +
       `<div class="cr-warning"><strong>Always double-check this.</strong><p>This is only a suggestion, not a legal determination. Verify it against the official eligibility rules and your own documents before relying on it.</p>${link(
         "eligibility",
         "Check official eligibility rules"
@@ -437,7 +532,10 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
         (state.files.length
           ? `<ul class="cr-list">${state.files.map((f) => `<li>${f.name}</li>`).join("")}</ul>`
           : `<p class="cr-copy">No documents attached yet.</p>`) +
-        `<button type="button" class="cr-btn cr-primary" data-action="resume-to-form">Continue to questionnaire &rarr;</button>`;
+        (state.approxError
+          ? `<p class="cr-status" style="color:var(--cr-error)">${esc(state.approxError)}</p>`
+          : "") +
+        `<button type="button" class="cr-btn cr-primary" id="cr-resume-btn" data-action="resume-to-form">Continue to questionnaire &rarr;</button>`;
     } else if (state.step === "approximate") {
       const showForm = state.approxStatus !== "done";
       html =
@@ -495,6 +593,7 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
     if (textarea) {
       textarea.addEventListener("input", () => {
         state.incidentText = textarea.value;
+        state.dirty = true;
       });
     }
     const attachBtn = screen.querySelector("#cr-attach-btn");
@@ -502,7 +601,10 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
     if (attachBtn && fileInput) {
       attachBtn.addEventListener("click", () => fileInput.click());
       fileInput.addEventListener("change", () => {
-        Array.from(fileInput.files).forEach((f) => state.files.push({ id: nextFileId++, name: f.name }));
+        Array.from(fileInput.files).forEach((f) =>
+          state.files.push({ id: nextFileId++, name: f.name, file: f })
+        );
+        state.dirty = true;
         fileInput.value = "";
         render();
       });
@@ -584,25 +686,63 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
         state.approxError = "";
         state.approxStatus = "connecting";
         render();
-        // Mocked network delay standing in for a real assistant call.
-        window.setTimeout(() => {
-          state.approxStatus = "done";
+        (async () => {
+          try {
+            state.analysis = await analyse(state.incidentText);
+            state.dirty = false;
+            state.approxStatus = "done";
+          } catch (error) {
+            state.approxStatus = "idle";
+            state.approxError = error && error.message ? error.message : "Something went wrong. Please try again.";
+          }
           render();
-        }, 1200);
+        })();
         return;
       }
       if (action === "continue-to-form") {
         // Generic event rather than a direct navigation call, so this
         // widget file stays reusable across different host pages.
-        window.dispatchEvent(new CustomEvent("claimready:route-complete"));
+        const payload = {
+          field_help: (state.analysis && state.analysis.field_help) || {},
+          documents: (state.analysis && state.analysis.documents) || [],
+        };
+        window.dispatchEvent(new CustomEvent("claimready:route-complete", { detail: payload }));
         close();
         return;
       }
       if (action === "resume-to-form") {
         // Same generic-event pattern as "continue-to-form" above — lets
-        // Page 2 restore its saved answers and re-hide this widget.
-        window.dispatchEvent(new CustomEvent("claimready:resume-to-form"));
-        close();
+        // Page 2 restore its saved answers and re-hide this widget. When
+        // new documents were attached since the last analysis, re-run the
+        // extraction first so the payload is fresh.
+        const shouldAnalyse = state.files.length > 0 && (!state.analysis || state.dirty);
+        const finish = () => {
+          const payload = {
+            field_help: (state.analysis && state.analysis.field_help) || {},
+            documents: (state.analysis && state.analysis.documents) || [],
+          };
+          window.dispatchEvent(new CustomEvent("claimready:resume-to-form", { detail: payload }));
+          close();
+        };
+        if (!shouldAnalyse) {
+          finish();
+          return;
+        }
+        const resumeButton = root.querySelector("#cr-resume-btn");
+        if (resumeButton) {
+          resumeButton.disabled = true;
+          resumeButton.textContent = "Analysing documents…";
+        }
+        (async () => {
+          try {
+            state.analysis = await analyse("");
+            state.dirty = false;
+            finish();
+          } catch (error) {
+            state.approxError = error && error.message ? error.message : "Something went wrong analysing your documents.";
+            render();
+          }
+        })();
         return;
       }
       const value = button.dataset.choice;
