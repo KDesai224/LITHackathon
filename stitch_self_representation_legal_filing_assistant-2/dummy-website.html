@@ -2036,7 +2036,11 @@ tailwind.config = {
 })();
 </script>
 
-<!-- ClaimReady overlay: independent floating guide, drops onto any page. -->
-<script src="claimready-overlay.js" defer></script>
+<!-- ClaimReady overlay: independent floating guide, drops onto any page.
+     "?v=" is a cache-buster — bump it whenever claimready-overlay.js changes, so a
+     plain reload can't accidentally keep running an older copy of the widget already
+     sitting in the browser's cache (a stale copy falls back to its old default
+     "route" mode for any context string it doesn't recognize, e.g. "dashboard"). -->
+<script src="claimready-overlay.js?v=2" defer></script>
 </body>
 </html>
