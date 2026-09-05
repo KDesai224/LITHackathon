@@ -19,6 +19,9 @@ Env / .env configuration:
     OPENAI_BASE_URL   (default https://api.openai.com/v1)
     OPENAI_API_KEY    (required at call time)
     OPENAI_MODEL      (default gpt-4o-mini)
+    OPENAI_CHAT_EXTRA_BODY  (optional JSON object merged into the request body;
+                             e.g. DeepSeek needs {"thinking":{"type":"disabled"}}
+                             so the forced tool_choice is accepted)
 
 Running ``python field_extractor.py`` runs a stub-session self-test only (no
 network).  It never makes a live call unless a caller invokes ``extract_fields``
@@ -34,6 +37,7 @@ from __future__ import annotations
 import json
 import os
 from typing import Any, cast
+from urllib.parse import urlparse
 
 import requests
 from dotenv import load_dotenv
@@ -52,6 +56,11 @@ DEFAULT_BASE_URL = "https://api.openai.com/v1"
 DEFAULT_MODEL = "gpt-4o-mini"
 TOOL_NAME = "submit_sct_fields"
 REQUEST_TIMEOUT_SECONDS = 60
+
+#: Fields the module owns; OPENAI_CHAT_EXTRA_BODY must never override these.
+RESERVED_CHAT_FIELDS = frozenset(
+    {"model", "messages", "tools", "tool_choice", "temperature"}
+)
 
 EXPECTED_KEYS: tuple[str, ...] = (
     "claimant_name",
@@ -186,6 +195,56 @@ def _build_tool_schema() -> dict[str, Any]:
 # --------------------------------------------------------------------------- #
 
 
+def _parse_extra_chat_body(raw: str | None) -> dict[str, Any]:
+    """Parse the ``OPENAI_CHAT_EXTRA_BODY`` env value into a JSON object."""
+    if raw is None:
+        return {}
+    try:
+        body = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise FieldExtractionError(
+            f"OPENAI_CHAT_EXTRA_BODY was not valid JSON: {raw[:200]!r}"
+        ) from exc
+    if not isinstance(body, dict):
+        raise FieldExtractionError(
+            "OPENAI_CHAT_EXTRA_BODY must be a JSON object, got "
+            f"{type(body).__name__}."
+        )
+    return body
+
+
+def _merge_extra_chat_body(
+    payload: dict[str, Any], extra: dict[str, Any]
+) -> dict[str, Any]:
+    """Merge provider-specific extra body fields; reserved fields are protected."""
+    collisions = sorted(RESERVED_CHAT_FIELDS & extra.keys())
+    if collisions:
+        raise FieldExtractionError(
+            "OPENAI_CHAT_EXTRA_BODY may not override reserved fields: "
+            + ", ".join(collisions)
+            + "."
+        )
+    merged = dict(payload)
+    merged.update(extra)
+    return merged
+
+
+def _effective_extra_body(
+    base_url: str, configured: dict[str, Any] | None
+) -> dict[str, Any]:
+    """Provider defaults on top of any explicitly configured extra body.
+
+    DeepSeek ships with thinking mode enabled, which rejects a forced
+    ``tool_choice``; unless the caller already chose a ``thinking`` mode, it is
+    disabled so the single forced tool call is accepted.
+    """
+    extra = dict(configured) if configured else {}
+    host = urlparse(base_url).netloc.lower()
+    if "deepseek" in host and "thinking" not in extra:
+        extra["thinking"] = {"type": "disabled"}
+    return extra
+
+
 def _post_chat_completions(
     session: Any,
     base_url: str,
@@ -194,16 +253,23 @@ def _post_chat_completions(
     prompt: list[dict[str, str]],
     tools: list[dict[str, Any]],
     tool_choice: str,
+    extra_body: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """POST a tool-forced chat-completions request and return the JSON body."""
+    """POST a tool-forced chat-completions request and return the JSON body.
+
+    ``extra_body`` carries optional OpenAI-compatible request-body knobs (for
+    example ``{"thinking": {"type": "disabled"}}`` on DeepSeek, which must have
+    thinking disabled before a forced ``tool_choice`` is accepted).
+    """
     url = base_url.rstrip("/") + "/chat/completions"
-    payload = {
+    base_payload = {
         "model": model,
         "messages": prompt,
         "tools": tools,
         "tool_choice": {"type": "function", "function": {"name": tool_choice}},
         "temperature": 0,
     }
+    payload = _merge_extra_chat_body(base_payload, extra_body or {})
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
@@ -318,11 +384,16 @@ def openai_compatible_extract(
     api_key: str,
     model: str,
     session: requests.Session | None = None,
+    extra_body: dict[str, Any] | None = None,
 ) -> dict[str, str]:
     """Run one forced-tool extraction against an OpenAI-compatible endpoint.
 
     ``session`` is an optional injected ``requests.Session`` (unit tests may
     substitute a stub; future chunking/embedding code can share one transport).
+    ``extra_body`` optionally adds provider-specific request-body knobs (e.g.
+    disabling DeepSeek thinking so the forced ``tool_choice`` is accepted).
+    For DeepSeek endpoints thinking is disabled automatically unless
+    ``extra_body`` already sets a ``thinking`` mode.
     """
     if not text or not text.strip():
         raise ValueError("upload text contained no non-blank content")
@@ -336,6 +407,7 @@ def openai_compatible_extract(
         prompt=_prompt(text),
         tools=[_build_tool_schema()],
         tool_choice=TOOL_NAME,
+        extra_body=_effective_extra_body(base_url, extra_body),
     )
     return _parse_tool_result(response_json)
 
@@ -355,8 +427,13 @@ def extract_fields(text: str) -> dict[str, str]:
         )
     base_url = os.environ.get("OPENAI_BASE_URL", DEFAULT_BASE_URL)
     model = os.environ.get("OPENAI_MODEL", DEFAULT_MODEL)
+    extra_body = _parse_extra_chat_body(os.environ.get("OPENAI_CHAT_EXTRA_BODY"))
     return openai_compatible_extract(
-        text, base_url=base_url, api_key=api_key, model=model
+        text,
+        base_url=base_url,
+        api_key=api_key,
+        model=model,
+        extra_body=extra_body,
     )
 
 
@@ -525,6 +602,71 @@ def _run_smoke_test() -> None:
         ),
         "HTTP 400",
     )
+
+    # ---- Provider extra body (e.g. DeepSeek: disable thinking for forced tool_choice)
+    extra_session = _StubSession(_completion(_tool_message(_sample_arguments())))
+    openai_compatible_extract(
+        SAMPLE_DOCUMENT,
+        base_url=base_url,
+        api_key=api_key,
+        model="stub-model",
+        session=cast(requests.Session, extra_session),
+        extra_body={"thinking": {"type": "disabled"}},
+    )
+    sent = extra_session.request["json"]
+    assert sent["thinking"] == {"type": "disabled"}
+    assert sent["tool_choice"]["function"]["name"] == TOOL_NAME
+    print("  ok (extra body): provider knobs merged into the chat payload")
+
+    _expect_raises(
+        FieldExtractionError,
+        lambda: openai_compatible_extract(
+            SAMPLE_DOCUMENT,
+            base_url=base_url,
+            api_key=api_key,
+            model="stub-model",
+            session=cast(
+                requests.Session,
+                _StubSession(_completion(_tool_message(_sample_arguments()))),
+            ),
+            extra_body={"model": "hijacked"},
+        ),
+        "reserved extra-body field",
+    )
+    _expect_raises(
+        FieldExtractionError,
+        lambda: _parse_extra_chat_body("{not json"),
+        "malformed OPENAI_CHAT_EXTRA_BODY",
+    )
+    _expect_raises(
+        FieldExtractionError,
+        lambda: _parse_extra_chat_body("[1, 2]"),
+        "non-object OPENAI_CHAT_EXTRA_BODY",
+    )
+
+    # ---- DeepSeek auto-defaults: thinking disabled unless already chosen ----- #
+    deepseek_session = _StubSession(_completion(_tool_message(_sample_arguments())))
+    openai_compatible_extract(
+        SAMPLE_DOCUMENT,
+        base_url="https://api.deepseek.com",
+        api_key=api_key,
+        model="stub-model",
+        session=cast(requests.Session, deepseek_session),
+    )
+    assert deepseek_session.request["json"]["thinking"] == {"type": "disabled"}
+    print("  ok (deepseek default): thinking auto-disabled for tool_choice")
+
+    override_session = _StubSession(_completion(_tool_message(_sample_arguments())))
+    openai_compatible_extract(
+        SAMPLE_DOCUMENT,
+        base_url="https://api.deepseek.com",
+        api_key=api_key,
+        model="stub-model",
+        session=cast(requests.Session, override_session),
+        extra_body={"thinking": {"type": "enabled"}},
+    )
+    assert override_session.request["json"]["thinking"] == {"type": "enabled"}
+    print("  ok (deepseek override): explicit thinking mode is respected")
 
 
 def main() -> int:
