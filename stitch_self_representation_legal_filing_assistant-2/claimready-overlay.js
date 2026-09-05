@@ -10,17 +10,21 @@
  * maroon primary, slate neutrals, Public Sans, soft 4px corners, minimal
  * shadows, ghost-border elevation.
  *
- * This build supports exactly two content modes, and does not expose a
+ * This build supports three content modes, and does not expose a
  * tab switcher to the visitor any more:
  *   - "route" — the simplified "Find my route" flow (a single "approximate
  *     my route" option, since every other route option was removed).
  *   - "after" — the "After filing" checklist.
+ *   - "upload" — an in-widget "add more documents" panel, reached from
+ *     Page 2's own "Add more documents" button. It reuses this widget's
+ *     existing state.files (attached earlier via "approximate my route"),
+ *     so it never resets on entry — see setContext() below.
  * "Form help" is no longer part of this widget: it moved into Page 2's own
  * inline (i) reference icons, built directly into dummy-website.html.
  *
  * Which mode is shown, and whether the widget appears at all, is decided
  * by the host page, not by the visitor: call
- *   window.ClaimReadyOverlay.setContext("route" | "after" | "hidden")
+ *   window.ClaimReadyOverlay.setContext("route" | "after" | "upload" | "hidden")
  * whenever the host page's own view changes (see dummy-website.html's
  * showPage()). This keeps the widget generic/reusable while letting each
  * host page decide what belongs on screen.
@@ -151,6 +155,12 @@
 .cr-brand span.cr-brand-sub { display: block; font-size: 12px; line-height: 18px; font-weight: 400; color: var(--cr-on-surface-variant); }
 .cr-brand-text { display: flex; flex-direction: column; }
 .cr-icon-badge { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 9999px; background: var(--cr-surface-container); color: var(--cr-primary); flex: none; }
+/* Header brand mark: the real logo already has its own maroon rounded-square
+   background baked in, so it skips the circular tint background above (that
+   would double up two clashing shapes/colors) but keeps the same 28x28
+   footprint, just with a couple of px of breathing room around the image. */
+.cr-icon-badge--logo { background: transparent; }
+.cr-icon-badge--logo img { display: block; width: 24px; height: 24px; border-radius: 6px; }
 #cr-close {
   flex: none;
   width: 28px; height: 28px;
@@ -308,7 +318,7 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
 <section id="cr-panel" role="dialog" aria-modal="false" aria-label="ClaimReady independent filing guide">
   <div class="cr-header">
     <div class="cr-brand">
-      <span class="cr-icon-badge">${svg("compass", 16)}</span>
+      <span class="cr-icon-badge cr-icon-badge--logo"><img src="assets/images/claimready-icon-mark.svg" alt="ClaimReady logo" width="24" height="24"></span>
       <span class="cr-brand-text">ClaimReady<span class="cr-brand-sub">Independent preparation guide</span></span>
     </div>
     <button type="button" id="cr-close" aria-label="Minimise guide">&#8722;</button>
@@ -332,7 +342,7 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
 
   function defaultState() {
     return {
-      mode: "route", // "route" | "after" — set by the host page via setContext(), not user-switchable
+      mode: "route", // "route" | "after" | "upload" — set by the host page via setContext(), not user-switchable
       step: "start", // route: "start" -> "approximate"
       incidentText: "",
       files: [], // [{id, name}] — mocked, no real upload/parsing happens here
@@ -382,7 +392,10 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
 
   function render() {
     const label = root.querySelector("#cr-context-label");
-    if (label) label.textContent = state.mode === "after" ? "After filing" : "Find my route";
+    if (label) {
+      label.textContent =
+        state.mode === "after" ? "After filing" : state.mode === "upload" ? "Add documents" : "Find my route";
+    }
 
     let html = "";
     if (state.mode === "after") {
@@ -410,6 +423,21 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
         } of 3 tasks marked done by you</p>` +
         `<details><summary>I could not deliver the documents</summary><p>Still attend the consultation. The registrar may give directions for another method of service.</p></details>` +
         link("filing", "Check service methods and requirements");
+    } else if (state.mode === "upload") {
+      html =
+        intro(
+          "ADD DOCUMENTS",
+          "Add more documents",
+          "Anything you attach here is in addition to what you already attached — nothing you attached earlier is removed or replaced."
+        ) +
+        `<div class="cr-upload-row"><button type="button" class="cr-btn" id="cr-attach-btn">${svg(
+          "upload",
+          16
+        )}<span>Attach documents</span></button><input type="file" id="cr-file-input" multiple style="display:none"></div>` +
+        (state.files.length
+          ? `<ul class="cr-list">${state.files.map((f) => `<li>${f.name}</li>`).join("")}</ul>`
+          : `<p class="cr-copy">No documents attached yet.</p>`) +
+        `<button type="button" class="cr-btn cr-primary" data-action="resume-to-form">Continue to questionnaire &rarr;</button>`;
     } else if (state.step === "approximate") {
       const showForm = state.approxStatus !== "done";
       html =
@@ -509,6 +537,12 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
       root.dataset.open = "false";
       launcher.setAttribute("aria-expanded", "false");
       launcher.focus();
+      // Page 2 has no visible launcher bubble for this widget (setContext
+      // sets root.style.display = "none" there) — so if the visitor closes
+      // the upload panel some way other than "Continue to questionnaire"
+      // (the X button, Escape), re-hide the root too, or the launcher would
+      // be left floating on Page 2 with nothing that reopens it.
+      if (state.mode === "upload") root.style.display = "none";
     }
 
     launcher.addEventListener("click", open);
@@ -518,6 +552,12 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
     });
 
     root.querySelector("#cr-reset").addEventListener("click", () => {
+      if (state.mode === "upload") {
+        // Resetting here would wipe state.files, which defeats the point of
+        // this panel (showing documents already attached). There's nothing
+        // else in upload mode to reset, so this is a no-op.
+        return;
+      }
       const preservedMode = state.mode;
       state = defaultState();
       state.mode = preservedMode;
@@ -558,6 +598,13 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
         close();
         return;
       }
+      if (action === "resume-to-form") {
+        // Same generic-event pattern as "continue-to-form" above — lets
+        // Page 2 restore its saved answers and re-hide this widget.
+        window.dispatchEvent(new CustomEvent("claimready:resume-to-form"));
+        close();
+        return;
+      }
       const value = button.dataset.choice;
       if (value === "approximate" && state.step === "start") {
         state.step = "approximate";
@@ -587,6 +634,14 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
           return;
         }
         root.style.display = "";
+        if (ctx === "upload") {
+          // Unlike "route"/"after", upload mode must NOT reset state — it
+          // needs to keep whatever is already in state.files from an
+          // earlier "approximate my route" visit.
+          state.mode = "upload";
+          render();
+          return;
+        }
         state = defaultState();
         state.mode = ctx === "after" ? "after" : "route";
         render();

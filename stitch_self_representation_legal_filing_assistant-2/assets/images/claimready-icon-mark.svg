@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="140" height="140">
+  <!-- Cropped from claimready-logo-lockup.svg's icon-mark group, so the header badge
+       and full lockup stay visually identical. -->
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6B2333"/>
+      <stop offset="100%" stop-color="#511A27"/>
+    </linearGradient>
+  </defs>
+  <rect x="10" y="10" width="120" height="120" rx="28" fill="url(#bg2)"/>
+  <circle cx="70" cy="70" r="35" fill="none" stroke="#FFFFFF" stroke-width="4"/>
+  <g stroke="#FFFFFF" stroke-width="3" stroke-linecap="round">
+    <line x1="70" y1="27" x2="70" y2="34"/>
+    <line x1="70" y1="106" x2="70" y2="113"/>
+    <line x1="27" y1="70" x2="34" y2="70"/>
+    <line x1="106" y1="70" x2="113" y2="70"/>
+  </g>
+  <path d="M88 48 L76 70 L52 92 L64 70 Z" fill="#C6634F"/>
+  <path d="M76 70 L88 48 L64 70 Z" fill="#D6A24C"/>
+  <circle cx="70" cy="70" r="4.5" fill="#FFFFFF"/>
+</svg>

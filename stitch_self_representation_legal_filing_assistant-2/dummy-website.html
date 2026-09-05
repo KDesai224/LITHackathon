@@ -83,7 +83,15 @@ tailwind.config = {
   </div>
   <header class="h-16 bg-surface-container-lowest border-b border-outline-variant/40">
     <div class="h-16 max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop flex items-center justify-between">
-      <div class="flex items-center gap-space-md">
+      <div class="flex items-center gap-space-sm md:gap-space-md">
+        <!-- Global back button: walks the client-side view-history stack maintained in
+             showPage() below, so any page reached during the demo (including Page 2/3,
+             which aren't in the top nav) can be backed out of. Hidden when there's
+             nowhere to go back to. -->
+        <button class="hidden flex items-center gap-space-2xs px-space-xs py-space-2xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors flex-shrink-0" id="global-back-btn" title="Back" type="button">
+          <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+          <span class="hidden md:inline font-label-md text-label-md">Back</span>
+        </button>
         <div class="flex flex-col">
           <span class="font-label-sm text-label-sm text-primary tracking-wider uppercase font-bold">Prototype</span>
           <span class="font-headline-md text-headline-md text-on-surface tracking-tight font-bold">CLAIMREADY DEMO</span>
@@ -117,256 +125,57 @@ tailwind.config = {
 <div class="flex flex-col w-full">
 
 <!-- ============================== ASSESSMENT VIEW ============================== -->
+<!-- ============================== ASSESSMENT VIEW ==============================
+     Intentionally blank prototype shell: this page's only job is to give the
+     ClaimReady widget (floating bottom-right) a realistic-looking host page to
+     sit on top of. The layout below only loosely echoes a typical government-
+     portal shell (thin utility banner, header with logo + nav, tinted hero
+     band) so the demo isn't a blank white screen — every label in it is a
+     generic placeholder. No real insignia, department names/logos, or the
+     real "Government Agency Website" assurance banner appear anywhere in this
+     file; see the honest, unofficial-prototype disclaimer banner above
+     (#chrome-fixed) for the real framing. Document upload now happens inside
+     the ClaimReady widget itself (see claimready-overlay.js's "upload" mode),
+     so this page no longer has its own upload bay, dispute selector, or
+     checklist. -->
 <div data-page="assessment">
-  <section class="w-full bg-surface-container-lowest shadow-sm">
-    <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop py-space-xl">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md">
-        <div class="flex flex-col max-w-3xl">
-          <div class="flex items-center gap-space-xs mb-space-2xs">
-            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary-container text-on-primary text-[11px] font-bold">CR</span>
-            <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider font-semibold">ClaimReady — Pre-Filing Assessment Demo</span>
-          </div>
-          <h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Pre-Filing Document Assessment &amp; Legal Assistant</h1>
-          <p class="font-body-lg text-body-lg text-secondary mt-space-2xs">Upload your dispute documents to automatically identify required court forms and procedural requirements. (Prototype only — nothing is actually processed or filed.)</p>
-        </div>
-        <div class="flex items-center gap-space-sm self-start md:self-center">
-          <div class="flex flex-col text-right">
-            <span class="font-label-sm text-label-sm text-secondary uppercase">Prototype Status</span>
-            <span class="font-label-md text-label-md text-on-surface font-bold">Unofficial Test Build</span>
-          </div>
-          <div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
-            <span class="material-symbols-outlined text-[24px]">gavel</span>
-          </div>
-        </div>
+  <div class="w-full bg-surface-container-low border-b border-outline-variant/40">
+    <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop py-1.5 flex items-center justify-between gap-space-md">
+      <span class="font-body-sm text-body-sm text-on-surface-variant">Placeholder Portal</span>
+      <div class="hidden sm:flex items-center gap-space-md">
+        <span class="font-body-sm text-body-sm text-on-surface-variant">Sample Link</span>
+        <span class="font-body-sm text-body-sm text-on-surface-variant">Sample Link</span>
       </div>
+    </div>
+  </div>
+
+  <div class="w-full bg-surface-container-lowest border-b border-outline-variant/40">
+    <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop h-16 flex items-center justify-between gap-space-md">
+      <div class="flex items-center gap-space-sm">
+        <div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-secondary flex-shrink-0">
+          <span class="material-symbols-outlined text-[18px]">public</span>
+        </div>
+        <span class="font-label-lg text-label-lg text-on-surface">Placeholder Organisation</span>
+      </div>
+      <nav class="hidden md:flex items-center gap-space-md">
+        <span class="font-label-md text-label-md text-on-surface-variant">Sample Menu</span>
+        <span class="font-label-md text-label-md text-on-surface-variant">Sample Menu</span>
+        <span class="font-label-md text-label-md text-on-surface-variant">Sample Menu</span>
+        <span class="font-label-md text-label-md text-on-surface-variant">Sample Menu</span>
+      </nav>
+    </div>
+  </div>
+
+  <section class="w-full bg-primary-fixed/40 border-b border-outline-variant/40">
+    <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop py-space-xl">
+      <p class="font-body-sm text-body-sm text-secondary">Placeholder Portal / Sample Section / Sample Page</p>
+      <h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight mt-space-2xs">Sample Page Title</h1>
+      <p class="font-body-sm text-body-sm text-secondary mt-space-2xs">Last updated 5 September 2026</p>
     </div>
   </section>
 
-  <div class="max-w-layout-content-max-width mx-auto w-full px-layout-margin-mobile md:px-layout-margin-desktop py-space-xl space-y-space-xl">
-
-    <section class="bg-surface-container-lowest rounded-lg shadow-sm overflow-hidden">
-      <div class="flex flex-col md:flex-row">
-        <div class="w-full md:w-2 bg-primary-container flex-shrink-0"></div>
-        <div class="p-space-lg md:p-space-xl flex flex-col md:flex-row gap-space-lg items-start flex-grow">
-          <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-surface-container text-primary">
-            <span class="material-symbols-outlined text-[24px]">info</span>
-          </div>
-          <div class="flex-1 space-y-space-xs">
-            <div class="flex items-center justify-between">
-              <h2 class="font-headline-md text-headline-md text-on-surface">General Information for Self-Represented Persons</h2>
-              <span class="font-label-sm text-label-sm text-secondary uppercase bg-surface-container px-space-xs py-space-2xs rounded">Prototype ref: CLAIMREADY-DEMO-01</span>
-            </div>
-            <p class="font-body-md text-body-md text-on-surface-variant">Please review the procedural parameters before commencing your self-guided triage:</p>
-            <ul class="grid grid-cols-1 md:grid-cols-2 gap-x-space-xl gap-y-space-xs pt-space-xs font-body-md text-body-md text-on-surface">
-              <li class="flex items-start gap-space-xs">
-                <span class="material-symbols-outlined text-primary text-[18px] mt-0.5">schedule</span>
-                <span><strong>10-minute assessment:</strong> Self-administered preliminary verification of tribunal eligibility.</span>
-              </li>
-              <li class="flex items-start gap-space-xs">
-                <span class="material-symbols-outlined text-primary text-[18px] mt-0.5">assignment_turned_in</span>
-                <span><strong>Identify tribunal forms:</strong> Designed to assist litigants-in-person (pro se) in isolating mandatory forms.</span>
-              </li>
-              <li class="flex items-start gap-space-xs">
-                <span class="material-symbols-outlined text-primary text-[18px] mt-0.5">security</span>
-                <span><strong>Secure processing:</strong> Unsubmitted uploaded materials are automatically purged after 7 days.</span>
-              </li>
-              <li class="flex items-start gap-space-xs">
-                <span class="material-symbols-outlined text-primary text-[18px] mt-0.5">asterisk</span>
-                <span><strong>Procedural completeness:</strong> Mandatory statutory fields are designated with an asterisk (<span class="text-primary font-bold">*</span>).</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-start">
-      <div class="lg:col-span-6 flex flex-col gap-space-lg">
-        <section class="bg-surface-container-lowest rounded-lg shadow-sm p-space-lg md:p-space-xl flex flex-col justify-between h-full">
-          <div class="space-y-space-lg">
-            <div class="flex items-center justify-between pb-space-xs">
-              <div class="flex items-center gap-space-xs">
-                <div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary">
-                  <span class="material-symbols-outlined text-[18px]">support_agent</span>
-                </div>
-                <div class="flex flex-col">
-                  <h3 class="font-headline-md text-headline-md text-on-surface">Interactive Assistant</h3>
-                  <span class="font-label-sm text-label-sm text-secondary">Start Assessment Dialogue</span>
-                </div>
-              </div>
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-container text-primary">
-                <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> Ready
-              </span>
-            </div>
-
-            <div class="bg-surface-container-low p-space-md rounded-lg space-y-space-sm max-h-72 overflow-y-auto" id="chat-log">
-              <div class="flex items-start gap-space-sm">
-                <div class="w-7 h-7 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">CJ</div>
-                <div class="space-y-space-xs">
-                  <p class="font-body-md text-body-md text-on-surface leading-relaxed">Welcome. If you intend to represent yourself in court, I can help determine which tribunal has jurisdiction, what forms you must submit, and which documents you need to prove your claim.</p>
-                  <p class="font-body-md text-body-md text-on-surface-variant font-semibold">To begin, select your dispute type below or upload your documents.</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="space-y-space-xs">
-              <label class="font-label-md text-label-md text-on-surface uppercase tracking-wider flex items-center gap-1">
-                <span>Nature of Dispute</span>
-                <span class="text-primary font-bold">*</span>
-              </label>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-xs" id="dispute-selector">
-                <button class="dispute-btn text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-all flex items-start gap-space-xs group" data-category="Contract for Sale of Goods" type="button" aria-pressed="false">
-                  <span class="material-symbols-outlined text-secondary group-hover:text-primary text-[20px]">shopping_bag</span>
-                  <div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface group-hover:text-primary">Sale of Goods</span><span class="font-body-sm text-body-sm text-secondary">Goods delivery, quality disputes</span></div>
-                </button>
-                <button class="dispute-btn text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-all flex items-start gap-space-xs group" data-category="Contract for Provision of Services" type="button" aria-pressed="false">
-                  <span class="material-symbols-outlined text-secondary group-hover:text-primary text-[20px]">handshake</span>
-                  <div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface group-hover:text-primary">Provision of Services</span><span class="font-body-sm text-body-sm text-secondary">Contractor, freelance claims</span></div>
-                </button>
-                <button class="dispute-btn text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-all flex items-start gap-space-xs group" data-category="Damage to Property" type="button" aria-pressed="false">
-                  <span class="material-symbols-outlined text-secondary group-hover:text-primary text-[20px]">home_repair_service</span>
-                  <div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface group-hover:text-primary">Damage to Property</span><span class="font-body-sm text-body-sm text-secondary">Non-motor physical damages</span></div>
-                </button>
-                <button class="dispute-btn text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-all flex items-start gap-space-xs group" data-category="Tenancy / Residential Lease" type="button" aria-pressed="false">
-                  <span class="material-symbols-outlined text-secondary group-hover:text-primary text-[20px]">key</span>
-                  <div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface group-hover:text-primary">Tenancy / Lease</span><span class="font-body-sm text-body-sm text-secondary">Security deposits, residential lease</span></div>
-                </button>
-                <button class="dispute-btn text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-all flex items-start gap-space-xs group" data-category="Employment Claim" type="button" aria-pressed="false">
-                  <span class="material-symbols-outlined text-secondary group-hover:text-primary text-[20px]">badge</span>
-                  <div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface group-hover:text-primary">Employment Claim</span><span class="font-body-sm text-body-sm text-secondary">Salary arrears, TADM cases</span></div>
-                </button>
-                <button class="dispute-btn text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-all flex items-start gap-space-xs group" data-category="Neighbour / Community Dispute" type="button" aria-pressed="false">
-                  <span class="material-symbols-outlined text-secondary group-hover:text-primary text-[20px]">groups</span>
-                  <div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface group-hover:text-primary">Community Dispute</span><span class="font-body-sm text-body-sm text-secondary">Excessive noise, neighbour interference</span></div>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="mt-space-lg pt-space-md">
-            <div class="space-y-space-xs">
-              <label class="font-label-sm text-label-sm text-on-surface-variant flex items-center justify-between" for="claimant-query">
-                <span>Describe your circumstances or ask a procedural question:</span>
-                <span class="text-secondary text-xs">Demo session (not Singpass-protected)</span>
-              </label>
-              <div class="relative rounded-lg bg-surface-container-lowest shadow-sm">
-                <textarea class="w-full p-space-sm rounded-lg bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" id="claimant-query" placeholder="e.g. The supplier failed to deliver commercial inventory after full payment on 12 Jan 2025. What documentation do I need to establish jurisdiction?" rows="3"></textarea>
-                <div class="flex items-center justify-between p-space-xs bg-surface-container-low rounded-b-lg">
-                  <div class="flex items-center gap-space-xs">
-                    <button class="p-1.5 text-secondary hover:text-primary rounded hover:bg-surface-container transition-colors" id="attach-btn" title="Attach supporting documentation" type="button">
-                      <span class="material-symbols-outlined text-[20px]">attach_file</span>
-                    </button>
-                    <span class="text-xs text-secondary font-label-sm hidden sm:inline">Attach claim files or select chip above</span>
-                  </div>
-                  <button class="flex items-center gap-space-xs px-space-md py-1.5 bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed" id="start-btn" type="button">
-                    <span id="start-btn-label">Start Assessment</span>
-                    <span class="material-symbols-outlined text-[16px]" id="start-btn-icon">arrow_forward</span>
-                  </button>
-                </div>
-              </div>
-              <p class="hidden font-body-sm text-body-sm text-error" id="start-error" role="alert"></p>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <div class="lg:col-span-6 flex flex-col gap-space-lg">
-        <section class="bg-surface-container-lowest rounded-lg shadow-sm p-space-lg md:p-space-xl space-y-space-lg">
-          <div class="flex items-center justify-between pb-space-xs">
-            <div class="flex items-center gap-space-xs">
-              <div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined text-[18px]">upload_file</span>
-              </div>
-              <div class="flex flex-col">
-                <h3 class="font-headline-md text-headline-md text-on-surface">Document Triage &amp; Upload Bay</h3>
-                <span class="font-label-sm text-label-sm text-secondary">Automated Statutory Form Mapping</span>
-              </div>
-            </div>
-            <span class="font-label-sm text-label-sm text-secondary bg-surface-container-low px-2 py-0.5 rounded">First-Time Intake</span>
-          </div>
-          <div class="bg-surface-container-low hover:bg-surface-container/60 rounded-lg p-space-xl flex flex-col items-center justify-center text-center cursor-pointer transition-colors group" id="drop-zone">
-            <input accept=".pdf,.docx,.jpg,.png" class="hidden" id="file-upload-input" multiple type="file" />
-            <div class="w-14 h-14 rounded-full bg-surface-container-lowest text-primary flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform mb-space-sm">
-              <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" x2="12" y1="3" y2="15"></line>
-              </svg>
-            </div>
-            <p class="font-headline-md text-headline-md text-on-surface mb-space-2xs">Drop files here or browse</p>
-            <p class="font-body-sm text-body-sm text-secondary mb-space-xs">Supported formats: PDF, DOCX, JPG, PNG • Max 50MB total</p>
-            <p class="font-body-sm text-body-sm text-on-surface-variant max-w-sm">Upload contracts, invoices, email/text correspondence, or receipts. The system will scan them and automatically map them to official State Courts forms.</p>
-          </div>
-          <p class="hidden font-body-sm text-body-sm text-error" id="upload-error" role="alert"></p>
-          <div class="space-y-space-xs">
-            <div class="flex items-center justify-between">
-              <span class="font-label-md text-label-md text-on-surface uppercase tracking-wider">Uploaded Documents Queue</span>
-              <span class="font-label-sm text-label-sm text-secondary" id="doc-count">0 items</span>
-            </div>
-            <div id="doc-queue">
-              <div class="bg-surface-container-low rounded-lg p-space-lg flex flex-col items-center justify-center text-center gap-space-2xs" id="doc-empty-state">
-                <div class="w-9 h-9 rounded-full bg-surface-container text-secondary flex items-center justify-center">
-                  <span class="material-symbols-outlined text-[20px]">inventory_2</span>
-                </div>
-                <span class="font-label-md text-label-md text-on-surface font-medium">No documents uploaded yet</span>
-                <p class="font-body-sm text-body-sm text-secondary max-w-xs">Your uploaded files and identified court requirements will appear here once submitted.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="bg-surface-container-lowest rounded-lg shadow-sm p-space-lg md:p-space-xl space-y-space-md">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-space-xs">
-              <span class="material-symbols-outlined text-primary text-[20px]">fact_check</span>
-              <h4 class="font-headline-md text-headline-md text-on-surface">Court Documents Checklist</h4>
-            </div>
-            <span class="font-label-sm text-label-sm text-secondary font-bold" id="checklist-status">Unstarted</span>
-          </div>
-          <div class="space-y-space-2xs">
-            <div class="flex justify-between items-center font-label-sm text-label-sm">
-              <span class="text-secondary">Progress</span>
-              <span class="text-primary font-bold" id="checklist-progress-label">0 of 0 Forms Identified</span>
-            </div>
-            <div class="w-full h-2 rounded-full bg-surface-container overflow-hidden">
-              <div class="bg-primary h-full w-0 transition-all duration-300" id="checklist-progress-bar"></div>
-            </div>
-          </div>
-          <div id="checklist-body">
-            <div class="bg-surface-container-low rounded-lg p-space-md flex items-start gap-space-sm">
-              <span class="material-symbols-outlined text-secondary text-[20px] mt-0.5">rule</span>
-              <div class="flex flex-col">
-                <span class="font-label-md text-label-md text-on-surface">Initial Assessment State</span>
-                <p class="font-body-sm text-body-sm text-secondary mt-0.5">Select a dispute category or upload your documentation above to see the mandatory statutory forms you must file.</p>
-              </div>
-            </div>
-          </div>
-          <div class="pt-space-xs flex flex-wrap items-center justify-between gap-space-xs text-xs text-secondary font-body-sm">
-            <div class="flex items-center gap-1">
-              <span class="material-symbols-outlined text-[16px] text-primary">verified_user</span>
-              <span>Electronic Filing Service Compliant</span>
-            </div>
-            <span>Small Claims Tribunals (SCT) • CDRT • ECT</span>
-          </div>
-        </section>
-      </div>
-    </div>
-
-    <section class="bg-surface-container-lowest rounded-lg p-space-lg shadow-sm flex flex-col md:flex-row items-center justify-between gap-space-md">
-      <div class="flex items-center gap-space-md">
-        <div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0">
-          <span class="material-symbols-outlined text-[24px]">contact_support</span>
-        </div>
-        <div class="flex flex-col">
-          <span class="font-label-md text-label-md text-on-surface font-bold">Need procedural assistance or tribunal information?</span>
-          <span class="font-body-sm text-body-sm text-secondary">Access Community Justice Centre (CJC) pro bono clinic directories or view statutory fee schedules.</span>
-        </div>
-      </div>
-      <div class="flex items-center gap-space-xs flex-shrink-0">
-        <button class="px-space-md py-space-xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg font-label-md text-label-md transition-colors" data-modal="tribunal-guide" type="button">Tribunal Guide</button>
-        <button class="px-space-md py-space-xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg font-label-md text-label-md transition-colors" data-modal="fee-schedule" type="button">Fee Schedule</button>
-      </div>
-    </section>
+  <div class="max-w-layout-content-max-width mx-auto w-full px-layout-margin-mobile md:px-layout-margin-desktop py-space-3xl flex items-center justify-center min-h-[16rem]">
+    <p class="font-body-sm text-body-sm text-secondary italic">This area is intentionally left blank for this prototype.</p>
   </div>
 </div>
 
@@ -444,6 +253,25 @@ tailwind.config = {
         <span class="font-label-sm text-label-sm text-secondary" id="pf-progress">0 of 8 fields completed</span>
       </div>
 
+      <!-- Save & resume (frontend-only mock): "Save answers" snapshots the current field
+           values into memory for this browser tab only — nothing is written to an account
+           or a server. Once saved, "Add more documents" opens the ClaimReady widget's own
+           upload panel (which clearly shows what's already been attached) without leaving
+           this page or losing the answers here. -->
+      <div class="bg-surface-container-low rounded-lg p-space-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-sm">
+        <p class="font-body-sm text-body-sm text-secondary" id="pf-save-status">Not saved yet — your answers will be lost if you close this tab.</p>
+        <div class="flex items-center gap-space-xs flex-shrink-0">
+          <button class="flex items-center gap-space-xs px-space-md py-space-2xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg font-label-md text-label-md transition-colors" id="pf-save-btn" type="button">
+            <span class="material-symbols-outlined text-[16px]">save</span>
+            <span>Save answers</span>
+          </button>
+          <button class="hidden flex items-center gap-space-xs px-space-md py-space-2xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg font-label-md text-label-md transition-colors" id="pf-add-docs-btn" type="button">
+            <span class="material-symbols-outlined text-[16px]">upload_file</span>
+            <span>Add more documents</span>
+          </button>
+        </div>
+      </div>
+
       <form class="space-y-space-lg" id="pf-form" novalidate>
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimantName">
@@ -451,7 +279,6 @@ tailwind.config = {
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimantName" type="button" aria-label="Help for your full name"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimantName" type="text" placeholder="As it appears on your NRIC/passport" />
-          <p class="hidden text-xs text-error font-medium" id="err-claimantName"></p>
         </div>
 
         <div class="space-y-space-2xs">
@@ -460,39 +287,27 @@ tailwind.config = {
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimantId" type="button" aria-label="Help for NRIC / FIN"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimantId" type="text" placeholder="e.g. S1234567A" />
-          <p class="hidden text-xs text-error font-medium" id="err-claimantId"></p>
-        </div>
-
-        <div class="space-y-space-2xs">
-          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimantEmail">
-            <span>3. Your email address (For court notices)</span>
-            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimantEmail" type="button" aria-label="Help for email address"><span class="material-symbols-outlined text-[14px]">info</span></button>
-          </label>
-          <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimantEmail" type="email" placeholder="e.g. yourname@example.com" />
-          <p class="hidden text-xs text-error font-medium" id="err-claimantEmail"></p>
         </div>
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-respondentName">
-            <span>4. Respondent's full name or business name</span>
+            <span>3. Respondent's full name or business name</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="respondentName" type="button" aria-label="Help for respondent's name"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-respondentName" type="text" placeholder="Person or business you are claiming against" />
-          <p class="hidden text-xs text-error font-medium" id="err-respondentName"></p>
         </div>
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-respondentAddress">
-            <span>5. Respondent's address for service</span>
+            <span>4. Respondent's address for service</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="respondentAddress" type="button" aria-label="Help for respondent's address"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <textarea class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" id="field-respondentAddress" placeholder="Where the respondent can be served with claim papers" rows="2"></textarea>
-          <p class="hidden text-xs text-error font-medium" id="err-respondentAddress"></p>
         </div>
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimNature">
-            <span>6. Nature of claim</span>
+            <span>5. Nature of claim</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimNature" type="button" aria-label="Help for nature of claim"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <select class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimNature">
@@ -505,59 +320,36 @@ tailwind.config = {
             <option>Neighbour / Community Dispute</option>
             <option>Other</option>
           </select>
-          <p class="hidden text-xs text-error font-medium" id="err-claimNature"></p>
         </div>
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimAmount">
-            <span>7. Amount claimed (SGD)</span>
+            <span>6. Amount claimed (SGD)</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimAmount" type="button" aria-label="Help for amount claimed"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
-          <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimAmount" type="text" placeholder="e.g. 4500 (numbers only)" />
-          <p class="hidden text-xs text-error font-medium" id="err-claimAmount"></p>
+          <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimAmount" min="0" type="number" placeholder="e.g. 4500" />
         </div>
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimDate">
-            <span>8. Date the dispute arose</span>
+            <span>7. Date the dispute arose</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimDate" type="button" aria-label="Help for date the dispute arose"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimDate" type="date" />
-          <p class="hidden text-xs text-error font-medium" id="err-claimDate"></p>
         </div>
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimStatement">
-            <span>9. Brief statement of claim</span>
+            <span>8. Brief statement of claim</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimStatement" type="button" aria-label="Help for statement of claim"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <textarea class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" id="field-claimStatement" placeholder="What happened, and what you are asking the tribunal to order" rows="4"></textarea>
-          <p class="hidden text-xs text-error font-medium" id="err-claimStatement"></p>
-          <div id="claim-statement-warning" class="hidden mt-space-xs p-space-md bg-amber-50/80 border border-amber-300 rounded-lg text-on-surface">
-            <div class="flex items-center gap-space-xs text-amber-900 font-label-md font-semibold">
-              <span class="material-symbols-outlined text-[20px] text-amber-600">warning</span>
-              <span id="tone-prompt-message">Are you sure you wish to proceed with this wording?</span>
-            </div>
-            <p class="font-body-sm text-body-sm text-secondary mt-space-2xs" id="tone-disclaimer-text">Court mediation data shows that personal insults and generalizations drastically reduce your chances of an amicable settlement and weaken your credibility before the Magistrate.</p>
-            <div class="mt-space-xs p-space-sm bg-surface-container-lowest border border-amber-200 rounded-md">
-              <span class="font-label-sm text-label-sm text-primary uppercase font-bold block mb-1">Recommended Factual Phrasing</span>
-              <p class="font-body-sm text-body-sm text-on-surface italic" id="tone-suggested-text"></p>
-            </div>
-            <div class="flex items-center gap-space-xs mt-space-sm flex-wrap">
-              <button type="button" id="tone-apply-btn" class="px-space-md py-1.5 bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors font-medium">Use recommended fix</button>
-              <button type="button" id="tone-ignore-btn" class="px-space-md py-1.5 bg-surface-container text-secondary rounded-lg font-label-md text-label-md hover:bg-surface-container-high transition-colors">Proceed anyway</button>
-            </div>
-          </div>
         </div>
 
-        <div class="pt-space-xs flex items-center gap-space-sm flex-wrap">
+        <div class="pt-space-xs">
           <button class="hidden flex items-center gap-space-xs px-space-lg py-space-sm bg-primary-container text-on-primary font-label-md text-label-md rounded-lg hover:bg-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled id="pf-submit-btn" type="button">
-            <span id="pf-submit-btn-label">Submit Mock Claim</span>
+            <span id="pf-submit-btn-label">Submit</span>
             <span class="material-symbols-outlined text-[16px]" id="pf-submit-btn-icon">arrow_forward</span>
-          </button>
-          <button class="flex items-center gap-space-xs px-space-lg py-space-sm bg-surface-container text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-container-high transition-colors border border-outline-variant/60" id="pf-download-pdf-btn" type="button">
-            <span class="material-symbols-outlined text-[18px] text-primary">picture_as_pdf</span>
-            <span id="pf-pdf-btn-label">Download Pre-Filing PDF</span>
           </button>
         </div>
       </form>
@@ -595,17 +387,6 @@ tailwind.config = {
       <button class="flex items-center gap-space-xs px-space-lg py-space-sm bg-primary-container text-on-primary font-label-md text-label-md rounded-lg hover:bg-primary transition-colors flex-shrink-0" id="af-open-guide-btn" type="button">
         <span class="material-symbols-outlined text-[18px]">support_agent</span>
         <span>Show me what to do next</span>
-      </button>
-    </section>
-
-    <section class="bg-surface-container-lowest rounded-lg shadow-sm p-space-lg md:p-space-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md border border-primary/20">
-      <div class="flex flex-col gap-space-2xs">
-        <h2 class="font-headline-md text-headline-md text-primary font-bold">Official Pre-Filing Claim Summary (PDF)</h2>
-        <p class="font-body-md text-body-md text-on-surface-variant">Download a clean, structured PDF summary of your claim particulars, respondent information, and procedural checklist to prepare for your SCT Consultation session.</p>
-      </div>
-      <button class="flex items-center gap-space-xs px-space-lg py-space-sm bg-secondary text-on-secondary font-label-md text-label-md rounded-lg hover:bg-slate-700 transition-colors flex-shrink-0" id="af-download-pdf-btn" type="button">
-        <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
-        <span id="af-pdf-btn-label">Download Claim PDF</span>
       </button>
     </section>
   </div>
@@ -652,66 +433,6 @@ tailwind.config = {
 (function () {
   "use strict";
 
-  /* ------------------------------------------------------------------
-   * Reference data: category -> tribunal + statutory forms mapping.
-   * Illustrative, for demo purposes; the real mapping logic belongs to
-   * the backend classifier that will replace this lookup.
-   * ------------------------------------------------------------------ */
-  const CATEGORY_DATA = {
-    "Contract for Sale of Goods": {
-      tribunal: "Small Claims Tribunal (SCT)",
-      forms: [
-        "SCT1 — Claim in the Small Claims Tribunals",
-        "SCT2 — Information Statement",
-        "Supporting: Invoice or receipt of purchase",
-        "Supporting: Delivery / non-delivery correspondence"
-      ]
-    },
-    "Contract for Provision of Services": {
-      tribunal: "Small Claims Tribunal (SCT)",
-      forms: [
-        "SCT1 — Claim in the Small Claims Tribunals",
-        "SCT2 — Information Statement",
-        "Supporting: Signed service agreement or quotation",
-        "Supporting: Proof of payment"
-      ]
-    },
-    "Damage to Property": {
-      tribunal: "Small Claims Tribunal (SCT)",
-      forms: [
-        "SCT1 — Claim in the Small Claims Tribunals",
-        "SCT2 — Information Statement",
-        "Supporting: Photographs of the damage",
-        "Supporting: Repair quotation or invoice"
-      ]
-    },
-    "Tenancy / Residential Lease": {
-      tribunal: "Community Disputes Resolution Tribunal (CDRT) / SCT",
-      forms: [
-        "SCT1 — Claim in the Small Claims Tribunals",
-        "Supporting: Tenancy agreement",
-        "Supporting: Inventory or condition report",
-        "Supporting: Deposit correspondence"
-      ]
-    },
-    "Employment Claim": {
-      tribunal: "Employment Claims Tribunal (ECT)",
-      forms: [
-        "TADM Mediation Request (mandatory before filing)",
-        "ECT1 — Claim in the Employment Claims Tribunals",
-        "Supporting: Employment contract and payslips"
-      ]
-    },
-    "Neighbour / Community Dispute": {
-      tribunal: "Community Disputes Resolution Tribunal (CDRT)",
-      forms: [
-        "CDRT1 — Application for Mediation",
-        "CDRT2 — Application for a Dispute Resolution Order",
-        "Supporting: Log of incidents"
-      ]
-    }
-  };
-
   const FAQS = [
     { q: "Do I need a lawyer to file in the Small Claims Tribunal?", a: "No. The SCT is designed for self-represented parties — lawyers are generally not permitted to represent claimants or respondents at hearings, except in limited circumstances." },
     { q: "How long do I have to file a claim?", a: "This varies by cause of action, but many contract claims must be brought within 6 years of the event. Check the relevant limitation period for your specific dispute — the ClaimReady guide's timing check can help you flag this early." },
@@ -747,11 +468,28 @@ tailwind.config = {
     });
   }
 
-  function showPage(view) {
+  // Client-side view-history stack, so a global "Back" control works from any page —
+  // including Page 2/3, which aren't reachable from the top nav. This is a simple LIFO
+  // stack (not the real browser history/URL), kept only so the demo can be freely
+  // walked backwards regardless of how a page was reached.
+  const viewHistory = ["assessment"];
+  const backBtn = document.getElementById("global-back-btn");
+
+  function updateBackButton() {
+    backBtn.classList.toggle("hidden", viewHistory.length <= 1);
+  }
+
+  function showPage(view, opts) {
+    opts = opts || {};
     pages.forEach((p) => p.classList.toggle("hidden", p.dataset.page !== view));
     setActiveNav(view);
     syncChromeOffset();
     window.scrollTo({ top: 0, behavior: "smooth" });
+
+    if (!opts.skipHistory && viewHistory[viewHistory.length - 1] !== view) {
+      viewHistory.push(view);
+    }
+    updateBackButton();
 
     // Keep the ClaimReady overlay's content in step with which page it's shown on:
     // hidden on the mock form (Page 2, which has its own inline (i) help instead),
@@ -767,6 +505,14 @@ tailwind.config = {
     if (view === "after-filing") renderAfterFilingRef();
   }
   let lastOverlayContext = "route"; // matches the widget's own default mode on load
+
+  function goBack() {
+    if (viewHistory.length <= 1) return;
+    viewHistory.pop(); // drop the current view
+    const previous = viewHistory[viewHistory.length - 1];
+    showPage(previous, { skipHistory: true });
+  }
+  backBtn.addEventListener("click", goBack);
 
   navLinks.forEach((a) => {
     a.addEventListener("click", (e) => {
@@ -801,22 +547,6 @@ tailwind.config = {
    * dead "#" links.
    * ------------------------------------------------------------------ */
   const MODALS = {
-    "tribunal-guide": {
-      title: "Tribunal Guide",
-      body:
-        '<p><strong>Small Claims Tribunal (SCT)</strong> — contract disputes for goods, services or property damage, generally up to $20,000 (or $30,000 with signed consent from both parties).</p>' +
-        '<p><strong>Community Disputes Resolution Tribunal (CDRT)</strong> — neighbour disputes involving unreasonable interference, harassment, or tenancy-related community issues.</p>' +
-        '<p><strong>Employment Claims Tribunal (ECT)</strong> — salary and employment-related claims, following mandatory TADM mediation.</p>'
-    },
-    "fee-schedule": {
-      title: "Fee Schedule (Illustrative)",
-      body:
-        '<table class="w-full text-left border-collapse"><thead><tr class="border-b border-outline-variant/60"><th class="py-space-2xs">Claim amount</th><th class="py-space-2xs">Filing fee</th></tr></thead><tbody>' +
-        '<tr class="border-b border-outline-variant/40"><td class="py-space-2xs">Up to $10,000</td><td class="py-space-2xs">$10</td></tr>' +
-        '<tr class="border-b border-outline-variant/40"><td class="py-space-2xs">$10,001 – $20,000</td><td class="py-space-2xs">$20</td></tr>' +
-        '<tr><td class="py-space-2xs">$20,001 – $30,000 (with consent)</td><td class="py-space-2xs">$40</td></tr>' +
-        '</tbody></table><p class="mt-space-sm text-body-sm">Figures are illustrative for this demo. Confirm current fees on the official judiciary e-filing portal before filing.</p>'
-    },
     privacy: { title: "Privacy Policy (Demo)", body: "<p>This is a non-production demonstration page. No personal data submitted here is stored, transmitted, or retained — all form state lives only in your browser tab and clears on reload.</p>" },
     terms: { title: "Terms of Service (Demo)", body: "<p>This interface is an illustrative prototype for evaluating layout and interaction design. It is not connected to any court system and creates no legal record.</p>" },
     vulnerability: { title: "Vulnerability Disclosure (Demo)", body: "<p>This is a static local demo with no live backend, authentication, or data store, so there is no production attack surface to report against.</p>" },
@@ -853,265 +583,6 @@ tailwind.config = {
   document.getElementById("account-btn").addEventListener("click", () => openModal("account"));
 
   /* ------------------------------------------------------------------
-   * Dispute category selection
-   * ------------------------------------------------------------------ */
-  const disputeButtons = document.querySelectorAll(".dispute-btn");
-  const inputArea = document.getElementById("claimant-query");
-  let selectedCategory = null;
-
-  disputeButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const alreadySelected = btn.getAttribute("aria-pressed") === "true";
-      disputeButtons.forEach((b) => {
-        b.setAttribute("aria-pressed", "false");
-        b.classList.remove("bg-surface-container", "text-primary", "ring-2", "ring-primary-container");
-        b.classList.add("bg-surface-container-low");
-      });
-      if (alreadySelected) {
-        selectedCategory = null;
-        renderChecklist(null);
-        return;
-      }
-      btn.setAttribute("aria-pressed", "true");
-      btn.classList.remove("bg-surface-container-low");
-      btn.classList.add("bg-surface-container", "text-primary", "ring-2", "ring-primary-container");
-
-      selectedCategory = btn.getAttribute("data-category");
-      if (inputArea && !inputArea.value.trim()) {
-        inputArea.value = "I am filing a claim regarding: " + selectedCategory + ". What are the mandatory forms and initial documents required?";
-      }
-      renderChecklist(selectedCategory);
-    });
-  });
-
-  /* ------------------------------------------------------------------
-   * Checklist rendering (driven by selected category)
-   * ------------------------------------------------------------------ */
-  const checklistBody = document.getElementById("checklist-body");
-  const checklistStatus = document.getElementById("checklist-status");
-  const checklistProgressLabel = document.getElementById("checklist-progress-label");
-  const checklistProgressBar = document.getElementById("checklist-progress-bar");
-
-  function updateProgress() {
-    const boxes = checklistBody.querySelectorAll('input[type="checkbox"]');
-    const total = boxes.length;
-    const done = Array.from(boxes).filter((b) => b.checked).length;
-    checklistProgressLabel.textContent = done + " of " + total + " Forms Identified";
-    checklistProgressBar.style.width = total ? Math.round((done / total) * 100) + "%" : "0%";
-    checklistStatus.textContent = total === 0 ? "Unstarted" : done === total ? "Complete" : "In Progress";
-  }
-
-  function renderChecklist(category) {
-    if (!category) {
-      checklistBody.innerHTML =
-        '<div class="bg-surface-container-low rounded-lg p-space-md flex items-start gap-space-sm">' +
-        '<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5">rule</span>' +
-        '<div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface">Initial Assessment State</span>' +
-        '<p class="font-body-sm text-body-sm text-secondary mt-0.5">Select a dispute category or upload your documentation above to see the mandatory statutory forms you must file.</p></div></div>';
-      updateProgress();
-      return;
-    }
-    const data = CATEGORY_DATA[category];
-    const rows = data.forms
-      .map((f, i) =>
-        '<label class="flex items-start gap-space-sm p-space-sm rounded-lg hover:bg-surface-container-low cursor-pointer">' +
-        '<input type="checkbox" class="mt-1 w-4 h-4 accent-primary-container" data-form-index="' + i + '">' +
-        '<span class="font-body-md text-body-md text-on-surface">' + f + '</span></label>'
-      )
-      .join("");
-    checklistBody.innerHTML =
-      '<div class="bg-surface-container-low rounded-lg p-space-md mb-space-sm">' +
-      '<span class="font-label-sm text-label-sm text-secondary uppercase">Recommended Tribunal</span>' +
-      '<p class="font-label-lg text-label-lg text-primary font-bold">' + data.tribunal + '</p></div>' +
-      '<div class="divide-y divide-outline-variant/40">' + rows + '</div>';
-    checklistBody.querySelectorAll('input[type="checkbox"]').forEach((cb) => cb.addEventListener("change", updateProgress));
-    updateProgress();
-  }
-
-  /* ------------------------------------------------------------------
-   * File upload / drag & drop
-   * ------------------------------------------------------------------ */
-  const dropZone = document.getElementById("drop-zone");
-  const fileInput = document.getElementById("file-upload-input");
-  const attachBtn = document.getElementById("attach-btn");
-  const docQueue = document.getElementById("doc-queue");
-  const docEmptyState = document.getElementById("doc-empty-state");
-  const docCount = document.getElementById("doc-count");
-  const uploadError = document.getElementById("upload-error");
-  const MAX_TOTAL_BYTES = 50 * 1024 * 1024;
-  const ALLOWED_EXT = [".pdf", ".docx", ".jpg", ".jpeg", ".png"];
-  let uploadedFiles = [];
-  let nextFileId = 1;
-
-  function formatBytes(bytes) {
-    if (bytes < 1024) return bytes + " B";
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-  }
-  function extOf(name) {
-    const i = name.lastIndexOf(".");
-    return i === -1 ? "" : name.slice(i).toLowerCase();
-  }
-  function iconFor(ext) {
-    if (ext === ".pdf") return "picture_as_pdf";
-    if (ext === ".docx") return "description";
-    return "image";
-  }
-  function totalBytes() {
-    return uploadedFiles.reduce((sum, f) => sum + f.size, 0);
-  }
-  function showUploadError(msg) {
-    uploadError.textContent = msg;
-    uploadError.classList.remove("hidden");
-  }
-  function clearUploadError() {
-    uploadError.classList.add("hidden");
-    uploadError.textContent = "";
-  }
-
-  function renderQueue() {
-    docCount.textContent = uploadedFiles.length + " item" + (uploadedFiles.length === 1 ? "" : "s");
-    if (uploadedFiles.length === 0) {
-      docQueue.innerHTML = "";
-      docQueue.appendChild(docEmptyState);
-      return;
-    }
-    docQueue.innerHTML = uploadedFiles
-      .map(
-        (f) =>
-          '<div class="flex items-center justify-between gap-space-sm p-space-sm rounded-lg bg-surface-container-low mb-space-2xs" data-file-id="' + f.id + '">' +
-          '<div class="flex items-center gap-space-sm min-w-0">' +
-          '<span class="material-symbols-outlined text-primary text-[20px] flex-shrink-0">' + iconFor(f.ext) + '</span>' +
-          '<div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-on-surface truncate">' + f.name + '</span>' +
-          '<span class="font-body-sm text-body-sm text-secondary">' + formatBytes(f.size) + '</span></div></div>' +
-          '<button type="button" class="remove-file-btn p-1 rounded hover:bg-surface-container text-secondary hover:text-error flex-shrink-0" data-file-id="' + f.id + '" aria-label="Remove ' + f.name + '">' +
-          '<span class="material-symbols-outlined text-[18px]">close</span></button></div>'
-      )
-      .join("");
-    docQueue.querySelectorAll(".remove-file-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        uploadedFiles = uploadedFiles.filter((f) => f.id !== Number(btn.dataset.fileId));
-        renderQueue();
-      });
-    });
-  }
-
-  function ingestFiles(fileList) {
-    clearUploadError();
-    const incoming = Array.from(fileList);
-    const rejected = [];
-    let runningTotal = totalBytes();
-    for (const file of incoming) {
-      const ext = extOf(file.name);
-      if (!ALLOWED_EXT.includes(ext)) {
-        rejected.push(file.name + " (unsupported file type)");
-        continue;
-      }
-      if (runningTotal + file.size > MAX_TOTAL_BYTES) {
-        rejected.push(file.name + " (exceeds 50MB total limit)");
-        continue;
-      }
-      runningTotal += file.size;
-      uploadedFiles.push({ id: nextFileId++, name: file.name, size: file.size, ext: ext });
-    }
-    if (rejected.length) showUploadError("Could not add: " + rejected.join(", "));
-    renderQueue();
-  }
-
-  dropZone.addEventListener("click", () => fileInput.click());
-  attachBtn.addEventListener("click", () => fileInput.click());
-  fileInput.addEventListener("change", () => {
-    if (fileInput.files.length) ingestFiles(fileInput.files);
-    fileInput.value = "";
-  });
-  dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("bg-surface-container"); });
-  dropZone.addEventListener("dragleave", (e) => { e.preventDefault(); dropZone.classList.remove("bg-surface-container"); });
-  dropZone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    dropZone.classList.remove("bg-surface-container");
-    if (e.dataTransfer.files.length) ingestFiles(e.dataTransfer.files);
-  });
-
-  /* ------------------------------------------------------------------
-   * Start Assessment
-   * ------------------------------------------------------------------ */
-  const startBtn = document.getElementById("start-btn");
-  const startBtnLabel = document.getElementById("start-btn-label");
-  const startBtnIcon = document.getElementById("start-btn-icon");
-  const startError = document.getElementById("start-error");
-  const chatLog = document.getElementById("chat-log");
-
-  function addChatMessage(html) {
-    const row = document.createElement("div");
-    row.className = "flex items-start gap-space-sm";
-    row.innerHTML =
-      '<div class="w-7 h-7 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">CJ</div>' +
-      '<div class="space-y-space-xs">' + html + '</div>';
-    chatLog.appendChild(row);
-    chatLog.scrollTop = chatLog.scrollHeight;
-  }
-
-  startBtn.addEventListener("click", async () => {
-    startError.classList.add("hidden");
-    const hasCategory = Boolean(selectedCategory);
-    const hasText = Boolean(inputArea.value.trim());
-    const hasFiles = uploadedFiles.length > 0;
-
-    if (!hasCategory && !hasText && !hasFiles) {
-      startError.textContent = "Please select a dispute category, describe your situation, or attach a document before starting.";
-      startError.classList.remove("hidden");
-      inputArea.focus();
-      return;
-    }
-
-    startBtn.disabled = true;
-    startBtnLabel.textContent = "Analysing…";
-    startBtnIcon.textContent = "progress_activity";
-    startBtnIcon.classList.add("animate-spin");
-
-    if (hasText) {
-      try {
-        const response = await fetch("/api/extract-fields", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: inputArea.value.trim() })
-        });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || "Analysis failed.");
-        applyExtractedFieldHelp(payload.field_help);
-      } catch (error) {
-        startBtn.disabled = false;
-        startBtnLabel.textContent = "Start Assessment";
-        startBtnIcon.textContent = "arrow_forward";
-        startBtnIcon.classList.remove("animate-spin");
-        startError.textContent = error.message + " Add OPENAI_API_KEY to .env before using live analysis.";
-        startError.classList.remove("hidden");
-        return;
-      }
-    }
-
-    window.setTimeout(() => {
-      startBtn.disabled = false;
-      startBtnLabel.textContent = "Start Assessment";
-      startBtnIcon.textContent = "arrow_forward";
-      startBtnIcon.classList.remove("animate-spin");
-
-      const category = selectedCategory || "Contract for Sale of Goods";
-      if (!selectedCategory) renderChecklist(category);
-      const data = CATEGORY_DATA[category];
-
-      addChatMessage(
-        '<p class="font-body-md text-body-md text-on-surface leading-relaxed">Based on ' +
-          (selectedCategory ? "your selected category" : "the details provided") +
-          ", this appears to fall under the <strong>" + data.tribunal + "</strong>. I have listed the mandatory forms in the Court Documents Checklist panel — check each one off as you gather it.</p>" +
-          '<p class="font-body-sm text-body-sm text-on-surface-variant">' + (hasFiles ? uploadedFiles.length + " document(s) received and queued for triage." : "You can also upload supporting documents to refine this recommendation.") + '</p>'
-      );
-
-      document.getElementById("checklist-body").scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 900);
-  });
-
-  /* ------------------------------------------------------------------
    * Pre-filing form (Page 2): mocked per-field "document help" popups.
    * FIELD_HELP stands in for a real document-analysis backend that would
    * pull excerpts/citations from the files the user attached on Page 1.
@@ -1128,12 +599,6 @@ tailwind.config = {
       excerpt: "“Buyer NRIC: S8712345A”",
       citation: "Sale Agreement.pdf, page 1",
       suggestion: "S8712345A"
-    },
-    claimantEmail: {
-      label: "Your email address",
-      excerpt: "“Buyer Email: john.tan.wm@example.com”",
-      citation: "Sale Agreement.pdf, page 1",
-      suggestion: "john.tan.wm@example.com"
     },
     respondentName: {
       label: "Respondent's full name or business name",
@@ -1155,9 +620,12 @@ tailwind.config = {
     },
     claimAmount: {
       label: "Amount claimed (SGD)",
-      excerpt: "“Total amount paid: $4,500.00, received in full on 12 Jan 2025”",
-      citation: "Payment Receipt.jpg",
-      suggestion: "4500"
+      // No excerpt/citation/suggestion here on purpose: hasInsufficientInfo is a
+      // reusable flag any question's entry could set, meaning the mocked
+      // document-analysis backend couldn't find enough information to suggest a
+      // value. Wired up only for this question for the demo; openFieldHelp()
+      // branches on this flag generically, not on the field key.
+      hasInsufficientInfo: true
     },
     claimDate: {
       label: "Date the dispute arose",
@@ -1173,36 +641,38 @@ tailwind.config = {
     }
   };
 
-  function applyExtractedFieldHelp(fieldHelp) {
-    Object.keys(FIELD_HELP).forEach((fieldKey) => {
-      if (fieldHelp[fieldKey]) FIELD_HELP[fieldKey] = fieldHelp[fieldKey];
-    });
-  }
-
   function openFieldHelp(fieldKey) {
     const help = FIELD_HELP[fieldKey];
     if (!help) return;
     modalTitle.textContent = "Help: " + help.label;
-    if (help.available === false) {
-      modalBody.innerHTML = '<div class="space-y-space-sm"><p class="font-body-md text-body-md text-on-surface">' + help.explanation + '</p><p class="font-body-sm text-body-sm text-secondary">No supported value was found. Please check your documents and complete this field yourself.</p></div>';
-      lastFocused = document.activeElement;
-      backdrop.classList.remove("hidden");
-      document.getElementById("modal-close").focus();
-      return;
+    if (help.hasInsufficientInfo) {
+      // Reassuring alternate state: the mocked document-analysis backend has
+      // nothing precise to offer for this question. Deliberately no error
+      // styling/icon and no "Use this suggestion" button — this is a normal,
+      // expected outcome, not a failure, and the user is free to answer from
+      // their own knowledge.
+      modalBody.innerHTML =
+        '<div class="space-y-space-sm">' +
+        '<div class="flex items-start gap-space-sm">' +
+        '<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5">search_off</span>' +
+        '<p class="font-body-md text-body-md text-on-surface">We couldn’t find enough information in your uploaded documents to suggest a precise value for this question. That’s completely normal — not every document set will cover every field.</p>' +
+        '</div>' +
+        '<p class="font-body-md text-body-md text-on-surface-variant">You’re welcome to answer this one using your own knowledge of the situation.</p>' +
+        '<p class="font-body-sm text-body-sm text-secondary">Mocked output — a real document-analysis backend may find this elsewhere; always double-check against your own records.</p>' +
+        '</div>';
+    } else {
+      modalBody.innerHTML =
+        '<div class="space-y-space-sm">' +
+        '<div><span class="font-label-sm text-label-sm text-secondary uppercase">From your uploaded documents (mocked)</span>' +
+        '<p class="font-body-md text-body-md text-on-surface italic mt-space-2xs">' + help.excerpt + '</p></div>' +
+        '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Citation</span>' +
+        '<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + help.citation + '</p></div>' +
+        '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Suggested value</span>' +
+        '<p class="font-body-md text-body-md text-primary font-semibold mt-space-2xs">' + help.suggestion + '</p></div>' +
+        '<button type="button" class="w-full mt-space-xs px-space-md py-space-xs bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors" id="pf-use-suggestion" data-field="' + fieldKey + '">Use this suggestion</button>' +
+        '<p class="font-body-sm text-body-sm text-secondary">Mocked output — always fact-check against your real documents and the official form instructions before relying on it.</p>' +
+        '</div>';
     }
-    modalBody.innerHTML =
-      '<div class="space-y-space-sm">' +
-      (help.explanation ? '<p class="font-body-md text-body-md text-on-surface">' + help.explanation + '</p>' : '') +
-      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Supporting evidence</span>' +
-      '<p class="font-body-md text-body-md text-on-surface italic mt-space-2xs">' + (help.quote || help.excerpt || "No verified document quote is available yet.") + '</p></div>' +
-      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Citation</span>' +
-      '<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + (help.source || help.citation || "No citation available") + '</p></div>' +
-      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Suggested value</span>' +
-      '<p class="font-body-md text-body-md text-primary font-semibold mt-space-2xs">' + help.suggestion + '</p></div>' +
-      (help.why_this_helps ? '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Why this helps</span><p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + help.why_this_helps + '</p></div>' : '') +
-      '<button type="button" class="w-full mt-space-xs px-space-md py-space-xs bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors" id="pf-use-suggestion" data-field="' + fieldKey + '">Use this suggestion</button>' +
-      '<p class="font-body-sm text-body-sm text-secondary">Mocked output — always fact-check against your real documents and the official form instructions before relying on it.</p>' +
-      '</div>';
     lastFocused = document.activeElement;
     backdrop.classList.remove("hidden");
     document.getElementById("modal-close").focus();
@@ -1225,349 +695,88 @@ tailwind.config = {
   });
 
   /* ------------------------------------------------------------------
-   * Pre-filing form (Page 2): Data Validation & Progress Tracking
+   * Pre-filing form (Page 2): progress tracking + submit.
+   * "Complete" is judged by best-guess validation for a prototype: every
+   * field must simply be non-empty (no format/regex checks).
    * ------------------------------------------------------------------ */
   const pfFields = document.querySelectorAll(".pf-field");
   const pfProgress = document.getElementById("pf-progress");
   const pfSubmitBtn = document.getElementById("pf-submit-btn");
-  const pfDownloadPdfBtn = document.getElementById("pf-download-pdf-btn");
-  const afDownloadPdfBtn = document.getElementById("af-download-pdf-btn");
-
-  const NRIC_REGEX = /^[STFGMstfgm]\d{7}[A-Za-z]$/;
-  const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-  function validateSingleField(fieldId, showErrors = true) {
-    const input = document.getElementById(fieldId);
-    const errEl = document.getElementById("err-" + fieldId.replace("field-", ""));
-    if (!input) return true;
-    const val = input.value.trim();
-    let errorMsg = null;
-
-    if (fieldId === "field-claimantName") {
-      if (!val) errorMsg = "Full name is required as shown on NRIC/passport.";
-      else if (val.length < 2) errorMsg = "Name must be at least 2 characters.";
-    } else if (fieldId === "field-claimantId") {
-      if (!val) errorMsg = "NRIC / FIN is required.";
-      else if (!NRIC_REGEX.test(val)) errorMsg = "Enter a valid NRIC/FIN format (e.g. S1234567A).";
-    } else if (fieldId === "field-claimantEmail") {
-      if (!val) errorMsg = "Email address is required for court service notices.";
-      else if (!EMAIL_REGEX.test(val)) errorMsg = "Enter a valid email address (e.g. name@example.com).";
-    } else if (fieldId === "field-respondentName") {
-      if (!val) errorMsg = "Respondent name is required.";
-    } else if (fieldId === "field-respondentAddress") {
-      if (!val) errorMsg = "Respondent address for service is required.";
-    } else if (fieldId === "field-claimNature") {
-      if (!val) errorMsg = "Please select a claim category.";
-    } else if (fieldId === "field-claimAmount") {
-      const cleaned = val.replace(/^\$/, "").replace(/,/g, "").trim();
-      if (!cleaned) {
-        errorMsg = "Claim amount is required.";
-      } else if (/[^\d.]/.test(cleaned)) {
-        errorMsg = "Invalid characters. Numbers only (no letters or special symbols).";
-      } else {
-        const num = parseFloat(cleaned);
-        if (isNaN(num) || num <= 0) errorMsg = "Amount must be a positive number greater than $0.00.";
-        else if (num > 30000) errorMsg = "Small Claims Tribunal jurisdiction is capped at $30,000 max.";
-      }
-    } else if (fieldId === "field-claimDate") {
-      if (!val) {
-        errorMsg = "Date dispute arose is required.";
-      } else {
-        const d = new Date(val + "T00:00:00");
-        const today = new Date();
-        today.setHours(23, 59, 59, 999);
-        const twoYearsAgo = new Date();
-        twoYearsAgo.setFullYear(today.getFullYear() - 2);
-        if (isNaN(d.getTime())) errorMsg = "Please enter a valid calendar date.";
-        else if (d > today) errorMsg = "Dispute date cannot be in the future.";
-        else if (d < twoYearsAgo) errorMsg = "Claims must be filed within 2 years from when dispute arose (SCT Act s.5(4)).";
-      }
-    } else if (fieldId === "field-claimStatement") {
-      if (!val) errorMsg = "Please provide a brief statement of claim.";
-      else if (val.length < 10) errorMsg = "Statement must be at least 10 characters long.";
-    }
-
-    if (errEl && showErrors) {
-      if (errorMsg) {
-        errEl.textContent = errorMsg;
-        errEl.classList.remove("hidden");
-        input.classList.add("ring-2", "ring-error", "border-error");
-      } else {
-        errEl.textContent = "";
-        errEl.classList.add("hidden");
-        input.classList.remove("ring-2", "ring-error", "border-error");
-      }
-    }
-
-    return !errorMsg;
-  }
-
-  function validateAllFields(showErrors = true) {
-    let allValid = true;
-    let firstInvalidInput = null;
-    pfFields.forEach((field) => {
-      const isValid = validateSingleField(field.id, showErrors);
-      if (!isValid) {
-        allValid = false;
-        if (!firstInvalidInput) firstInvalidInput = field;
-      }
-    });
-    return { allValid, firstInvalidInput };
-  }
 
   function updatePfProgress() {
     const total = pfFields.length;
-    let completedCount = 0;
-    pfFields.forEach((field) => {
-      if (validateSingleField(field.id, false)) completedCount++;
-    });
-    pfProgress.textContent = completedCount + " of " + total + " fields completed";
-    const ready = completedCount === total;
-    pfSubmitBtn.classList.toggle("hidden", !ready);
-    pfSubmitBtn.disabled = !ready;
+    const done = Array.from(pfFields).filter((f) => f.value.trim() !== "").length;
+    pfProgress.textContent = done + " of " + total + " fields completed";
+    const complete = done === total;
+    pfSubmitBtn.classList.toggle("hidden", !complete);
+    pfSubmitBtn.disabled = !complete;
   }
-
   pfFields.forEach((f) => {
-    f.addEventListener("input", () => {
-      validateSingleField(f.id, true);
-      updatePfProgress();
-    });
-    f.addEventListener("blur", () => {
-      validateSingleField(f.id, true);
-      updatePfProgress();
-    });
-    f.addEventListener("change", () => {
-      validateSingleField(f.id, true);
-      updatePfProgress();
-    });
+    f.addEventListener("input", updatePfProgress);
+    f.addEventListener("change", updatePfProgress);
   });
-
-  /* ------------------------------------------------------------------
-   * Hostile / Extreme language detection (Frontend Heuristic + Backend)
-   * ------------------------------------------------------------------ */
-  const claimStatementInput = document.getElementById("field-claimStatement");
-  const toneWarningBox = document.getElementById("claim-statement-warning");
-  const tonePromptMessage = document.getElementById("tone-prompt-message");
-  const toneDisclaimerText = document.getElementById("tone-disclaimer-text");
-  const toneSuggestedText = document.getElementById("tone-suggested-text");
-  const toneApplyBtn = document.getElementById("tone-apply-btn");
-  const toneIgnoreBtn = document.getElementById("tone-ignore-btn");
-
-  const CLIENT_HOSTILE_PATTERNS = [
-    /\b(these\s+(?:young|old)\s+people|(?:all\s+)?youths?|useless\s+(?:youth|kids?|people)|these\s+[a-z]+\s+are\s+always|typical\s+(?:young|old|millennial|boomer))\b/i,
-    /\b(thief|thieves|scammer|scammers|scam|fraudster|con\s*artist|crook|crooks|cheater|stole|robbed|criminal)\b/i,
-    /\b(useless|idiot|idiots|stupid|asshole|liar|liars|scumbag|scum|shameless|cheat)\b/i,
-    /\b(regret\s+this|ruin\s+you|ruin\s+your|police\s+on\s+you|pay\s+or\s+else|destroy\s+you)\b/i,
-  ];
-
-  let toneDebounceTimer = null;
-  let lastCheckedToneText = "";
-  let currentSuggestedRewrite = "";
-  let userIgnoredToneWarning = false;
-
-  function runClientHeuristicToneCheck(text) {
-    if (!text || !text.trim()) {
-      clearToneWarning();
-      return false;
-    }
-    for (const pat of CLIENT_HOSTILE_PATTERNS) {
-      if (pat.test(text)) {
-        currentSuggestedRewrite = "I am claiming a refund of the amount paid because the respondent failed to deliver the agreed goods/services and has not repaid me despite repeated requests.";
-        tonePromptMessage.textContent = "Are you sure you wish to proceed with this wording?";
-        toneDisclaimerText.textContent = "Court mediation data shows that personal insults and generalizations drastically reduce your chances of an amicable settlement and weaken your credibility before the Magistrate.";
-        toneSuggestedText.textContent = currentSuggestedRewrite;
-
-        claimStatementInput.classList.add("ring-2", "ring-amber-500", "border-amber-500", "bg-amber-50/20");
-        if (!userIgnoredToneWarning) {
-          toneWarningBox.classList.remove("hidden");
-        }
-        return true;
-      }
-    }
-    if (!userIgnoredToneWarning) {
-      clearToneWarning();
-    }
-    return false;
-  }
-
-  async function evaluateClaimTone(text) {
-    const trimmed = text.trim();
-    if (!trimmed || trimmed === lastCheckedToneText) return;
-    lastCheckedToneText = trimmed;
-
-    // Instant Tier 1 local check
-    runClientHeuristicToneCheck(trimmed);
-
-    // Tier 2 Async API call
-    try {
-      const response = await fetch("/api/check-tone", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: trimmed })
-      });
-      if (!response.ok) return;
-      const data = await response.json();
-
-      if (data.flagged) {
-        currentSuggestedRewrite = data.suggested_clean_rewrite || currentSuggestedRewrite;
-        tonePromptMessage.textContent = data.prompt_message || "Are you sure you wish to proceed with this wording?";
-        toneDisclaimerText.textContent = data.disclaimer || "Court mediation data shows that personal insults and generalizations drastically reduce your chances of an amicable settlement and weaken your credibility before the Magistrate.";
-        toneSuggestedText.textContent = currentSuggestedRewrite;
-
-        claimStatementInput.classList.add("ring-2", "ring-amber-500", "border-amber-500", "bg-amber-50/20");
-        if (!userIgnoredToneWarning) {
-          toneWarningBox.classList.remove("hidden");
-        }
-      } else if (!userIgnoredToneWarning) {
-        clearToneWarning();
-      }
-    } catch (err) {
-      // Graceful fallback: local heuristics already triggered
-    }
-  }
-
-  function clearToneWarning() {
-    if (claimStatementInput) {
-      claimStatementInput.classList.remove("ring-2", "ring-amber-500", "border-amber-500", "bg-amber-50/20");
-    }
-    if (toneWarningBox) {
-      toneWarningBox.classList.add("hidden");
-    }
-    userIgnoredToneWarning = false;
-  }
-
-  if (claimStatementInput) {
-    claimStatementInput.addEventListener("input", () => {
-      userIgnoredToneWarning = false;
-      runClientHeuristicToneCheck(claimStatementInput.value);
-      clearTimeout(toneDebounceTimer);
-      toneDebounceTimer = setTimeout(() => {
-        evaluateClaimTone(claimStatementInput.value);
-      }, 400);
-    });
-
-    claimStatementInput.addEventListener("blur", () => {
-      clearTimeout(toneDebounceTimer);
-      evaluateClaimTone(claimStatementInput.value);
-    });
-  }
-
-  if (toneApplyBtn) {
-    toneApplyBtn.addEventListener("click", () => {
-      if (currentSuggestedRewrite && claimStatementInput) {
-        claimStatementInput.value = currentSuggestedRewrite;
-        clearToneWarning();
-        lastCheckedToneText = currentSuggestedRewrite;
-        validateSingleField("field-claimStatement", true);
-        updatePfProgress();
-      }
-    });
-  }
-
-  if (toneIgnoreBtn) {
-    toneIgnoreBtn.addEventListener("click", () => {
-      userIgnoredToneWarning = true;
-      if (toneWarningBox) toneWarningBox.classList.add("hidden");
-    });
-  }
-
-  /* ------------------------------------------------------------------
-   * Form Submission & Pre-Filing PDF Generation
-   * ------------------------------------------------------------------ */
-  function collectFormData() {
-    return {
-      claimant_name: document.getElementById("field-claimantName")?.value || "",
-      claimant_nric: document.getElementById("field-claimantId")?.value || "",
-      claimant_email: document.getElementById("field-claimantEmail")?.value || "",
-      respondent_name: document.getElementById("field-respondentName")?.value || "",
-      respondent_address: document.getElementById("field-respondentAddress")?.value || "",
-      nature_of_dispute: document.getElementById("field-claimNature")?.value || "",
-      claim_amount: document.getElementById("field-claimAmount")?.value || "",
-      date_of_cause_of_action: document.getElementById("field-claimDate")?.value || "",
-      particulars: document.getElementById("field-claimStatement")?.value || "",
-      reference_number: document.getElementById("af-ref-number")?.textContent || null
-    };
-  }
-
-  async function handleDownloadPdf(btn, labelEl) {
-    const { allValid, firstInvalidInput } = validateAllFields(true);
-    if (!allValid) {
-      if (firstInvalidInput) {
-        firstInvalidInput.scrollIntoView({ behavior: "smooth", block: "center" });
-        firstInvalidInput.focus();
-      }
-      alert("Please fix the highlighted validation errors before downloading the claim summary PDF.");
-      return;
-    }
-
-    const origLabel = labelEl.textContent;
-    btn.disabled = true;
-    labelEl.textContent = "Generating PDF…";
-
-    try {
-      const data = collectFormData();
-      const response = await fetch("/api/generate-pdf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-
-      if (!response.ok) {
-        const errPayload = await response.json().catch(() => ({}));
-        throw new Error(errPayload.detail?.message || "Failed to generate claim PDF.");
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "SCT_PreFiling_Claim_Summary.pdf";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      alert("Error generating PDF: " + error.message);
-    } finally {
-      btn.disabled = false;
-      labelEl.textContent = origLabel;
-    }
-  }
-
-  if (pfDownloadPdfBtn) {
-    pfDownloadPdfBtn.addEventListener("click", () => {
-      const label = document.getElementById("pf-pdf-btn-label");
-      handleDownloadPdf(pfDownloadPdfBtn, label);
-    });
-  }
-
-  if (afDownloadPdfBtn) {
-    afDownloadPdfBtn.addEventListener("click", () => {
-      const label = document.getElementById("af-pdf-btn-label");
-      handleDownloadPdf(afDownloadPdfBtn, label);
-    });
-  }
+  updatePfProgress();
 
   pfSubmitBtn.addEventListener("click", () => {
-    const { allValid, firstInvalidInput } = validateAllFields(true);
-    if (!allValid) {
-      if (firstInvalidInput) {
-        firstInvalidInput.scrollIntoView({ behavior: "smooth", block: "center" });
-        firstInvalidInput.focus();
-      }
-      return;
-    }
-
     const label = document.getElementById("pf-submit-btn-label");
     const icon = document.getElementById("pf-submit-btn-icon");
     pfSubmitBtn.disabled = true;
     label.textContent = "Submitting…";
     icon.textContent = "progress_activity";
     icon.classList.add("animate-spin");
-    window.setTimeout(() => {
-      renderAfterFilingRef();
-      showPage("after-filing");
-    }, 900);
+    // Mocked latency only — no real submission happens; a production build
+    // would POST the form here and only navigate on a successful response.
+    window.setTimeout(() => showPage("after-filing"), 900);
+  });
+
+  /* ------------------------------------------------------------------
+   * Pre-filing form (Page 2): save-for-this-session + in-widget "add more
+   * documents". There's no account/server here, so "saving" just snapshots
+   * the current field values into an in-memory object that lasts only as
+   * long as this browser tab stays open — consistent with how the widget's
+   * own state (state.files etc.) is already handled elsewhere (plain
+   * in-memory JS, no localStorage/sessionStorage anywhere in this codebase).
+   * Adding more documents no longer navigates away from this page at all:
+   * it opens the ClaimReady widget's own "upload" mode, which already
+   * remembers whatever the visitor attached earlier via the widget's
+   * "approximate my route" step (see claimready-overlay.js).
+   * ------------------------------------------------------------------ */
+  let savedFormAnswers = null;
+  const pfSaveBtn = document.getElementById("pf-save-btn");
+  const pfSaveStatus = document.getElementById("pf-save-status");
+  const pfAddDocsBtn = document.getElementById("pf-add-docs-btn");
+
+  function fieldKeyOf(el) {
+    return el.id.replace(/^field-/, "");
+  }
+
+  pfSaveBtn.addEventListener("click", () => {
+    savedFormAnswers = {};
+    pfFields.forEach((f) => { savedFormAnswers[fieldKeyOf(f)] = f.value; });
+    pfSaveStatus.textContent = "Saved for this session — your answers will stay filled in as long as this tab stays open.";
+    pfAddDocsBtn.classList.remove("hidden");
+  });
+
+  pfAddDocsBtn.addEventListener("click", () => {
+    if (window.ClaimReadyOverlay) {
+      window.ClaimReadyOverlay.setContext("upload");
+      window.ClaimReadyOverlay.open();
+    }
+  });
+
+  // Dispatched by the widget's "upload" mode when the visitor taps "Continue
+  // to questionnaire" — restores whatever was saved before they went to add
+  // more documents, then hands the widget back its normal Page 2 "hidden"
+  // context. Mirrors how "claimready:route-complete" hands off the other way.
+  window.addEventListener("claimready:resume-to-form", () => {
+    if (savedFormAnswers) {
+      pfFields.forEach((f) => {
+        const key = fieldKeyOf(f);
+        if (key in savedFormAnswers) f.value = savedFormAnswers[key];
+      });
+      updatePfProgress();
+    }
+    if (window.ClaimReadyOverlay) window.ClaimReadyOverlay.setContext("hidden");
   });
 
   /* ------------------------------------------------------------------
@@ -1583,10 +792,6 @@ tailwind.config = {
   document.getElementById("af-open-guide-btn").addEventListener("click", () => {
     if (window.ClaimReadyOverlay) window.ClaimReadyOverlay.open();
   });
-
-  /* Initial state */
-  updatePfProgress();
-  renderChecklist(null);
 })();
 </script>
 
