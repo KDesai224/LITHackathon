@@ -575,9 +575,191 @@ tailwind.config = {
   </div>
 </div>
 
+<!-- ============================== SCT PORTAL VIEW (Page 1.75) ==============================
+     Reached by submitting the eligibility check (Page 1.5) above. Mocks the real CJTS account
+     homepage you land on before actually reaching the claim form: a mostly-static dashboard
+     (Notifications/Active Cases panels, both empty) plus a left sidebar. Per request, the only
+     working control on this whole page is "Online Applications" — an accordion revealing
+     CDRT/ECT/PHC/SCT sub-links, of which only "SCT" is wired up. Clicking it swaps this page's
+     own content pane (dashboard <-> applications grid; not a showPage() view change, since both
+     live here) to the real "Online Applications - Small Claims Tribunals" grid of application
+     types, where again only one card, Claim Form, is wired up — handing off to the mock claim
+     form (Page 2) below via showPage(). Everything else here (other sidebar items, other
+     sub-links, other application cards, "Enter one-time reference number") is a non-functional
+     placeholder that opens the same "not wired up in this demo" modal as the header's
+     Singpass/account buttons — no dead "#" links. -->
+<div class="hidden" data-page="sct-portal">
+  <div class="w-full bg-primary text-on-primary">
+    <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop py-space-sm flex items-center justify-between gap-space-md">
+      <div class="flex items-center gap-space-sm">
+        <span class="material-symbols-outlined text-[28px]">gavel</span>
+        <div class="flex flex-col leading-tight">
+          <span class="font-label-md text-label-md font-bold tracking-wide">STATE COURTS OF SINGAPORE</span>
+          <span class="font-body-sm text-body-sm text-on-primary/80">Community Justice and Tribunals System (Mock)</span>
+        </div>
+      </div>
+      <button class="flex items-center gap-space-2xs px-space-md py-space-2xs bg-on-primary/10 hover:bg-on-primary/20 rounded-lg font-label-md text-label-md transition-colors" data-modal="sctInert" type="button">
+        <span class="material-symbols-outlined text-[18px]">logout</span>
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <div class="bg-amber-50 border-b border-amber-200">
+    <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop py-space-sm flex flex-wrap items-center justify-between gap-space-sm">
+      <p class="font-body-sm text-body-sm text-amber-900">[Beta] This site is being progressively translated — some content may not yet be fully translated.</p>
+      <button class="flex-shrink-0 px-space-md py-space-2xs bg-white border border-amber-300 rounded-lg font-label-sm text-label-sm text-amber-900 hover:bg-amber-100 transition-colors" data-modal="sctInert" type="button">Enter one-time reference number</button>
+    </div>
+  </div>
+
+  <div class="max-w-layout-content-max-width mx-auto w-full px-layout-margin-mobile md:px-layout-margin-desktop py-space-lg flex flex-col md:flex-row gap-space-lg">
+    <!-- Sidebar -->
+    <aside class="w-full md:w-64 flex-shrink-0 bg-surface-container-lowest rounded-lg shadow-sm p-space-sm h-max">
+      <div class="flex items-center gap-space-sm p-space-sm border-b border-outline-variant/40 mb-space-xs">
+        <span class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-on-primary font-label-md text-label-md font-bold flex-shrink-0">U</span>
+        <span class="font-label-md text-label-md text-on-surface font-semibold truncate">Welcome, User</span>
+      </div>
+      <nav class="flex flex-col gap-space-2xs" id="sct-sidebar-nav">
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md bg-primary-container text-on-primary transition-colors" id="sct-home-link" type="button">
+          <span class="material-symbols-outlined text-[20px]">home</span>Home
+        </button>
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" data-modal="sctInert" type="button">
+          <span class="material-symbols-outlined text-[20px]">notifications</span>Notifications
+        </button>
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" data-modal="sctInert" type="button">
+          <span class="material-symbols-outlined text-[20px]">handshake</span>eNegotiation
+        </button>
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" data-modal="sctInert" type="button">
+          <span class="material-symbols-outlined text-[20px]">folder_open</span>My Filings
+        </button>
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" data-modal="sctInert" type="button">
+          <span class="material-symbols-outlined text-[20px]">history_edu</span>Settlement Agreements
+        </button>
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" data-modal="sctInert" type="button">
+          <span class="material-symbols-outlined text-[20px]">payments</span>Payment Details
+        </button>
+
+        <!-- Online Applications: the one working accordion on this page. Its sub-links sit in
+             normal document flow, so expanding it naturally pushes My Profile/Resources/Logout
+             down (matching one reference screenshot); collapsed, they sit right below it as
+             usual (matching the other). -->
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" aria-expanded="false" id="sct-oa-toggle" type="button">
+          <span class="material-symbols-outlined text-[20px]">apps</span>
+          <span class="flex-1 text-left">Online Applications</span>
+          <span class="material-symbols-outlined text-[18px]" id="sct-oa-chevron">expand_more</span>
+        </button>
+        <div class="hidden flex-col gap-space-2xs pl-space-lg" id="sct-oa-submenu">
+          <button class="px-space-sm py-space-2xs rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container transition-colors text-left" data-modal="sctInert" title="Community Disputes Resolution Tribunals" type="button">CDRT</button>
+          <button class="px-space-sm py-space-2xs rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container transition-colors text-left" data-modal="sctInert" title="Employment Claims Tribunals" type="button">ECT</button>
+          <button class="px-space-sm py-space-2xs rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container transition-colors text-left" data-modal="sctInert" title="Protection from Harassment Court" type="button">PHC</button>
+          <button class="px-space-sm py-space-2xs rounded-lg font-label-sm text-label-sm font-semibold text-primary hover:bg-primary-fixed/40 transition-colors text-left" id="sct-sct-link" title="Small Claims Tribunals" type="button">SCT</button>
+        </div>
+
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" data-modal="sctInert" type="button">
+          <span class="material-symbols-outlined text-[20px]">person</span>My Profile
+        </button>
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" data-modal="sctInert" type="button">
+          <span class="material-symbols-outlined text-[20px]">menu_book</span>Resources
+        </button>
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" data-modal="sctInert" type="button">
+          <span class="material-symbols-outlined text-[20px]">logout</span>Logout
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Content -->
+    <div class="flex-1 min-w-0 flex flex-col gap-space-lg">
+      <div class="flex flex-col gap-space-lg" id="sct-dashboard-view">
+        <div class="bg-primary-fixed/40 border border-primary-container/40 rounded-lg p-space-md flex items-start gap-space-sm">
+          <span class="material-symbols-outlined text-primary text-[20px] mt-0.5">info</span>
+          <p class="font-body-sm text-body-sm text-on-surface">This is a mocked CJTS account homepage for the ClaimReady prototype — no real filings, notifications, or account data live here. Use the sidebar's <strong>Online Applications → SCT</strong> to reach the mock claim form.</p>
+        </div>
+
+        <section class="bg-surface-container-lowest rounded-lg shadow-sm">
+          <div class="px-space-lg py-space-sm border-b border-outline-variant/40 flex items-center justify-between">
+            <h2 class="font-label-lg text-label-lg text-on-surface font-semibold">Notifications</h2>
+            <button class="font-label-sm text-label-sm text-primary hover:underline" data-modal="sctInert" type="button">MORE &gt;&gt;</button>
+          </div>
+          <div class="p-space-lg overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="font-label-sm text-label-sm text-on-surface-variant border-b border-outline-variant/40">
+                  <th class="pb-space-xs pr-space-md font-semibold">Date &amp; Time</th>
+                  <th class="pb-space-xs font-semibold">Subject</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="py-space-md font-body-sm text-body-sm text-on-surface-variant" colspan="2">No notifications.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="bg-surface-container-lowest rounded-lg shadow-sm">
+          <div class="px-space-lg py-space-sm border-b border-outline-variant/40">
+            <h2 class="font-label-lg text-label-lg text-on-surface font-semibold">Active Case(s) <span class="text-on-surface-variant font-normal">(0)</span></h2>
+          </div>
+          <div class="p-space-lg overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="font-label-sm text-label-sm text-on-surface-variant border-b border-outline-variant/40">
+                  <th class="pb-space-xs pr-space-md font-semibold">S/N</th>
+                  <th class="pb-space-xs pr-space-md font-semibold">Case No.</th>
+                  <th class="pb-space-xs pr-space-md font-semibold">Parties</th>
+                  <th class="pb-space-xs pr-space-md font-semibold">Next Court Date</th>
+                  <th class="pb-space-xs pr-space-md font-semibold">Status</th>
+                  <th class="pb-space-xs font-semibold">Remarks/Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="py-space-md font-body-sm text-body-sm text-on-surface-variant" colspan="6">No active cases.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <div class="hidden flex-col gap-space-lg" id="sct-applications-view">
+        <p class="font-body-sm text-body-sm text-on-surface-variant">
+          <button class="hover:underline text-primary" id="sct-breadcrumb-home" type="button">Home</button>
+          &gt; Online Applications &gt; Small Claims Tribunals
+        </p>
+        <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Online Applications - Small Claims Tribunals</h1>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-md">
+          <button class="flex flex-col items-center justify-center gap-space-sm p-space-lg rounded-lg bg-primary text-on-primary shadow-sm hover:bg-primary-container transition-colors text-center" id="sct-claimform-card" type="button">
+            <span class="material-symbols-outlined text-[36px]">description</span>
+            <span class="font-label-md text-label-md font-bold">CLAIM FORM</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-space-sm p-space-lg rounded-lg bg-surface-container-lowest shadow-sm hover:bg-surface-container transition-colors text-center" data-modal="sctInert" type="button">
+            <span class="material-symbols-outlined text-[36px] text-on-surface-variant">description</span>
+            <span class="font-label-md text-label-md text-on-surface">Counter Claim Form</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-space-sm p-space-lg rounded-lg bg-surface-container-lowest shadow-sm hover:bg-surface-container transition-colors text-center" data-modal="sctInert" type="button">
+            <span class="material-symbols-outlined text-[36px] text-on-surface-variant">person_add</span>
+            <span class="font-label-md text-label-md text-on-surface">Application for Representative</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-space-sm p-space-lg rounded-lg bg-surface-container-lowest shadow-sm hover:bg-surface-container transition-colors text-center" data-modal="sctInert" type="button">
+            <span class="material-symbols-outlined text-[36px] text-on-surface-variant">edit_note</span>
+            <span class="font-label-md text-label-md text-on-surface">Request for Amendments</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-space-sm p-space-lg rounded-lg bg-surface-container-lowest shadow-sm hover:bg-surface-container transition-colors text-center" data-modal="sctInert" type="button">
+            <span class="material-symbols-outlined text-[36px] text-on-surface-variant">event</span>
+            <span class="font-label-md text-label-md text-on-surface">Change of Court Date Application</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-space-sm p-space-lg rounded-lg bg-surface-container-lowest shadow-sm hover:bg-surface-container transition-colors text-center" data-modal="sctInert" type="button">
+            <span class="material-symbols-outlined text-[36px] text-on-surface-variant">cancel</span>
+            <span class="font-label-md text-label-md text-on-surface">Withdrawal Application Form</span>
+          </button>
+        </div>
+        <p class="font-body-sm text-body-sm text-on-surface-variant italic">The real page has further application types below this row, cut off in the reference screenshots — omitted here since their exact labels weren't visible. Only "Claim Form" is wired up for this demo.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ============================== PRE-FILING FORM VIEW (Page 2) ==============================
-     Reached by submitting the eligibility check (Page 1.5) above, once every question there is
-     answered. Mock pre-filing form: each field has an (i) info button that opens a popup showing a
+     Reached by clicking "Claim Form" on the mock SCT portal above (Page 1.75), which itself
+     follows the eligibility check (Page 1.5). Mock pre-filing form: each field has an (i) info button that opens a popup showing a
      mocked document excerpt, citation, and suggested value — standing in for a future
      real document-analysis backend. Sectioned A–F to mirror the real CJTS claim form (see
      screenshots this was built from): A/B are party details, C is Particulars of Claim
@@ -989,7 +1171,11 @@ tailwind.config = {
     // changes — otherwise switching between Home/Resources/FAQs (all "route" mode) would
     // wipe out whatever the visitor had already typed into the widget.
     const nextContext =
-      view === "prefiling-form" || view === "eligibility-check" ? "hidden" : view === "after-filing" ? "after" : "route";
+      view === "prefiling-form" || view === "eligibility-check" || view === "sct-portal"
+        ? "hidden"
+        : view === "after-filing"
+        ? "after"
+        : "route";
     if (window.ClaimReadyOverlay && nextContext !== lastOverlayContext) {
       window.ClaimReadyOverlay.setContext(nextContext);
       lastOverlayContext = nextContext;
@@ -1043,7 +1229,8 @@ tailwind.config = {
     terms: { title: "Terms of Service (Demo)", body: "<p>This interface is an illustrative prototype for evaluating layout and interaction design. It is not connected to any court system and creates no legal record.</p>" },
     vulnerability: { title: "Vulnerability Disclosure (Demo)", body: "<p>This is a static local demo with no live backend, authentication, or data store, so there is no production attack surface to report against.</p>" },
     singpass: { title: "Login — Non-Functional Placeholder", body: "<p>This button is a visual placeholder only. It is <strong>not</strong> connected to Singpass or any real government authentication service, and no real login occurs. In a production build, this control would need to hand off to the actual Singpass OIDC flow — that integration is intentionally out of scope for this frontend prototype.</p>" },
-    account: { title: "Account — Demo Mode", body: "<p>No account/session backend is wired up in this demo. This is a placeholder for the signed-in user menu (profile, saved assessments, sign out).</p>" }
+    account: { title: "Account — Demo Mode", body: "<p>No account/session backend is wired up in this demo. This is a placeholder for the signed-in user menu (profile, saved assessments, sign out).</p>" },
+    sctInert: { title: "Not Wired Up — Demo Mode", body: "<p>This control is a static placeholder in this prototype. Per the requested scope for this mock SCT portal page, only <strong>Online Applications → SCT → Claim Form</strong> is wired up — everything else here (the other sidebar items, the other tribunal sub-links, the other application-type cards, the one-time reference number field) is visual only.</p>" }
   };
 
   const backdrop = document.getElementById("modal-backdrop");
@@ -1073,6 +1260,40 @@ tailwind.config = {
 
   document.getElementById("singpass-btn").addEventListener("click", () => openModal("singpass"));
   document.getElementById("account-btn").addEventListener("click", () => openModal("account"));
+
+  /* ------------------------------------------------------------------
+   * SCT portal (Page 1.75): the "Online Applications" accordion, and the
+   * dashboard <-> applications-grid content swap it leads to. Both live inside
+   * this one data-page, so they're plain local toggles rather than showPage()
+   * calls — only the grid's "Claim Form" card actually calls showPage().
+   * ------------------------------------------------------------------ */
+  const sctOaToggle = document.getElementById("sct-oa-toggle");
+  const sctOaSubmenu = document.getElementById("sct-oa-submenu");
+  const sctOaChevron = document.getElementById("sct-oa-chevron");
+  sctOaToggle.addEventListener("click", () => {
+    const expanded = sctOaToggle.getAttribute("aria-expanded") === "true";
+    sctOaToggle.setAttribute("aria-expanded", String(!expanded));
+    sctOaSubmenu.classList.toggle("hidden", expanded);
+    sctOaSubmenu.classList.toggle("flex", !expanded);
+    sctOaChevron.textContent = expanded ? "expand_more" : "expand_less";
+  });
+
+  const sctDashboardView = document.getElementById("sct-dashboard-view");
+  const sctApplicationsView = document.getElementById("sct-applications-view");
+  const sctHomeLink = document.getElementById("sct-home-link");
+  function showSctView(view) {
+    sctDashboardView.classList.toggle("hidden", view !== "dashboard");
+    sctApplicationsView.classList.toggle("hidden", view !== "applications");
+    sctApplicationsView.classList.toggle("flex", view === "applications");
+    sctHomeLink.classList.toggle("bg-primary-container", view === "dashboard");
+    sctHomeLink.classList.toggle("text-on-primary", view === "dashboard");
+    sctHomeLink.classList.toggle("text-on-surface-variant", view !== "dashboard");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  sctHomeLink.addEventListener("click", () => showSctView("dashboard"));
+  document.getElementById("sct-breadcrumb-home").addEventListener("click", () => showSctView("dashboard"));
+  document.getElementById("sct-sct-link").addEventListener("click", () => showSctView("applications"));
+  document.getElementById("sct-claimform-card").addEventListener("click", () => showPage("prefiling-form"));
 
   /* ------------------------------------------------------------------
    * Per-field "document help" popups, shared by the eligibility check
@@ -1470,7 +1691,9 @@ tailwind.config = {
     icon.classList.add("animate-spin");
     // Mocked latency only — no real submission happens; a production build
     // would POST the answers here and only navigate on a successful response.
-    window.setTimeout(() => showPage("prefiling-form"), 900);
+    // Lands on the mock SCT portal (Page 1.75) rather than the claim form directly —
+    // see that view's own comment for how it hands off to the claim form from there.
+    window.setTimeout(() => showPage("sct-portal"), 900);
   });
 
   /* ------------------------------------------------------------------
