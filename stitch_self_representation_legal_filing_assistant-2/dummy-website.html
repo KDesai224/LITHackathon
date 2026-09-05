@@ -451,6 +451,7 @@ tailwind.config = {
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimantName" type="button" aria-label="Help for your full name"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimantName" type="text" placeholder="As it appears on your NRIC/passport" />
+          <p class="hidden text-xs text-error font-medium" id="err-claimantName"></p>
         </div>
 
         <div class="space-y-space-2xs">
@@ -459,27 +460,39 @@ tailwind.config = {
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimantId" type="button" aria-label="Help for NRIC / FIN"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimantId" type="text" placeholder="e.g. S1234567A" />
+          <p class="hidden text-xs text-error font-medium" id="err-claimantId"></p>
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimantEmail">
+            <span>3. Your email address (For court notices)</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimantEmail" type="button" aria-label="Help for email address"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimantEmail" type="email" placeholder="e.g. yourname@example.com" />
+          <p class="hidden text-xs text-error font-medium" id="err-claimantEmail"></p>
         </div>
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-respondentName">
-            <span>3. Respondent's full name or business name</span>
+            <span>4. Respondent's full name or business name</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="respondentName" type="button" aria-label="Help for respondent's name"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-respondentName" type="text" placeholder="Person or business you are claiming against" />
+          <p class="hidden text-xs text-error font-medium" id="err-respondentName"></p>
         </div>
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-respondentAddress">
-            <span>4. Respondent's address for service</span>
+            <span>5. Respondent's address for service</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="respondentAddress" type="button" aria-label="Help for respondent's address"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <textarea class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" id="field-respondentAddress" placeholder="Where the respondent can be served with claim papers" rows="2"></textarea>
+          <p class="hidden text-xs text-error font-medium" id="err-respondentAddress"></p>
         </div>
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimNature">
-            <span>5. Nature of claim</span>
+            <span>6. Nature of claim</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimNature" type="button" aria-label="Help for nature of claim"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <select class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimNature">
@@ -492,36 +505,59 @@ tailwind.config = {
             <option>Neighbour / Community Dispute</option>
             <option>Other</option>
           </select>
+          <p class="hidden text-xs text-error font-medium" id="err-claimNature"></p>
         </div>
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimAmount">
-            <span>6. Amount claimed (SGD)</span>
+            <span>7. Amount claimed (SGD)</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimAmount" type="button" aria-label="Help for amount claimed"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
-          <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimAmount" min="0" type="number" placeholder="e.g. 4500" />
+          <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimAmount" type="text" placeholder="e.g. 4500 (numbers only)" />
+          <p class="hidden text-xs text-error font-medium" id="err-claimAmount"></p>
         </div>
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimDate">
-            <span>7. Date the dispute arose</span>
+            <span>8. Date the dispute arose</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimDate" type="button" aria-label="Help for date the dispute arose"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimDate" type="date" />
+          <p class="hidden text-xs text-error font-medium" id="err-claimDate"></p>
         </div>
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimStatement">
-            <span>8. Brief statement of claim</span>
+            <span>9. Brief statement of claim</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimStatement" type="button" aria-label="Help for statement of claim"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <textarea class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" id="field-claimStatement" placeholder="What happened, and what you are asking the tribunal to order" rows="4"></textarea>
+          <p class="hidden text-xs text-error font-medium" id="err-claimStatement"></p>
+          <div id="claim-statement-warning" class="hidden mt-space-xs p-space-md bg-amber-50/80 border border-amber-300 rounded-lg text-on-surface">
+            <div class="flex items-center gap-space-xs text-amber-900 font-label-md font-semibold">
+              <span class="material-symbols-outlined text-[20px] text-amber-600">warning</span>
+              <span id="tone-prompt-message">Are you sure you wish to proceed with this wording?</span>
+            </div>
+            <p class="font-body-sm text-body-sm text-secondary mt-space-2xs" id="tone-disclaimer-text">Court mediation data shows that personal insults and generalizations drastically reduce your chances of an amicable settlement and weaken your credibility before the Magistrate.</p>
+            <div class="mt-space-xs p-space-sm bg-surface-container-lowest border border-amber-200 rounded-md">
+              <span class="font-label-sm text-label-sm text-primary uppercase font-bold block mb-1">Recommended Factual Phrasing</span>
+              <p class="font-body-sm text-body-sm text-on-surface italic" id="tone-suggested-text"></p>
+            </div>
+            <div class="flex items-center gap-space-xs mt-space-sm flex-wrap">
+              <button type="button" id="tone-apply-btn" class="px-space-md py-1.5 bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors font-medium">Use recommended fix</button>
+              <button type="button" id="tone-ignore-btn" class="px-space-md py-1.5 bg-surface-container text-secondary rounded-lg font-label-md text-label-md hover:bg-surface-container-high transition-colors">Proceed anyway</button>
+            </div>
+          </div>
         </div>
 
-        <div class="pt-space-xs">
+        <div class="pt-space-xs flex items-center gap-space-sm flex-wrap">
           <button class="hidden flex items-center gap-space-xs px-space-lg py-space-sm bg-primary-container text-on-primary font-label-md text-label-md rounded-lg hover:bg-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled id="pf-submit-btn" type="button">
-            <span id="pf-submit-btn-label">Submit</span>
+            <span id="pf-submit-btn-label">Submit Mock Claim</span>
             <span class="material-symbols-outlined text-[16px]" id="pf-submit-btn-icon">arrow_forward</span>
+          </button>
+          <button class="flex items-center gap-space-xs px-space-lg py-space-sm bg-surface-container text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-container-high transition-colors border border-outline-variant/60" id="pf-download-pdf-btn" type="button">
+            <span class="material-symbols-outlined text-[18px] text-primary">picture_as_pdf</span>
+            <span id="pf-pdf-btn-label">Download Pre-Filing PDF</span>
           </button>
         </div>
       </form>
@@ -559,6 +595,17 @@ tailwind.config = {
       <button class="flex items-center gap-space-xs px-space-lg py-space-sm bg-primary-container text-on-primary font-label-md text-label-md rounded-lg hover:bg-primary transition-colors flex-shrink-0" id="af-open-guide-btn" type="button">
         <span class="material-symbols-outlined text-[18px]">support_agent</span>
         <span>Show me what to do next</span>
+      </button>
+    </section>
+
+    <section class="bg-surface-container-lowest rounded-lg shadow-sm p-space-lg md:p-space-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md border border-primary/20">
+      <div class="flex flex-col gap-space-2xs">
+        <h2 class="font-headline-md text-headline-md text-primary font-bold">Official Pre-Filing Claim Summary (PDF)</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">Download a clean, structured PDF summary of your claim particulars, respondent information, and procedural checklist to prepare for your SCT Consultation session.</p>
+      </div>
+      <button class="flex items-center gap-space-xs px-space-lg py-space-sm bg-secondary text-on-secondary font-label-md text-label-md rounded-lg hover:bg-slate-700 transition-colors flex-shrink-0" id="af-download-pdf-btn" type="button">
+        <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+        <span id="af-pdf-btn-label">Download Claim PDF</span>
       </button>
     </section>
   </div>
@@ -1004,7 +1051,7 @@ tailwind.config = {
     chatLog.scrollTop = chatLog.scrollHeight;
   }
 
-  startBtn.addEventListener("click", () => {
+  startBtn.addEventListener("click", async () => {
     startError.classList.add("hidden");
     const hasCategory = Boolean(selectedCategory);
     const hasText = Boolean(inputArea.value.trim());
@@ -1021,6 +1068,27 @@ tailwind.config = {
     startBtnLabel.textContent = "Analysing…";
     startBtnIcon.textContent = "progress_activity";
     startBtnIcon.classList.add("animate-spin");
+
+    if (hasText) {
+      try {
+        const response = await fetch("/api/extract-fields", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: inputArea.value.trim() })
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Analysis failed.");
+        applyExtractedFieldHelp(payload.field_help);
+      } catch (error) {
+        startBtn.disabled = false;
+        startBtnLabel.textContent = "Start Assessment";
+        startBtnIcon.textContent = "arrow_forward";
+        startBtnIcon.classList.remove("animate-spin");
+        startError.textContent = error.message + " Add OPENAI_API_KEY to .env before using live analysis.";
+        startError.classList.remove("hidden");
+        return;
+      }
+    }
 
     window.setTimeout(() => {
       startBtn.disabled = false;
@@ -1061,6 +1129,12 @@ tailwind.config = {
       citation: "Sale Agreement.pdf, page 1",
       suggestion: "S8712345A"
     },
+    claimantEmail: {
+      label: "Your email address",
+      excerpt: "“Buyer Email: john.tan.wm@example.com”",
+      citation: "Sale Agreement.pdf, page 1",
+      suggestion: "john.tan.wm@example.com"
+    },
     respondentName: {
       label: "Respondent's full name or business name",
       excerpt: "“…supplied by Bright Home Furnishings Pte Ltd (UEN 201812345K)…”",
@@ -1099,18 +1173,33 @@ tailwind.config = {
     }
   };
 
+  function applyExtractedFieldHelp(fieldHelp) {
+    Object.keys(FIELD_HELP).forEach((fieldKey) => {
+      if (fieldHelp[fieldKey]) FIELD_HELP[fieldKey] = fieldHelp[fieldKey];
+    });
+  }
+
   function openFieldHelp(fieldKey) {
     const help = FIELD_HELP[fieldKey];
     if (!help) return;
     modalTitle.textContent = "Help: " + help.label;
+    if (help.available === false) {
+      modalBody.innerHTML = '<div class="space-y-space-sm"><p class="font-body-md text-body-md text-on-surface">' + help.explanation + '</p><p class="font-body-sm text-body-sm text-secondary">No supported value was found. Please check your documents and complete this field yourself.</p></div>';
+      lastFocused = document.activeElement;
+      backdrop.classList.remove("hidden");
+      document.getElementById("modal-close").focus();
+      return;
+    }
     modalBody.innerHTML =
       '<div class="space-y-space-sm">' +
-      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">From your uploaded documents (mocked)</span>' +
-      '<p class="font-body-md text-body-md text-on-surface italic mt-space-2xs">' + help.excerpt + '</p></div>' +
+      (help.explanation ? '<p class="font-body-md text-body-md text-on-surface">' + help.explanation + '</p>' : '') +
+      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Supporting evidence</span>' +
+      '<p class="font-body-md text-body-md text-on-surface italic mt-space-2xs">' + (help.quote || help.excerpt || "No verified document quote is available yet.") + '</p></div>' +
       '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Citation</span>' +
-      '<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + help.citation + '</p></div>' +
+      '<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + (help.source || help.citation || "No citation available") + '</p></div>' +
       '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Suggested value</span>' +
       '<p class="font-body-md text-body-md text-primary font-semibold mt-space-2xs">' + help.suggestion + '</p></div>' +
+      (help.why_this_helps ? '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Why this helps</span><p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + help.why_this_helps + '</p></div>' : '') +
       '<button type="button" class="w-full mt-space-xs px-space-md py-space-xs bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors" id="pf-use-suggestion" data-field="' + fieldKey + '">Use this suggestion</button>' +
       '<p class="font-body-sm text-body-sm text-secondary">Mocked output — always fact-check against your real documents and the official form instructions before relying on it.</p>' +
       '</div>';
@@ -1136,38 +1225,349 @@ tailwind.config = {
   });
 
   /* ------------------------------------------------------------------
-   * Pre-filing form (Page 2): progress tracking + submit.
-   * "Complete" is judged by best-guess validation for a prototype: every
-   * field must simply be non-empty (no format/regex checks).
+   * Pre-filing form (Page 2): Data Validation & Progress Tracking
    * ------------------------------------------------------------------ */
   const pfFields = document.querySelectorAll(".pf-field");
   const pfProgress = document.getElementById("pf-progress");
   const pfSubmitBtn = document.getElementById("pf-submit-btn");
+  const pfDownloadPdfBtn = document.getElementById("pf-download-pdf-btn");
+  const afDownloadPdfBtn = document.getElementById("af-download-pdf-btn");
+
+  const NRIC_REGEX = /^[STFGMstfgm]\d{7}[A-Za-z]$/;
+  const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+  function validateSingleField(fieldId, showErrors = true) {
+    const input = document.getElementById(fieldId);
+    const errEl = document.getElementById("err-" + fieldId.replace("field-", ""));
+    if (!input) return true;
+    const val = input.value.trim();
+    let errorMsg = null;
+
+    if (fieldId === "field-claimantName") {
+      if (!val) errorMsg = "Full name is required as shown on NRIC/passport.";
+      else if (val.length < 2) errorMsg = "Name must be at least 2 characters.";
+    } else if (fieldId === "field-claimantId") {
+      if (!val) errorMsg = "NRIC / FIN is required.";
+      else if (!NRIC_REGEX.test(val)) errorMsg = "Enter a valid NRIC/FIN format (e.g. S1234567A).";
+    } else if (fieldId === "field-claimantEmail") {
+      if (!val) errorMsg = "Email address is required for court service notices.";
+      else if (!EMAIL_REGEX.test(val)) errorMsg = "Enter a valid email address (e.g. name@example.com).";
+    } else if (fieldId === "field-respondentName") {
+      if (!val) errorMsg = "Respondent name is required.";
+    } else if (fieldId === "field-respondentAddress") {
+      if (!val) errorMsg = "Respondent address for service is required.";
+    } else if (fieldId === "field-claimNature") {
+      if (!val) errorMsg = "Please select a claim category.";
+    } else if (fieldId === "field-claimAmount") {
+      const cleaned = val.replace(/^\$/, "").replace(/,/g, "").trim();
+      if (!cleaned) {
+        errorMsg = "Claim amount is required.";
+      } else if (/[^\d.]/.test(cleaned)) {
+        errorMsg = "Invalid characters. Numbers only (no letters or special symbols).";
+      } else {
+        const num = parseFloat(cleaned);
+        if (isNaN(num) || num <= 0) errorMsg = "Amount must be a positive number greater than $0.00.";
+        else if (num > 30000) errorMsg = "Small Claims Tribunal jurisdiction is capped at $30,000 max.";
+      }
+    } else if (fieldId === "field-claimDate") {
+      if (!val) {
+        errorMsg = "Date dispute arose is required.";
+      } else {
+        const d = new Date(val + "T00:00:00");
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        const twoYearsAgo = new Date();
+        twoYearsAgo.setFullYear(today.getFullYear() - 2);
+        if (isNaN(d.getTime())) errorMsg = "Please enter a valid calendar date.";
+        else if (d > today) errorMsg = "Dispute date cannot be in the future.";
+        else if (d < twoYearsAgo) errorMsg = "Claims must be filed within 2 years from when dispute arose (SCT Act s.5(4)).";
+      }
+    } else if (fieldId === "field-claimStatement") {
+      if (!val) errorMsg = "Please provide a brief statement of claim.";
+      else if (val.length < 10) errorMsg = "Statement must be at least 10 characters long.";
+    }
+
+    if (errEl && showErrors) {
+      if (errorMsg) {
+        errEl.textContent = errorMsg;
+        errEl.classList.remove("hidden");
+        input.classList.add("ring-2", "ring-error", "border-error");
+      } else {
+        errEl.textContent = "";
+        errEl.classList.add("hidden");
+        input.classList.remove("ring-2", "ring-error", "border-error");
+      }
+    }
+
+    return !errorMsg;
+  }
+
+  function validateAllFields(showErrors = true) {
+    let allValid = true;
+    let firstInvalidInput = null;
+    pfFields.forEach((field) => {
+      const isValid = validateSingleField(field.id, showErrors);
+      if (!isValid) {
+        allValid = false;
+        if (!firstInvalidInput) firstInvalidInput = field;
+      }
+    });
+    return { allValid, firstInvalidInput };
+  }
 
   function updatePfProgress() {
     const total = pfFields.length;
-    const done = Array.from(pfFields).filter((f) => f.value.trim() !== "").length;
-    pfProgress.textContent = done + " of " + total + " fields completed";
-    const complete = done === total;
-    pfSubmitBtn.classList.toggle("hidden", !complete);
-    pfSubmitBtn.disabled = !complete;
+    let completedCount = 0;
+    pfFields.forEach((field) => {
+      if (validateSingleField(field.id, false)) completedCount++;
+    });
+    pfProgress.textContent = completedCount + " of " + total + " fields completed";
+    const ready = completedCount === total;
+    pfSubmitBtn.classList.toggle("hidden", !ready);
+    pfSubmitBtn.disabled = !ready;
   }
+
   pfFields.forEach((f) => {
-    f.addEventListener("input", updatePfProgress);
-    f.addEventListener("change", updatePfProgress);
+    f.addEventListener("input", () => {
+      validateSingleField(f.id, true);
+      updatePfProgress();
+    });
+    f.addEventListener("blur", () => {
+      validateSingleField(f.id, true);
+      updatePfProgress();
+    });
+    f.addEventListener("change", () => {
+      validateSingleField(f.id, true);
+      updatePfProgress();
+    });
   });
-  updatePfProgress();
+
+  /* ------------------------------------------------------------------
+   * Hostile / Extreme language detection (Frontend Heuristic + Backend)
+   * ------------------------------------------------------------------ */
+  const claimStatementInput = document.getElementById("field-claimStatement");
+  const toneWarningBox = document.getElementById("claim-statement-warning");
+  const tonePromptMessage = document.getElementById("tone-prompt-message");
+  const toneDisclaimerText = document.getElementById("tone-disclaimer-text");
+  const toneSuggestedText = document.getElementById("tone-suggested-text");
+  const toneApplyBtn = document.getElementById("tone-apply-btn");
+  const toneIgnoreBtn = document.getElementById("tone-ignore-btn");
+
+  const CLIENT_HOSTILE_PATTERNS = [
+    /\b(these\s+(?:young|old)\s+people|(?:all\s+)?youths?|useless\s+(?:youth|kids?|people)|these\s+[a-z]+\s+are\s+always|typical\s+(?:young|old|millennial|boomer))\b/i,
+    /\b(thief|thieves|scammer|scammers|scam|fraudster|con\s*artist|crook|crooks|cheater|stole|robbed|criminal)\b/i,
+    /\b(useless|idiot|idiots|stupid|asshole|liar|liars|scumbag|scum|shameless|cheat)\b/i,
+    /\b(regret\s+this|ruin\s+you|ruin\s+your|police\s+on\s+you|pay\s+or\s+else|destroy\s+you)\b/i,
+  ];
+
+  let toneDebounceTimer = null;
+  let lastCheckedToneText = "";
+  let currentSuggestedRewrite = "";
+  let userIgnoredToneWarning = false;
+
+  function runClientHeuristicToneCheck(text) {
+    if (!text || !text.trim()) {
+      clearToneWarning();
+      return false;
+    }
+    for (const pat of CLIENT_HOSTILE_PATTERNS) {
+      if (pat.test(text)) {
+        currentSuggestedRewrite = "I am claiming a refund of the amount paid because the respondent failed to deliver the agreed goods/services and has not repaid me despite repeated requests.";
+        tonePromptMessage.textContent = "Are you sure you wish to proceed with this wording?";
+        toneDisclaimerText.textContent = "Court mediation data shows that personal insults and generalizations drastically reduce your chances of an amicable settlement and weaken your credibility before the Magistrate.";
+        toneSuggestedText.textContent = currentSuggestedRewrite;
+
+        claimStatementInput.classList.add("ring-2", "ring-amber-500", "border-amber-500", "bg-amber-50/20");
+        if (!userIgnoredToneWarning) {
+          toneWarningBox.classList.remove("hidden");
+        }
+        return true;
+      }
+    }
+    if (!userIgnoredToneWarning) {
+      clearToneWarning();
+    }
+    return false;
+  }
+
+  async function evaluateClaimTone(text) {
+    const trimmed = text.trim();
+    if (!trimmed || trimmed === lastCheckedToneText) return;
+    lastCheckedToneText = trimmed;
+
+    // Instant Tier 1 local check
+    runClientHeuristicToneCheck(trimmed);
+
+    // Tier 2 Async API call
+    try {
+      const response = await fetch("/api/check-tone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: trimmed })
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+
+      if (data.flagged) {
+        currentSuggestedRewrite = data.suggested_clean_rewrite || currentSuggestedRewrite;
+        tonePromptMessage.textContent = data.prompt_message || "Are you sure you wish to proceed with this wording?";
+        toneDisclaimerText.textContent = data.disclaimer || "Court mediation data shows that personal insults and generalizations drastically reduce your chances of an amicable settlement and weaken your credibility before the Magistrate.";
+        toneSuggestedText.textContent = currentSuggestedRewrite;
+
+        claimStatementInput.classList.add("ring-2", "ring-amber-500", "border-amber-500", "bg-amber-50/20");
+        if (!userIgnoredToneWarning) {
+          toneWarningBox.classList.remove("hidden");
+        }
+      } else if (!userIgnoredToneWarning) {
+        clearToneWarning();
+      }
+    } catch (err) {
+      // Graceful fallback: local heuristics already triggered
+    }
+  }
+
+  function clearToneWarning() {
+    if (claimStatementInput) {
+      claimStatementInput.classList.remove("ring-2", "ring-amber-500", "border-amber-500", "bg-amber-50/20");
+    }
+    if (toneWarningBox) {
+      toneWarningBox.classList.add("hidden");
+    }
+    userIgnoredToneWarning = false;
+  }
+
+  if (claimStatementInput) {
+    claimStatementInput.addEventListener("input", () => {
+      userIgnoredToneWarning = false;
+      runClientHeuristicToneCheck(claimStatementInput.value);
+      clearTimeout(toneDebounceTimer);
+      toneDebounceTimer = setTimeout(() => {
+        evaluateClaimTone(claimStatementInput.value);
+      }, 400);
+    });
+
+    claimStatementInput.addEventListener("blur", () => {
+      clearTimeout(toneDebounceTimer);
+      evaluateClaimTone(claimStatementInput.value);
+    });
+  }
+
+  if (toneApplyBtn) {
+    toneApplyBtn.addEventListener("click", () => {
+      if (currentSuggestedRewrite && claimStatementInput) {
+        claimStatementInput.value = currentSuggestedRewrite;
+        clearToneWarning();
+        lastCheckedToneText = currentSuggestedRewrite;
+        validateSingleField("field-claimStatement", true);
+        updatePfProgress();
+      }
+    });
+  }
+
+  if (toneIgnoreBtn) {
+    toneIgnoreBtn.addEventListener("click", () => {
+      userIgnoredToneWarning = true;
+      if (toneWarningBox) toneWarningBox.classList.add("hidden");
+    });
+  }
+
+  /* ------------------------------------------------------------------
+   * Form Submission & Pre-Filing PDF Generation
+   * ------------------------------------------------------------------ */
+  function collectFormData() {
+    return {
+      claimant_name: document.getElementById("field-claimantName")?.value || "",
+      claimant_nric: document.getElementById("field-claimantId")?.value || "",
+      claimant_email: document.getElementById("field-claimantEmail")?.value || "",
+      respondent_name: document.getElementById("field-respondentName")?.value || "",
+      respondent_address: document.getElementById("field-respondentAddress")?.value || "",
+      nature_of_dispute: document.getElementById("field-claimNature")?.value || "",
+      claim_amount: document.getElementById("field-claimAmount")?.value || "",
+      date_of_cause_of_action: document.getElementById("field-claimDate")?.value || "",
+      particulars: document.getElementById("field-claimStatement")?.value || "",
+      reference_number: document.getElementById("af-ref-number")?.textContent || null
+    };
+  }
+
+  async function handleDownloadPdf(btn, labelEl) {
+    const { allValid, firstInvalidInput } = validateAllFields(true);
+    if (!allValid) {
+      if (firstInvalidInput) {
+        firstInvalidInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        firstInvalidInput.focus();
+      }
+      alert("Please fix the highlighted validation errors before downloading the claim summary PDF.");
+      return;
+    }
+
+    const origLabel = labelEl.textContent;
+    btn.disabled = true;
+    labelEl.textContent = "Generating PDF…";
+
+    try {
+      const data = collectFormData();
+      const response = await fetch("/api/generate-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        const errPayload = await response.json().catch(() => ({}));
+        throw new Error(errPayload.detail?.message || "Failed to generate claim PDF.");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "SCT_PreFiling_Claim_Summary.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      alert("Error generating PDF: " + error.message);
+    } finally {
+      btn.disabled = false;
+      labelEl.textContent = origLabel;
+    }
+  }
+
+  if (pfDownloadPdfBtn) {
+    pfDownloadPdfBtn.addEventListener("click", () => {
+      const label = document.getElementById("pf-pdf-btn-label");
+      handleDownloadPdf(pfDownloadPdfBtn, label);
+    });
+  }
+
+  if (afDownloadPdfBtn) {
+    afDownloadPdfBtn.addEventListener("click", () => {
+      const label = document.getElementById("af-pdf-btn-label");
+      handleDownloadPdf(afDownloadPdfBtn, label);
+    });
+  }
 
   pfSubmitBtn.addEventListener("click", () => {
+    const { allValid, firstInvalidInput } = validateAllFields(true);
+    if (!allValid) {
+      if (firstInvalidInput) {
+        firstInvalidInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        firstInvalidInput.focus();
+      }
+      return;
+    }
+
     const label = document.getElementById("pf-submit-btn-label");
     const icon = document.getElementById("pf-submit-btn-icon");
     pfSubmitBtn.disabled = true;
     label.textContent = "Submitting…";
     icon.textContent = "progress_activity";
     icon.classList.add("animate-spin");
-    // Mocked latency only — no real submission happens; a production build
-    // would POST the form here and only navigate on a successful response.
-    window.setTimeout(() => showPage("after-filing"), 900);
+    window.setTimeout(() => {
+      renderAfterFilingRef();
+      showPage("after-filing");
+    }, 900);
   });
 
   /* ------------------------------------------------------------------
@@ -1185,6 +1585,7 @@ tailwind.config = {
   });
 
   /* Initial state */
+  updatePfProgress();
   renderChecklist(null);
 })();
 </script>

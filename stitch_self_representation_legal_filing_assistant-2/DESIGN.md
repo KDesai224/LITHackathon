@@ -161,6 +161,7 @@ The palette derives directly from judicial civic identities, pairing deep instit
 - **Surface Muted / Neutral Warm (`#F8FAFC` to `#F1F5F9`):** Subdued off-white used for instructions blocks and nested table backgrounds.
 - **Border Definers (`#E2E8F0` / `#CBD5E1`):** Precise light gray boundaries delivering sharp structural separation without high cognitive noise.
 - **Success / Status (`#166534`):** Forest green reserved for progress confirmation, validated fields, and successfully lodged declarations.
+- **Warning / Language Advisory (`#D97706` / `#F59E0B`):** Warm amber accent used to visually highlight inputs containing hostile or legally prejudicial language. Paired with container light (`#FFFBEB`), amber border (`#FCD34D`), and high-contrast alert text (`#78350F`).
 
 ## Typography
 
@@ -230,3 +231,28 @@ The design system enforces a **Soft (`1`)** shape language, applying consistent 
 
 ### Progress & Completion Indicators
 - **Bottom Workflow Footer:** Sticky or terminal banner featuring high-contrast percentage readouts (`label-lg`), supported by a linear progress track (height 6px, track background `#E2E8F0`, progress fill `#8B1D3D` or `#2563EB`).
+
+### Language Advisory & Protective Warning Box
+- **Purpose:** Surfaces protective, non-punitive guidance when free-text claim statements contain inflammatory, threatening, or demographic generalizing language.
+- **Input Alert State:**
+  - On detection, the input border shifts to a solid 2px amber warning stroke (`#D97706` / `ring-amber-500`) with a subtle 20% amber wash (`#FEF3C7`) across the canvas to draw attention without disabling typing.
+- **Advisory Card Architecture:**
+  - **Surface:** Soft amber canvas (`#FFFBEB`) framed by a 1px border (`#FCD34D`) and soft 8px (`rounded-lg`) radius.
+  - **Header:** 20px warning glyph (`warning`) styled in `#D97706` paired with an authoritative bold headline (`label-md`, `#78350F`): *"Are you sure you wish to proceed with this wording?"*
+  - **Court Reality Disclaimer:** `body-sm` neutral slate (`#4E6073`) explaining the procedural risk under Singapore State Courts / SCT rules (impact on mandatory mediation settlement rates and Magistrate credibility).
+  - **Suggested Factual Alternative:** Encased in an inner pure white (`#FFFFFF`) card with a 1px `#FDE68A` border, headed by an uppercase judicial maroon badge (`#8B1D3D`, `label-sm`) and italicized objective text.
+  - **Action Controls (Dual-CTA):**
+    - **Primary Action (`#8B1D3D` filled, `#FFFFFF` text):** *"Use recommended fix"* — immediately adopts the factual statement, clears the warning border, and updates completion progress.
+    - **Secondary Action (`#E2E8F0` filled, `#4E6073` text):** *"Proceed anyway"* — respects user autonomy, dismissing the intervention while allowing submission of the original text.
+
+### Form Validation Error States
+- **Trigger:** Real-time client-side evaluation on typing (`input`), focus departure (`blur`), or bulk submission check (`submit`).
+- **Input Error Styling:** 2px high-visibility error ring (`ring-2 ring-error border-error`, `#BA1A1A`) applied directly to invalid input elements.
+- **Inline Feedback Message:** Compact `text-xs text-error font-medium` alert rendered immediately beneath each invalid field, articulating unambiguous correction guidelines (e.g. rejection of alpha characters in numerical currency, calendar boundary enforcement, valid NRIC/FIN format).
+
+### Pre-Filing Document Generation (PDF Action)
+- **Visual Presentation:** Secondary utility action button (`#4E6073` slate or `#E7EEFF` container with `#6B0028` judicial maroon accents) featuring a 20px `picture_as_pdf` Material Symbol.
+- **Interactive States:**
+  - **Ready:** Displays *"Download Pre-Filing PDF"*.
+  - **In-flight:** Disables button and transforms label to *"Generating PDF…"*.
+  - **Export Standard:** Streams official ReportLab-compiled SCT Form 1 Pre-Filing Summary PDF directly to browser download queue (`application/pdf`).

@@ -1,0 +1,308 @@
+"""ClaimReady / ClaimBuddy FastAPI Server.
+
+Serves the mock portal frontend and exposes REST APIs for:
+1. Form Field Extraction (/api/extract-fields)
+2. Hostile Language Detection & Protective Guidance (/api/check-tone)
+3. Full Claim Data Validation (/api/validate-claim)
+4. Pre-Filing Claim PDF Generation (/api/generate-pdf)
+5. Health check (/api/health)
+"""
+
+from __future__ import annotations
+
+import os
+import re
+from datetime import date, datetime, timedelta
+from decimal import Decimal, InvalidOperation
+from pathlib import Path
+from typing import Any
+
+import uvicorn
+from fastapi import FastAPI, HTTPException, Response, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
+
+from backend.pdf_generator import generate_prefiling_pdf
+from backend.tone_detector import ToneCheckResult, check_tone
+from client_upload import NATURE_OF_DISPUTE_CHOICES, SCTCase
+from field_extractor import FieldExtractionError, extract_fields
+
+PORT = 8743
+STATIC_ROOT = Path(__file__).resolve().parent / "stitch_self_representation_legal_filing_assistant-2"
+
+_FIELD_META: dict[str, tuple[str, str, str]] = {
+    "claimantName": ("claimant_name", "Your full name (Claimant)", "Enter your name as it appears on your identification document."),
+    "claimantId": ("claimant_nric", "Your NRIC / FIN", "Enter your NRIC or FIN exactly as shown on your identification document."),
+    "claimantEmail": ("claimant_email", "Email address", "Enter a valid email address where court service notices can reach you."),
+    "respondentName": ("respondent_name", "Respondent's full name or business name", "This identifies the person or business you are making the claim against."),
+    "respondentAddress": ("", "Respondent's address for service", "Enter an address where the respondent can receive claim papers."),
+    "claimNature": ("nature_of_dispute", "Nature of claim", "Choose the claim category that best describes your dispute."),
+    "claimAmount": ("claim_amount", "Amount you want to claim", "Enter the amount you are asking the respondent to repay."),
+    "claimDate": ("date_of_cause_of_action", "Date the dispute arose", "Enter the date the event giving rise to your claim happened."),
+    "claimStatement": ("particulars", "Brief statement of claim", "Summarise what happened and what you are asking the Tribunal to order."),
+}
+
+_UI_NATURES = {
+    "Contract for sale of goods": "Contract for Sale of Goods",
+    "Contract for provision of services": "Contract for Provision of Services",
+    "Damage to property": "Damage to Property",
+    "Lease not exceeding two years": "Tenancy / Residential Lease",
+}
+
+NRIC_PATTERN = re.compile(r"^[STFGMstfgm]\d{7}[A-Za-z]$")
+EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+
+
+def build_field_help(answers: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Translate extractor fields into the UI's tooltip field IDs."""
+    result: dict[str, dict[str, Any]] = {}
+    for field_id, (answer_key, title, explanation) in _FIELD_META.items():
+        suggestion = str(answers.get(answer_key) or "").strip() if answer_key else ""
+        if field_id == "claimNature" and suggestion:
+            suggestion = _UI_NATURES.get(suggestion, suggestion)
+        if field_id == "claimDate" and suggestion:
+            suggestion = suggestion[:10]
+        result[field_id] = {
+            "label": title,
+            "explanation": explanation,
+            "suggestion": suggestion,
+            "available": bool(suggestion),
+            "quote": None,
+            "source": "Claim narrative provided by the user (no document-page citation available)",
+            "why_this_helps": explanation,
+            "requires_confirmation": True,
+        }
+    return result
+
+
+# --------------------------------------------------------------------------- #
+# Request / Response Models & Validation
+# --------------------------------------------------------------------------- #
+
+class ExtractRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=250_000, description="Claim narrative or incident text")
+
+
+class ToneCheckRequest(BaseModel):
+    text: str = Field(..., description="Draft text from free-form fields such as statement of claim")
+
+
+class ClaimFormData(BaseModel):
+    claimant_name: str = ""
+    claimant_nric: str = ""
+    claimant_email: str = ""
+    respondent_name: str = ""
+    respondent_address: str = ""
+    nature_of_dispute: str = ""
+    claim_amount: str = ""
+    date_of_cause_of_action: str = ""
+    particulars: str = ""
+    reference_number: str | None = None
+
+
+def validate_claim_data(data: ClaimFormData) -> dict[str, str]:
+    """Validate all claim form fields and return a mapping of field_name -> error_message."""
+    errors: dict[str, str] = {}
+
+    # 1. Claimant Name
+    name = data.claimant_name.strip()
+    if not name:
+        errors["claimantName"] = "Full name is required as shown on your NRIC/Passport."
+    elif len(name) < 2:
+        errors["claimantName"] = "Name must be at least 2 characters long."
+
+    # 2. Claimant NRIC / FIN
+    nric = data.claimant_nric.strip().upper()
+    if not nric:
+        errors["claimantId"] = "NRIC / FIN is required."
+    elif not NRIC_PATTERN.match(nric):
+        errors["claimantId"] = "Enter a valid NRIC/FIN format (e.g. S1234567A)."
+
+    # 3. Claimant Email
+    email = data.claimant_email.strip()
+    if not email:
+        errors["claimantEmail"] = "Email address is required for court service notices."
+    elif not EMAIL_PATTERN.match(email):
+        errors["claimantEmail"] = "Enter a valid email address (e.g. name@example.com)."
+
+    # 4. Respondent Name
+    resp_name = data.respondent_name.strip()
+    if not resp_name:
+        errors["respondentName"] = "Respondent full name or registered business name is required."
+
+    # 5. Respondent Address
+    resp_addr = data.respondent_address.strip()
+    if not resp_addr:
+        errors["respondentAddress"] = "Respondent address for service of claim papers is required."
+
+    # 6. Nature of Dispute
+    nature = data.nature_of_dispute.strip()
+    if not nature:
+        errors["claimNature"] = "Please select a claim category."
+
+    # 7. Claim Amount (Strict numeric validation)
+    amt_str = data.claim_amount.strip().replace("$", "").replace(",", "")
+    if not amt_str:
+        errors["claimAmount"] = "Claim amount is required."
+    else:
+        # Reject if letters or invalid symbols are present
+        if re.search(r"[^\d.]", amt_str):
+            errors["claimAmount"] = "Invalid amount. Enter numbers only (no letters or symbols)."
+        else:
+            try:
+                amt = Decimal(amt_str)
+                if amt <= 0:
+                    errors["claimAmount"] = "Claim amount must be greater than $0.00."
+                elif amt > 30000:
+                    errors["claimAmount"] = "Small Claims Tribunal jurisdiction is capped at $30,000 max (with consent, or $20,000 standard)."
+            except InvalidOperation:
+                errors["claimAmount"] = "Invalid numerical format. Enter numbers only (e.g. 4500)."
+
+    # 8. Dispute Date (Strict calendar & statute of limitations validation)
+    date_str = data.date_of_cause_of_action.strip()
+    if not date_str:
+        errors["claimDate"] = "Date the dispute arose is required."
+    else:
+        try:
+            parsed_date = datetime.strptime(date_str[:10], "%Y-%m-%d").date()
+            today = date.today()
+            two_years_ago = today - timedelta(days=730)
+            if parsed_date > today:
+                errors["claimDate"] = "Dispute date cannot be in the future."
+            elif parsed_date < two_years_ago:
+                errors["claimDate"] = "SCT claims must be filed within 2 years from the date the dispute arose (SCT Act s.5(4))."
+        except ValueError:
+            errors["claimDate"] = "Invalid date format. Please use YYYY-MM-DD."
+
+    # 9. Particulars / Statement of Claim
+    stmt = data.particulars.strip()
+    if not stmt:
+        errors["claimStatement"] = "Please provide a brief statement describing what happened."
+    elif len(stmt) < 10:
+        errors["claimStatement"] = "Statement must be at least 10 characters long to explain the dispute."
+
+    return errors
+
+
+# --------------------------------------------------------------------------- #
+# FastAPI Application
+# --------------------------------------------------------------------------- #
+
+app = FastAPI(
+    title="ClaimBuddy / ClaimReady API",
+    description="Backend services for AI-assisted Small Claims Tribunal preparation",
+    version="1.0.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/api/health")
+def health_check() -> dict[str, Any]:
+    return {
+        "status": "ok",
+        "has_openai_key": bool(os.getenv("OPENAI_API_KEY", "").strip()),
+    }
+
+
+@app.post("/api/extract-fields")
+def api_extract_fields(payload: ExtractRequest) -> dict[str, Any]:
+    text = payload.text.strip()
+    if not text:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A non-empty claim narrative is required.",
+        )
+    try:
+        case = SCTCase.from_text(text, extractor=extract_fields)
+        answers = case.to_dict()
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except FieldExtractionError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to analyse the claim narrative.",
+        ) from exc
+
+    return {"field_help": build_field_help(answers)}
+
+
+@app.post("/api/check-tone")
+def api_check_tone(payload: ToneCheckRequest) -> dict[str, Any]:
+    """Check text for hostile, extreme, or generalizing wording."""
+    result: ToneCheckResult = check_tone(payload.text)
+    return result.to_dict()
+
+
+@app.post("/api/validate-claim")
+def api_validate_claim(payload: ClaimFormData) -> dict[str, Any]:
+    """Validate all claim form fields and check tone of the statement."""
+    errors = validate_claim_data(payload)
+    tone_result = check_tone(payload.particulars) if payload.particulars.strip() else None
+
+    return {
+        "valid": len(errors) == 0,
+        "errors": errors,
+        "tone": tone_result.to_dict() if tone_result else None,
+    }
+
+
+@app.post("/api/generate-pdf")
+def api_generate_pdf(payload: ClaimFormData) -> Response:
+    """Validate claim data and generate a downloadable SCT Pre-Filing Claim Summary PDF."""
+    errors = validate_claim_data(payload)
+    if errors:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"message": "Please correct the form errors before generating the PDF.", "errors": errors},
+        )
+
+    try:
+        pdf_bytes = generate_prefiling_pdf(payload.dict())
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate PDF: {exc}",
+        ) from exc
+
+    ref = payload.reference_number or f"DRAFT-{datetime.now().strftime('%Y%m%d')}"
+    filename = f"SCT_PreFiling_Claim_{ref}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Length": str(len(pdf_bytes)),
+        },
+    )
+
+
+# Redirect root to dummy-website.html
+@app.get("/", include_in_schema=False)
+def index_redirect() -> RedirectResponse:
+    return RedirectResponse(url="/dummy-website.html")
+
+
+# Mount static website files
+if STATIC_ROOT.exists():
+    app.mount("/", StaticFiles(directory=str(STATIC_ROOT), html=True), name="static")
+
+
+def main() -> None:
+    print(f"Starting ClaimReady FastAPI server on http://127.0.0.1:{PORT}/dummy-website.html")
+    uvicorn.run("app:app", host="127.0.0.1", port=PORT, reload=True)
+
+
+if __name__ == "__main__":
+    main()
