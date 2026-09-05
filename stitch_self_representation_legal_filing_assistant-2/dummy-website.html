@@ -579,7 +579,12 @@ tailwind.config = {
      Reached by submitting the eligibility check (Page 1.5) above, once every question there is
      answered. Mock pre-filing form: each field has an (i) info button that opens a popup showing a
      mocked document excerpt, citation, and suggested value — standing in for a future
-     real document-analysis backend. -->
+     real document-analysis backend. Sectioned A–F to mirror the real CJTS claim form (see
+     screenshots this was built from): A/B are party details, C is Particulars of Claim
+     (with the Nature/Type of Dispute shown read-only, as they'd be carried over from the
+     eligibility check rather than re-entered here), D is the brief summary, E is a mocked
+     supporting-documents uploader (separate from the ClaimReady widget's own upload panel —
+     this one lives inline in the form, same as the real thing), and F is "Claiming for". -->
 <div class="hidden" data-page="prefiling-form">
   <section class="w-full bg-surface-container-lowest shadow-sm">
     <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop py-space-xl">
@@ -598,7 +603,7 @@ tailwind.config = {
     <section class="bg-surface-container-lowest rounded-lg shadow-sm p-space-lg md:p-space-xl space-y-space-lg">
       <div class="flex items-center justify-between flex-wrap gap-space-xs">
         <h2 class="font-headline-md text-headline-md text-on-surface">Claim Details</h2>
-        <span class="font-label-sm text-label-sm text-secondary" id="pf-progress">0 of 8 fields completed</span>
+        <span class="font-label-sm text-label-sm text-secondary" id="pf-progress">0 of 10 fields completed</span>
       </div>
 
       <!-- Save & resume (frontend-only mock): "Save answers" snapshots the current field
@@ -621,6 +626,10 @@ tailwind.config = {
       </div>
 
       <form class="space-y-space-lg" id="pf-form" novalidate>
+        <div class="bg-primary-fixed/40 border-l-4 border-primary rounded-r-lg px-space-md py-space-2xs">
+          <h3 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wide">A. Claimant's Details</h3>
+        </div>
+
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimantName">
             <span>1. Your full name (Claimant)</span>
@@ -635,6 +644,10 @@ tailwind.config = {
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimantId" type="button" aria-label="Help for NRIC / FIN"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimantId" type="text" placeholder="e.g. S1234567A" />
+        </div>
+
+        <div class="bg-primary-fixed/40 border-l-4 border-primary rounded-r-lg px-space-md py-space-2xs">
+          <h3 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wide">B. Respondent's Details</h3>
         </div>
 
         <div class="space-y-space-2xs">
@@ -653,51 +666,181 @@ tailwind.config = {
           <textarea class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" id="field-respondentAddress" placeholder="Where the respondent can be served with claim papers" rows="2"></textarea>
         </div>
 
-        <div class="space-y-space-2xs">
-          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimNature">
-            <span>5. Nature of claim</span>
-            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimNature" type="button" aria-label="Help for nature of claim"><span class="material-symbols-outlined text-[14px]">info</span></button>
-          </label>
-          <select class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimNature">
-            <option value="">Select one…</option>
-            <option>Contract for Sale of Goods</option>
-            <option>Contract for Provision of Services</option>
-            <option>Damage to Property</option>
-            <option>Tenancy / Residential Lease</option>
-            <option>Employment Claim</option>
-            <option>Neighbour / Community Dispute</option>
-            <option>Other</option>
-          </select>
+        <!-- "Add another Address" (mock, frontend-only): appends a plain extra address block
+             into #pf-extra-addresses. Not tracked in progress — the base respondentAddress
+             above already covers the required case, this is just for a respondent with
+             more than one address for service, same as the real form. -->
+        <div class="space-y-space-xs" id="pf-extra-addresses"></div>
+        <div class="bg-surface-container-low rounded-lg p-space-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-sm">
+          <p class="font-body-sm text-body-sm text-secondary italic">Note: Click "Add another Address" if the same Respondent has an additional address for service.</p>
+          <button class="flex items-center gap-space-xs px-space-md py-space-2xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg font-label-md text-label-md transition-colors flex-shrink-0" id="pf-add-address-btn" type="button">
+            <span class="material-symbols-outlined text-[16px]">add</span>
+            <span>Add another Address</span>
+          </button>
         </div>
 
-        <div class="space-y-space-2xs">
-          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimAmount">
-            <span>6. Amount claimed (SGD)</span>
-            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimAmount" type="button" aria-label="Help for amount claimed"><span class="material-symbols-outlined text-[14px]">info</span></button>
-          </label>
-          <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimAmount" min="0" type="number" placeholder="e.g. 4500" />
+        <div class="bg-primary-fixed/40 border-l-4 border-primary rounded-r-lg px-space-md py-space-2xs">
+          <h3 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wide">C. Particulars of Claim</h3>
         </div>
 
-        <div class="space-y-space-2xs">
-          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimDate">
-            <span>7. Date the dispute arose</span>
-            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimDate" type="button" aria-label="Help for date the dispute arose"><span class="material-symbols-outlined text-[14px]">info</span></button>
-          </label>
-          <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimDate" type="date" />
+        <!-- Nature/Type of Dispute are shown read-only here: in a real filing these carry over
+             from the eligibility check (Page 1.5) rather than being re-entered, so there's no
+             (i) button or .pf-field on them — this demo just hardcodes the same fictional
+             dispute used throughout FIELD_HELP. -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+          <div class="space-y-space-2xs">
+            <span class="font-label-md text-label-md text-on-surface block">Nature of Dispute</span>
+            <p class="font-body-md text-body-md text-on-surface-variant bg-surface-container-low rounded-lg p-space-sm">Contract for Sale of Goods</p>
+          </div>
+          <div class="space-y-space-2xs">
+            <span class="font-label-md text-label-md text-on-surface block">Type of Dispute</span>
+            <p class="font-body-md text-body-md text-on-surface-variant bg-surface-container-low rounded-lg p-space-sm">Defective Goods</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+          <div class="space-y-space-2xs">
+            <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-goodsOrServicesType">
+              <span>5. Type of Goods Sold or Services Provided</span>
+              <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="goodsOrServicesType" type="button" aria-label="Help for type of goods or services"><span class="material-symbols-outlined text-[14px]">info</span></button>
+            </label>
+            <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-goodsOrServicesType" type="text" placeholder="Enter name of the goods or services provided" />
+          </div>
+          <div class="space-y-space-2xs">
+            <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-invoiceNo">
+              <span>6. Invoice No</span>
+              <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="invoiceNo" type="button" aria-label="Help for invoice number"><span class="material-symbols-outlined text-[14px]">info</span></button>
+            </label>
+            <input class="w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-invoiceNo" type="text" placeholder="Enter invoice no. (if any)" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+          <div class="space-y-space-2xs">
+            <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimAmount">
+              <span>7. Contract Sum (SGD)</span>
+              <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimAmount" type="button" aria-label="Help for contract sum"><span class="material-symbols-outlined text-[14px]">info</span></button>
+            </label>
+            <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimAmount" min="0" step="0.01" type="number" placeholder="0.00" />
+          </div>
+          <div class="space-y-space-2xs">
+            <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-amountPaid">
+              <span>8. Paid (SGD)</span>
+              <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="amountPaid" type="button" aria-label="Help for amount paid"><span class="material-symbols-outlined text-[14px]">info</span></button>
+            </label>
+            <input class="w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-amountPaid" min="0" step="0.01" type="number" placeholder="0.00" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+          <div class="space-y-space-2xs">
+            <label class="font-label-md text-label-md text-on-surface" for="field-balanceSum">9. Balance Sum (SGD)</label>
+            <input class="w-full p-space-sm rounded-lg bg-surface-container font-body-md text-body-md text-on-surface-variant" id="field-balanceSum" readonly type="text" value="0.00" />
+            <p class="font-body-sm text-body-sm text-secondary">Calculated automatically as Contract Sum minus Paid.</p>
+          </div>
+          <div class="space-y-space-2xs">
+            <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-contractDate">
+              <span>10. Contract Date</span>
+              <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="contractDate" type="button" aria-label="Help for contract date"><span class="material-symbols-outlined text-[14px]">info</span></button>
+            </label>
+            <input class="w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-contractDate" type="date" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+          <div class="space-y-space-2xs">
+            <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-dateContractPerformed">
+              <span>11. Date Contract Performed</span>
+              <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="dateContractPerformed" type="button" aria-label="Help for date contract performed"><span class="material-symbols-outlined text-[14px]">info</span></button>
+            </label>
+            <input class="w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-dateContractPerformed" type="date" />
+          </div>
+          <div class="space-y-space-2xs">
+            <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimDate">
+              <span>12. Date Contract Defaulted</span>
+              <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimDate" type="button" aria-label="Help for date contract defaulted"><span class="material-symbols-outlined text-[14px]">info</span></button>
+            </label>
+            <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimDate" type="date" />
+          </div>
+        </div>
+
+        <div class="bg-primary-fixed/40 border-l-4 border-primary rounded-r-lg px-space-md py-space-2xs">
+          <h3 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wide">D. Brief Summary of Claim</h3>
         </div>
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimStatement">
-            <span>8. Brief statement of claim</span>
+            <span>13. Brief statement of claim</span>
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimStatement" type="button" aria-label="Help for statement of claim"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
-          <textarea class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" id="field-claimStatement" placeholder="What happened, and what you are asking the tribunal to order" rows="4"></textarea>
+          <textarea class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" id="field-claimStatement" maxlength="500" placeholder="What happened, and what you are asking the tribunal to order" rows="4"></textarea>
+          <p class="font-body-sm text-body-sm text-success" id="pf-statement-remaining">remaining 500 / 500</p>
         </div>
 
-        <div class="pt-space-xs">
-          <button class="hidden flex items-center gap-space-xs px-space-lg py-space-sm bg-primary-container text-on-primary font-label-md text-label-md rounded-lg hover:bg-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled id="pf-submit-btn" type="button">
+        <div class="bg-primary-fixed/40 border-l-4 border-primary rounded-r-lg px-space-md py-space-2xs flex items-center justify-between gap-space-sm flex-wrap">
+          <h3 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wide">E. Supporting Documents</h3>
+          <button class="flex items-center gap-space-xs px-space-md py-space-2xs bg-surface-container-lowest hover:bg-surface-container-high text-on-surface rounded-lg font-label-md text-label-md transition-colors flex-shrink-0" id="pf-add-document-btn" type="button">
+            <span class="material-symbols-outlined text-[16px]">add</span>
+            <span>Add another Document</span>
+          </button>
+        </div>
+
+        <!-- Rows are built by addDocumentRow() further down the script (one is added on
+             load, matching the real form's default single row); "Upload" is mocked — it just
+             disables the row and flips its label, there's no real file transfer here. -->
+        <div class="space-y-space-sm" id="pf-documents-list"></div>
+        <input class="pf-field hidden" id="field-supportingDocuments" type="hidden" />
+
+        <div class="bg-surface-container-low rounded-lg p-space-md space-y-space-2xs">
+          <p class="font-body-sm text-body-sm text-secondary italic">Note: All documents should be in PDF format. Select the document type, add a short description, then click Upload. If you have no documents to attach, you may leave this section and proceed.</p>
+          <p class="font-body-sm text-body-sm text-secondary italic">The latest ACRA Business Profile of the Claimant(s) and/or Respondent(s) who is a non-individual must be uploaded. The ACRA Business Profile can be purchased at <a class="text-primary underline" href="https://www.acra.gov.sg" rel="noopener" target="_blank">www.acra.gov.sg</a>.</p>
+        </div>
+
+        <div class="bg-primary-fixed/40 border-l-4 border-primary rounded-r-lg px-space-md py-space-2xs">
+          <h3 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wide">F. Claiming for</h3>
+        </div>
+
+        <!-- Checkboxes are purely presentational, same convention as the eligibility check's
+             Yes/No toggles: a hidden .pf-field (field-claimingFor) is what progress tracking,
+             save/resume, and submit gating actually read, kept in sync by
+             updateClaimingForField() further down the script. -->
+        <div class="space-y-space-xs">
+          <label class="flex items-center gap-space-sm font-body-md text-body-md text-on-surface">
+            <input class="pf-claiming-for w-5 h-5 rounded border-outline text-primary focus:ring-primary-container" data-label="Money Order" type="checkbox" />
+            <span>Money Order</span>
+          </label>
+          <label class="flex items-center gap-space-sm font-body-md text-body-md text-on-surface">
+            <input class="pf-claiming-for w-5 h-5 rounded border-outline text-primary focus:ring-primary-container" data-label="Work Order" type="checkbox" />
+            <span>Work Order</span>
+          </label>
+          <label class="flex items-center gap-space-sm font-body-md text-body-md text-on-surface">
+            <input class="pf-claiming-for w-5 h-5 rounded border-outline text-primary focus:ring-primary-container" data-label="Vacant Possession Orders" type="checkbox" />
+            <span>Vacant Possession Orders</span>
+          </label>
+          <label class="flex items-center gap-space-sm font-body-md text-body-md text-on-surface">
+            <input class="pf-claiming-for w-5 h-5 rounded border-outline text-primary focus:ring-primary-container" data-label="Costs" type="checkbox" />
+            <span>Costs</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimCosts" type="button" aria-label="Help for costs"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <label class="flex items-center gap-space-sm font-body-md text-body-md text-on-surface">
+            <input class="pf-claiming-for w-5 h-5 rounded border-outline text-primary focus:ring-primary-container" data-label="Disbursements" type="checkbox" />
+            <span>Disbursements</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimDisbursements" type="button" aria-label="Help for disbursements"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <input class="pf-field hidden" id="field-claimingFor" type="hidden" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-space-sm pt-space-xs">
+          <button class="flex items-center gap-space-xs px-space-lg py-space-sm bg-primary-container text-on-primary font-label-md text-label-md rounded-lg hover:bg-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled id="pf-submit-btn" type="button">
             <span id="pf-submit-btn-label">Submit</span>
             <span class="material-symbols-outlined text-[16px]" id="pf-submit-btn-icon">arrow_forward</span>
+          </button>
+          <button class="flex items-center gap-space-xs px-space-lg py-space-sm bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md rounded-lg transition-colors" id="pf-save-draft-btn" type="button">
+            <span class="material-symbols-outlined text-[16px]">save</span>
+            <span>Save As Draft</span>
+          </button>
+          <button class="flex items-center gap-space-xs px-space-lg py-space-sm bg-surface-container-low hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md rounded-lg transition-colors" id="pf-cancel-btn" type="button">
+            <span>Cancel</span>
           </button>
         </div>
       </form>
@@ -969,14 +1112,8 @@ tailwind.config = {
       citation: "Demand Letter.pdf, page 1",
       suggestion: "88 Jurong Industrial Road, #03-12, Singapore 619123"
     },
-    claimNature: {
-      label: "Nature of claim",
-      excerpt: "“…the Buyer paid in full for a custom sofa set which was never delivered…”",
-      citation: "Sale Agreement.pdf, page 2",
-      suggestion: "Contract for Sale of Goods"
-    },
     claimAmount: {
-      label: "Amount claimed (SGD)",
+      label: "Contract Sum (SGD)",
       // No excerpt/citation/suggestion here on purpose: hasInsufficientInfo is a
       // reusable flag any question's entry could set, meaning the mocked
       // document-analysis backend couldn't find enough information to suggest a
@@ -985,10 +1122,52 @@ tailwind.config = {
       hasInsufficientInfo: true
     },
     claimDate: {
-      label: "Date the dispute arose",
+      label: "Date Contract Defaulted",
       excerpt: "“Agreed delivery date: 26 Jan 2025. As of this letter, no delivery has been made.”",
       citation: "Demand Letter.pdf, page 1",
       suggestion: "2025-01-26"
+    },
+    goodsOrServicesType: {
+      label: "Type of Goods Sold or Services Provided",
+      excerpt: "“…the Buyer paid in full for a custom sofa set which was never delivered…”",
+      citation: "Sale Agreement.pdf, page 2",
+      suggestion: "Custom sofa set"
+    },
+    invoiceNo: {
+      label: "Invoice No",
+      excerpt: "“Invoice No: INV-2025-0142”",
+      citation: "Invoice.pdf, page 1",
+      suggestion: "INV-2025-0142"
+    },
+    amountPaid: {
+      label: "Paid (SGD)",
+      excerpt: "“No part of the purchase price has been refunded to date.”",
+      citation: "Demand Letter.pdf, page 1",
+      suggestion: "0"
+    },
+    contractDate: {
+      label: "Contract Date",
+      excerpt: "“This Agreement is made on 2 December 2024 between John Tan Wei Ming…”",
+      citation: "Sale Agreement.pdf, page 1",
+      suggestion: "2024-12-02"
+    },
+    dateContractPerformed: {
+      label: "Date Contract Performed",
+      // Another natural fit for the reusable hasInsufficientInfo flag: the goods
+      // were reportedly never delivered, so there's no performance date to find.
+      hasInsufficientInfo: true
+    },
+    claimCosts: {
+      label: "Costs",
+      // A plain legal-term explainer, not a document-derived suggestion — the
+      // `definition` field is a third FIELD_HELP shape (alongside the normal
+      // excerpt/citation/suggestion and hasInsufficientInfo shapes) that
+      // openFieldHelp() renders as just a paragraph, no excerpt/citation/button.
+      definition: "Costs refer to the costs of bringing this claim (e.g. filing fees) that you are asking the Tribunal to order the other party to pay you, in addition to your claim amount."
+    },
+    claimDisbursements: {
+      label: "Disbursements",
+      definition: "Disbursements are out-of-pocket expenses you incurred in bringing this claim (e.g. service fees, transport, printing) that you are asking the Tribunal to order the other party to reimburse."
     },
     claimStatement: {
       label: "Brief statement of claim",
@@ -1164,7 +1343,12 @@ tailwind.config = {
     const help = FIELD_HELP[fieldKey];
     if (!help) return;
     modalTitle.textContent = "Help: " + help.label;
-    if (help.hasInsufficientInfo) {
+    if (help.definition) {
+      // Plain legal-term explainer (Costs/Disbursements in Section F) — not a
+      // document-derived suggestion, so no excerpt/citation/"Use this
+      // suggestion" button, just the definition itself.
+      modalBody.innerHTML = '<p class="font-body-md text-body-md text-on-surface">' + help.definition + '</p>';
+    } else if (help.hasInsufficientInfo) {
       // Reassuring alternate state: the mocked document-analysis backend has
       // nothing precise to offer for this question. Deliberately no error
       // styling/icon and no "Use this suggestion" button — this is a normal,
@@ -1331,10 +1515,126 @@ tailwind.config = {
     const total = pfFields.length;
     const done = Array.from(pfFields).filter((f) => f.value.trim() !== "").length;
     pfProgress.textContent = done + " of " + total + " fields completed";
-    const complete = done === total;
-    pfSubmitBtn.classList.toggle("hidden", !complete);
-    pfSubmitBtn.disabled = !complete;
+    // Unlike the eligibility check, Submit here stays visible alongside Save As
+    // Draft/Cancel at all times (matching the real form) — only its disabled
+    // state toggles with completeness.
+    pfSubmitBtn.disabled = done !== total;
   }
+
+  /* ------------------------------------------------------------------
+   * Pre-filing form (Page 2), Section C: Balance Sum is derived, not typed —
+   * kept in sync with Contract Sum/Paid on every input. Not a .pf-field
+   * itself (it has nothing for the visitor to fill in), so it isn't part of
+   * progress tracking.
+   * ------------------------------------------------------------------ */
+  const pfContractSumField = document.getElementById("field-claimAmount");
+  const pfAmountPaidField = document.getElementById("field-amountPaid");
+  const pfBalanceSumField = document.getElementById("field-balanceSum");
+  function updatePfBalanceSum() {
+    const sum = parseFloat(pfContractSumField.value) || 0;
+    const paid = parseFloat(pfAmountPaidField.value) || 0;
+    pfBalanceSumField.value = (sum - paid).toFixed(2);
+  }
+  pfContractSumField.addEventListener("input", updatePfBalanceSum);
+  pfAmountPaidField.addEventListener("input", updatePfBalanceSum);
+
+  /* ------------------------------------------------------------------
+   * Pre-filing form (Page 2), Section D: live "remaining X / 500" counter
+   * under the brief statement of claim, matching the real form's character
+   * counter (its 500-char cap is mirrored by the textarea's maxlength).
+   * ------------------------------------------------------------------ */
+  const pfStatementField = document.getElementById("field-claimStatement");
+  const pfStatementRemaining = document.getElementById("pf-statement-remaining");
+  function updatePfStatementRemaining() {
+    pfStatementRemaining.textContent = "remaining " + (500 - pfStatementField.value.length) + " / 500";
+  }
+  pfStatementField.addEventListener("input", updatePfStatementRemaining);
+
+  /* ------------------------------------------------------------------
+   * Pre-filing form (Page 2), Section B: "Add another Address" (mock,
+   * frontend-only) appends a plain extra address block. These are optional
+   * extras on top of the required respondentAddress field above, so they
+   * aren't tracked in progress — same reasoning as the real form, which
+   * only requires one address for service.
+   * ------------------------------------------------------------------ */
+  let pfAddressCount = 0;
+  document.getElementById("pf-add-address-btn").addEventListener("click", () => {
+    pfAddressCount += 1;
+    const wrap = document.createElement("div");
+    wrap.className = "space-y-space-2xs bg-surface-container-low rounded-lg p-space-sm";
+    wrap.innerHTML =
+      '<div class="flex items-center justify-between gap-space-xs">' +
+      '<label class="font-label-md text-label-md text-on-surface">Additional address for service</label>' +
+      '<button class="pf-remove-address font-label-sm text-label-sm text-error hover:underline" type="button">Remove</button>' +
+      '</div>' +
+      '<textarea class="w-full p-space-sm rounded-lg bg-surface-container-lowest font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" placeholder="Another address where the respondent can be served" rows="2"></textarea>';
+    document.getElementById("pf-extra-addresses").appendChild(wrap);
+    wrap.querySelector(".pf-remove-address").addEventListener("click", () => wrap.remove());
+  });
+
+  /* ------------------------------------------------------------------
+   * Pre-filing form (Page 2), Section E: mocked supporting-documents
+   * uploader. Rows are built entirely in JS (one added on load, matching
+   * the real form's default single row) so "Add another Document" and the
+   * initial row share the same markup. "Upload" is mocked — it just
+   * disables the row and flips its own label; there's no real file
+   * transfer here, that's for the real backend later. field-supportingDocuments
+   * is the hidden .pf-field progress tracking actually reads: non-empty once
+   * at least one row has a description filled in.
+   * ------------------------------------------------------------------ */
+  let pfDocRowCount = 0;
+  function addDocumentRow() {
+    pfDocRowCount += 1;
+    const row = document.createElement("div");
+    row.className = "flex flex-col md:flex-row items-stretch md:items-center gap-space-xs bg-surface-container-low rounded-lg p-space-sm";
+    row.id = "pf-doc-row-" + pfDocRowCount;
+    row.innerHTML =
+      '<input class="pf-doc-file flex-shrink-0 font-body-sm text-body-sm text-on-surface-variant" type="file" accept="application/pdf" />' +
+      '<select class="pf-doc-type p-space-xs rounded-lg bg-surface-container-lowest font-body-sm text-body-sm text-on-surface flex-shrink-0">' +
+      '<option value="">Select document type…</option>' +
+      '<option>Invoice</option><option>Sale Agreement / Contract</option><option>Demand Letter</option>' +
+      '<option>Receipt</option><option>ACRA Business Profile</option><option>Other</option>' +
+      '</select>' +
+      '<input class="pf-doc-description flex-1 p-space-xs rounded-lg bg-surface-container-lowest font-body-sm text-body-sm text-on-surface" placeholder="Document description" type="text" />' +
+      '<button class="pf-doc-upload px-space-md py-space-2xs bg-primary-container text-on-primary rounded-lg font-label-sm text-label-sm hover:bg-primary transition-colors flex-shrink-0" type="button">Upload</button>' +
+      '<button class="pf-doc-delete px-space-md py-space-2xs bg-surface-container-high text-on-surface rounded-lg font-label-sm text-label-sm hover:bg-error-container transition-colors flex-shrink-0" type="button">Delete</button>';
+    document.getElementById("pf-documents-list").appendChild(row);
+
+    row.querySelector(".pf-doc-description").addEventListener("input", updatePfDocumentsField);
+    row.querySelector(".pf-doc-upload").addEventListener("click", () => {
+      row.querySelectorAll("input, select").forEach((el) => { el.disabled = true; });
+      const uploadBtn = row.querySelector(".pf-doc-upload");
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = "Uploaded";
+    });
+    row.querySelector(".pf-doc-delete").addEventListener("click", () => {
+      row.remove();
+      updatePfDocumentsField();
+    });
+  }
+  function updatePfDocumentsField() {
+    const hasDoc = Array.from(document.querySelectorAll(".pf-doc-description")).some((el) => el.value.trim() !== "");
+    const field = document.getElementById("field-supportingDocuments");
+    field.value = hasDoc ? "yes" : "";
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  document.getElementById("pf-add-document-btn").addEventListener("click", addDocumentRow);
+  addDocumentRow(); // start with one row, matching the real form's default
+
+  /* ------------------------------------------------------------------
+   * Pre-filing form (Page 2), Section F: "Claiming for" checkboxes are
+   * purely presentational, same convention as the eligibility check's Yes/No
+   * toggles — field-claimingFor is the hidden .pf-field progress tracking
+   * actually reads, kept in sync here.
+   * ------------------------------------------------------------------ */
+  function updatePfClaimingForField() {
+    const checked = Array.from(document.querySelectorAll(".pf-claiming-for:checked")).map((el) => el.dataset.label);
+    const field = document.getElementById("field-claimingFor");
+    field.value = checked.join(", ");
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  document.querySelectorAll(".pf-claiming-for").forEach((cb) => cb.addEventListener("change", updatePfClaimingForField));
+
   pfFields.forEach((f) => {
     f.addEventListener("input", updatePfProgress);
     f.addEventListener("change", updatePfProgress);
@@ -1386,6 +1686,15 @@ tailwind.config = {
       window.ClaimReadyOverlay.setContext("upload");
       window.ClaimReadyOverlay.open();
     }
+  });
+
+  // "Save As Draft" (bottom button row, matching the real form) reuses the exact
+  // same in-memory snapshot as the "Save answers" bar above rather than
+  // duplicating the logic. "Cancel" is a simple mocked confirm-then-go-back —
+  // there's no draft to discard server-side since nothing here is persisted.
+  document.getElementById("pf-save-draft-btn").addEventListener("click", () => pfSaveBtn.click());
+  document.getElementById("pf-cancel-btn").addEventListener("click", () => {
+    if (window.confirm("Discard your answers on this form and go back?")) goBack();
   });
 
   // Dispatched by the widget's "upload" mode when the visitor taps "Continue
