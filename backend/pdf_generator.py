@@ -8,7 +8,7 @@ Singapore Courts' Guide on the Use of Generative AI.
 from __future__ import annotations
 
 import io
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from reportlab.lib import colors
@@ -116,8 +116,8 @@ def generate_prefiling_pdf(case_data: dict[str, Any]) -> bytes:
     story = []
 
     # 1. Header Banner
-    ref_num = case_data.get("reference_number") or f"DRAFT-{datetime.now().strftime('%Y%m%d%H%M')}"
-    today_str = datetime.now().strftime("%d %b %Y")
+    ref_num = case_data.get("reference_number") or f"DRAFT-{datetime.now(UTC).strftime('%Y%m%d%H%M')}"
+    today_str = datetime.now(UTC).strftime("%d %b %Y")
 
     header_data = [
         [

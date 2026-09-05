@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import os
 import re
-from datetime import date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field
 
 from backend.pdf_generator import generate_prefiling_pdf
 from backend.tone_detector import ToneCheckResult, check_tone
-from client_upload import NATURE_OF_DISPUTE_CHOICES, SCTCase
+from client_upload import SCTCase
 from field_extractor import FieldExtractionError, extract_fields
 
 PORT = 8743
@@ -166,8 +166,8 @@ def validate_claim_data(data: ClaimFormData) -> dict[str, str]:
         errors["claimDate"] = "Date the dispute arose is required."
     else:
         try:
-            parsed_date = datetime.strptime(date_str[:10], "%Y-%m-%d").date()
-            today = date.today()
+            parsed_date = datetime.fromisoformat(date_str[:10]).date()
+            today = datetime.now(UTC).date()
             two_years_ago = today - timedelta(days=730)
             if parsed_date > today:
                 errors["claimDate"] = "Dispute date cannot be in the future."
@@ -275,7 +275,7 @@ def api_generate_pdf(payload: ClaimFormData) -> Response:
             detail=f"Failed to generate PDF: {exc}",
         ) from exc
 
-    ref = payload.reference_number or f"DRAFT-{datetime.now().strftime('%Y%m%d')}"
+    ref = payload.reference_number or f"DRAFT-{datetime.now(UTC).strftime('%Y%m%d')}"
     filename = f"SCT_PreFiling_Claim_{ref}.pdf"
 
     return Response(

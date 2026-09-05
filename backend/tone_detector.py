@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import os
 import re
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from typing import Any
 
 import requests
@@ -220,7 +220,7 @@ def check_tone_llm(
             suggested_clean_rewrite=payload.get("suggested_clean_rewrite", text),
             can_proceed=True,
         )
-    except Exception:
+    except Exception:  # noqa: BLE001 - deliberate fallback to heuristic tier on any provider failure
         return check_tone_heuristics(text)
 
 

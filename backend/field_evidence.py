@@ -6,12 +6,11 @@ calculation and display decisions happen deterministically in this module.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from hashlib import sha256
 import re
+from datetime import UTC, datetime
+from hashlib import sha256
 from typing import Any
 from uuid import uuid4
-
 
 # Supply this schema to the model provider's structured-output feature.
 # The backend still validates all returned values before using them.
@@ -127,7 +126,7 @@ def build_suggestion_audit_log(
     return {
         "audit_event_id": f"audit_{uuid4().hex}",
         "event_type": "field_suggestion_evaluated",
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
         "session_id": request["session_id"],
         "field_id": request["field_id"],
         "field_question": request["field_question"],

@@ -8,7 +8,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from backend.field_evidence import build_suggestion_audit_log
+from backend.field_evidence import build_suggestion_audit_log  # noqa: I001 - needs sys.path bootstrap above
 
 
 request = {
