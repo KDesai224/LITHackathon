@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-<title>State Courts Singapore — Community Justice &amp; Tribunals System (Demo)</title>
+<title>ClaimReady Prototype — Unofficial Pre-Filing Demo (Not a Government Site)</title>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
 <style>
@@ -73,38 +73,47 @@ tailwind.config = {
 <body class="bg-background font-body-md text-body-md text-on-surface antialiased">
 
 <!-- ============================== HEADER ============================== -->
-<header class="fixed top-0 inset-x-0 h-16 bg-surface-container-lowest z-50 border-b border-outline-variant/40">
-  <div class="h-16 max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop flex items-center justify-between">
-    <div class="flex items-center gap-space-md">
-      <div class="flex flex-col">
-        <span class="font-label-sm text-label-sm text-primary tracking-wider uppercase font-bold">SG Courts</span>
-        <span class="font-headline-md text-headline-md text-on-surface tracking-tight font-bold">STATE COURTS SINGAPORE</span>
-      </div>
-      <div class="h-7 w-[2px] bg-primary-container hidden md:block"></div>
-      <div class="hidden md:flex flex-col">
-        <span class="font-label-md text-label-md text-on-surface font-semibold">Community Justice &amp; Tribunals System</span>
-        <span class="font-body-sm text-body-sm text-on-surface-variant">Citizen Legal Access</span>
-      </div>
-    </div>
-    <nav class="hidden lg:flex items-center gap-space-md" id="main-nav">
-      <a class="nav-link px-space-sm py-space-xs rounded-lg transition-colors" data-view="assessment" href="#">Home</a>
-      <a class="nav-link px-space-sm py-space-xs rounded-lg transition-colors" data-view="assessment" href="#" aria-current="page">Pre-Filing Assessment</a>
-      <a class="nav-link px-space-sm py-space-xs rounded-lg transition-colors" data-view="resources" href="#">Resources</a>
-      <a class="nav-link px-space-sm py-space-xs rounded-lg transition-colors" data-view="faqs" href="#">Help / FAQs</a>
-    </nav>
-    <div class="flex items-center gap-space-sm">
-      <button class="flex items-center gap-space-xs px-space-md py-space-2xs bg-primary-container text-on-primary font-label-md text-label-md rounded-lg hover:bg-primary transition-colors" id="singpass-btn" type="button">
-        <span class="material-symbols-outlined text-[18px]">badge</span>
-        <span>Singpass Login</span>
-      </button>
-      <button class="w-8 h-8 rounded-full bg-primary flex items-center justify-center" id="account-btn" title="Account (demo)" type="button">
-        <span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
-      </button>
-    </div>
+<!-- #chrome-fixed groups the disclaimer banner + header into one fixed block; main's
+     top padding is synced to its real rendered height at runtime (see syncChromeOffset
+     in the script below) since the banner text can wrap to two lines on narrow screens. -->
+<div class="fixed top-0 inset-x-0 z-50" id="chrome-fixed">
+  <div class="w-full bg-amber-100 border-b border-amber-300 text-amber-900 flex items-center justify-center gap-2 px-layout-margin-mobile md:px-layout-margin-desktop py-1.5" id="prototype-banner" role="note">
+    <span class="material-symbols-outlined text-[16px] flex-shrink-0">warning</span>
+    <span class="font-body-sm text-body-sm font-semibold text-center">Unofficial test prototype — for testing purposes only. Not affiliated with, endorsed by, or connected to the State Courts of Singapore, the Singapore Judiciary, Singpass, or any government agency.</span>
   </div>
-</header>
+  <header class="h-16 bg-surface-container-lowest border-b border-outline-variant/40">
+    <div class="h-16 max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop flex items-center justify-between">
+      <div class="flex items-center gap-space-md">
+        <div class="flex flex-col">
+          <span class="font-label-sm text-label-sm text-primary tracking-wider uppercase font-bold">Prototype</span>
+          <span class="font-headline-md text-headline-md text-on-surface tracking-tight font-bold">CLAIMREADY DEMO</span>
+        </div>
+        <div class="h-7 w-[2px] bg-primary-container hidden md:block"></div>
+        <div class="hidden md:flex flex-col">
+          <span class="font-label-md text-label-md text-on-surface font-semibold">Unofficial Pre-Filing Assistant Demo</span>
+          <span class="font-body-sm text-body-sm text-on-surface-variant">Hackathon Prototype — Not a Government Service</span>
+        </div>
+      </div>
+      <nav class="hidden lg:flex items-center gap-space-md" id="main-nav">
+        <a class="nav-link px-space-sm py-space-xs rounded-lg transition-colors" data-view="assessment" href="#">Home</a>
+        <a class="nav-link px-space-sm py-space-xs rounded-lg transition-colors" data-view="assessment" href="#" aria-current="page">Pre-Filing Assessment</a>
+        <a class="nav-link px-space-sm py-space-xs rounded-lg transition-colors" data-view="resources" href="#">Resources</a>
+        <a class="nav-link px-space-sm py-space-xs rounded-lg transition-colors" data-view="faqs" href="#">Help / FAQs</a>
+      </nav>
+      <div class="flex items-center gap-space-sm">
+        <button class="flex items-center gap-space-xs px-space-md py-space-2xs bg-surface-container text-on-surface-variant font-label-md text-label-md rounded-lg border border-dashed border-outline hover:bg-surface-container-high transition-colors" id="singpass-btn" title="Non-functional placeholder — no real authentication" type="button">
+          <span class="material-symbols-outlined text-[18px]">block</span>
+          <span>Login (demo — not real Singpass)</span>
+        </button>
+        <button class="w-8 h-8 rounded-full bg-primary flex items-center justify-center" id="account-btn" title="Account (demo)" type="button">
+          <span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
+        </button>
+      </div>
+    </div>
+  </header>
+</div>
 
-<main class="w-full pt-16 bg-surface min-h-screen">
+<main class="w-full pt-[6.5rem] bg-surface min-h-screen">
 <div class="flex flex-col w-full">
 
 <!-- ============================== ASSESSMENT VIEW ============================== -->
@@ -114,16 +123,16 @@ tailwind.config = {
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md">
         <div class="flex flex-col max-w-3xl">
           <div class="flex items-center gap-space-xs mb-space-2xs">
-            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary-container text-on-primary text-[11px] font-bold">SG</span>
-            <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider font-semibold">Community Justice and Tribunals System (CJTS)</span>
+            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary-container text-on-primary text-[11px] font-bold">CR</span>
+            <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider font-semibold">ClaimReady — Pre-Filing Assessment Demo</span>
           </div>
           <h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Pre-Filing Document Assessment &amp; Legal Assistant</h1>
-          <p class="font-body-lg text-body-lg text-secondary mt-space-2xs">Upload your dispute documents to automatically identify required court forms and procedural requirements.</p>
+          <p class="font-body-lg text-body-lg text-secondary mt-space-2xs">Upload your dispute documents to automatically identify required court forms and procedural requirements. (Prototype only — nothing is actually processed or filed.)</p>
         </div>
         <div class="flex items-center gap-space-sm self-start md:self-center">
           <div class="flex flex-col text-right">
-            <span class="font-label-sm text-label-sm text-secondary uppercase">Statutory Jurisdiction</span>
-            <span class="font-label-md text-label-md text-on-surface font-bold">State Courts Singapore</span>
+            <span class="font-label-sm text-label-sm text-secondary uppercase">Prototype Status</span>
+            <span class="font-label-md text-label-md text-on-surface font-bold">Unofficial Test Build</span>
           </div>
           <div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
             <span class="material-symbols-outlined text-[24px]">gavel</span>
@@ -145,7 +154,7 @@ tailwind.config = {
           <div class="flex-1 space-y-space-xs">
             <div class="flex items-center justify-between">
               <h2 class="font-headline-md text-headline-md text-on-surface">General Information for Self-Represented Persons</h2>
-              <span class="font-label-sm text-label-sm text-secondary uppercase bg-surface-container px-space-xs py-space-2xs rounded">Notice ref: CJTS/2025/PF-01</span>
+              <span class="font-label-sm text-label-sm text-secondary uppercase bg-surface-container px-space-xs py-space-2xs rounded">Prototype ref: CLAIMREADY-DEMO-01</span>
             </div>
             <p class="font-body-md text-body-md text-on-surface-variant">Please review the procedural parameters before commencing your self-guided triage:</p>
             <ul class="grid grid-cols-1 md:grid-cols-2 gap-x-space-xl gap-y-space-xs pt-space-xs font-body-md text-body-md text-on-surface">
@@ -238,7 +247,7 @@ tailwind.config = {
             <div class="space-y-space-xs">
               <label class="font-label-sm text-label-sm text-on-surface-variant flex items-center justify-between" for="claimant-query">
                 <span>Describe your circumstances or ask a procedural question:</span>
-                <span class="text-secondary text-xs">Singpass Protected Session</span>
+                <span class="text-secondary text-xs">Demo session (not Singpass-protected)</span>
               </label>
               <div class="relative rounded-lg bg-surface-container-lowest shadow-sm">
                 <textarea class="w-full p-space-sm rounded-lg bg-surface-container-lowest font-body-md text-body-md text-on-surface placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" id="claimant-query" placeholder="e.g. The supplier failed to deliver commercial inventory after full payment on 12 Jan 2025. What documentation do I need to establish jurisdiction?" rows="3"></textarea>
@@ -408,6 +417,153 @@ tailwind.config = {
   </div>
 </div>
 
+<!-- ============================== PRE-FILING FORM VIEW (Page 2) ==============================
+     Reached from the ClaimReady widget's "Let us approximate your route for you" flow
+     (claimready-overlay.js dispatches "claimready:route-complete", handled below).
+     Mock pre-filing form: each field has an (i) info button that opens a popup showing a
+     mocked document excerpt, citation, and suggested value — standing in for a future
+     real document-analysis backend. -->
+<div class="hidden" data-page="prefiling-form">
+  <section class="w-full bg-surface-container-lowest shadow-sm">
+    <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop py-space-xl">
+      <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider font-semibold">Pre-Filing Form (Prototype)</span>
+      <h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Small Claims Tribunal — Claim Form (Mock)</h1>
+      <p class="font-body-lg text-body-lg text-secondary mt-space-2xs">This imitates a real pre-filing form. Tap the <span class="material-symbols-outlined align-middle text-[16px]">info</span> icon next to any question to see a mocked suggestion drawn from documents you "uploaded" earlier.</p>
+    </div>
+  </section>
+
+  <div class="max-w-layout-content-max-width mx-auto w-full px-layout-margin-mobile md:px-layout-margin-desktop py-space-xl space-y-space-lg">
+    <div class="bg-primary-fixed/40 border border-primary-container/40 rounded-lg p-space-md flex items-start gap-space-sm">
+      <span class="material-symbols-outlined text-primary text-[20px] mt-0.5">warning</span>
+      <p class="font-body-sm text-body-sm text-on-surface">This is a mocked form for the ClaimReady prototype. No data entered here is submitted anywhere or legally binding — always verify against the real court form and your own documents.</p>
+    </div>
+
+    <section class="bg-surface-container-lowest rounded-lg shadow-sm p-space-lg md:p-space-xl space-y-space-lg">
+      <div class="flex items-center justify-between flex-wrap gap-space-xs">
+        <h2 class="font-headline-md text-headline-md text-on-surface">Claim Details</h2>
+        <span class="font-label-sm text-label-sm text-secondary" id="pf-progress">0 of 8 fields completed</span>
+      </div>
+
+      <form class="space-y-space-lg" id="pf-form" novalidate>
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimantName">
+            <span>1. Your full name (Claimant)</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimantName" type="button" aria-label="Help for your full name"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimantName" type="text" placeholder="As it appears on your NRIC/passport" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimantId">
+            <span>2. Your NRIC / FIN</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimantId" type="button" aria-label="Help for NRIC / FIN"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimantId" type="text" placeholder="e.g. S1234567A" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-respondentName">
+            <span>3. Respondent's full name or business name</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="respondentName" type="button" aria-label="Help for respondent's name"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-respondentName" type="text" placeholder="Person or business you are claiming against" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-respondentAddress">
+            <span>4. Respondent's address for service</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="respondentAddress" type="button" aria-label="Help for respondent's address"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <textarea class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" id="field-respondentAddress" placeholder="Where the respondent can be served with claim papers" rows="2"></textarea>
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimNature">
+            <span>5. Nature of claim</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimNature" type="button" aria-label="Help for nature of claim"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <select class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimNature">
+            <option value="">Select one…</option>
+            <option>Contract for Sale of Goods</option>
+            <option>Contract for Provision of Services</option>
+            <option>Damage to Property</option>
+            <option>Tenancy / Residential Lease</option>
+            <option>Employment Claim</option>
+            <option>Neighbour / Community Dispute</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimAmount">
+            <span>6. Amount claimed (SGD)</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimAmount" type="button" aria-label="Help for amount claimed"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimAmount" min="0" type="number" placeholder="e.g. 4500" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimDate">
+            <span>7. Date the dispute arose</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimDate" type="button" aria-label="Help for date the dispute arose"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimDate" type="date" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimStatement">
+            <span>8. Brief statement of claim</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimStatement" type="button" aria-label="Help for statement of claim"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <textarea class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" id="field-claimStatement" placeholder="What happened, and what you are asking the tribunal to order" rows="4"></textarea>
+        </div>
+
+        <div class="pt-space-xs">
+          <button class="hidden flex items-center gap-space-xs px-space-lg py-space-sm bg-primary-container text-on-primary font-label-md text-label-md rounded-lg hover:bg-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled id="pf-submit-btn" type="button">
+            <span id="pf-submit-btn-label">Submit</span>
+            <span class="material-symbols-outlined text-[16px]" id="pf-submit-btn-icon">arrow_forward</span>
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+</div>
+
+<!-- ============================== AFTER-FILING VIEW (Page 3) ==============================
+     Reached after submitting the Page 2 mock form. The ClaimReady widget reappears here in
+     "after" mode (window.ClaimReadyOverlay.setContext("after")), showing the after-filing
+     checklist that used to live in a "After filing" tab on Page 1. -->
+<div class="hidden" data-page="after-filing">
+  <section class="w-full bg-surface-container-lowest shadow-sm">
+    <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop py-space-xl">
+      <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider font-semibold">After Filing (Prototype)</span>
+      <h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Your Mock Claim Has Been "Filed"</h1>
+      <p class="font-body-lg text-body-lg text-secondary mt-space-2xs">Nothing was actually submitted to any court. This page mocks what a confirmation and next-steps screen could look like.</p>
+    </div>
+  </section>
+
+  <div class="max-w-layout-content-max-width mx-auto w-full px-layout-margin-mobile md:px-layout-margin-desktop py-space-xl space-y-space-lg">
+    <section class="bg-success-container border border-success/30 rounded-lg p-space-lg flex items-start gap-space-sm">
+      <span class="material-symbols-outlined text-success text-[24px] mt-0.5">check_circle</span>
+      <div class="flex flex-col gap-space-2xs">
+        <span class="font-headline-md text-headline-md text-success">Mock filing reference: <span id="af-ref-number">—</span></span>
+        <p class="font-body-md text-body-md text-on-surface">Keep this reference for your records in a real filing. In this prototype it is randomly generated and not connected to any court system.</p>
+      </div>
+    </section>
+
+    <section class="bg-surface-container-lowest rounded-lg shadow-sm p-space-lg md:p-space-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md">
+      <div class="flex flex-col gap-space-2xs">
+        <h2 class="font-headline-md text-headline-md text-on-surface">What happens next?</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">Open the ClaimReady guide for a mocked after-filing checklist (service of documents, mediation, hearing prep).</p>
+      </div>
+      <button class="flex items-center gap-space-xs px-space-lg py-space-sm bg-primary-container text-on-primary font-label-md text-label-md rounded-lg hover:bg-primary transition-colors flex-shrink-0" id="af-open-guide-btn" type="button">
+        <span class="material-symbols-outlined text-[18px]">support_agent</span>
+        <span>Show me what to do next</span>
+      </button>
+    </section>
+  </div>
+</div>
+
 </div>
 </main>
 
@@ -415,19 +571,19 @@ tailwind.config = {
 <footer class="w-full bg-surface-container-low border-t border-outline-variant/40 py-space-xl">
   <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop flex flex-col md:flex-row items-start md:items-center justify-between gap-space-lg">
     <div class="flex flex-col text-left">
-      <span class="font-headline-md text-headline-md text-primary font-bold">Singapore State Courts</span>
-      <span class="font-body-md text-body-md text-on-surface font-semibold mt-space-2xs">Community Justice &amp; Tribunals Division • Ministry of Law</span>
-      <span class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">© 2025 Government of Singapore. All Rights Reserved. (Demo content — not an official Singapore Government site.)</span>
-      <span class="font-body-sm text-body-sm text-on-surface-variant">1 Havelock Square, State Courts, Singapore 059724</span>
+      <span class="font-headline-md text-headline-md text-primary font-bold">ClaimReady Prototype</span>
+      <span class="font-body-md text-body-md text-on-surface font-semibold mt-space-2xs">Hackathon Demo • Unofficial, Not a Government Service</span>
+      <span class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">© 2025 ClaimReady Prototype. For testing purposes only — not affiliated with, endorsed by, or connected to the Government of Singapore.</span>
+      <span class="font-body-sm text-body-sm text-on-surface-variant">123 Example Avenue, Demo Building, Singapore 000000 (fictional address for this prototype)</span>
     </div>
     <div class="flex flex-col items-start md:items-end gap-space-sm">
       <div class="flex flex-wrap items-center gap-space-md">
         <button class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" data-modal="privacy" type="button">Privacy Policy</button>
         <button class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" data-modal="terms" type="button">Terms of Service</button>
         <button class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" data-modal="vulnerability" type="button">Vulnerability Disclosure</button>
-        <span class="font-body-sm text-body-sm text-on-surface-variant">Helpdesk: 1800-JUSTICE</span>
+        <span class="font-body-sm text-body-sm text-on-surface-variant">Demo helpdesk: not a real support line</span>
       </div>
-      <span class="font-label-sm text-label-sm text-secondary">Supported by GovTech &amp; Ministry of Law Singapore</span>
+      <span class="font-label-sm text-label-sm text-secondary">Independent hackathon build — no government affiliation</span>
     </div>
   </div>
 </footer>
@@ -522,6 +678,16 @@ tailwind.config = {
   const pages = document.querySelectorAll("[data-page]");
   const navLinks = document.querySelectorAll("#main-nav .nav-link");
 
+  // The banner can wrap to two lines on narrow viewports, so the fixed header block's
+  // real height isn't a constant — measure it and push <main> down by exactly that much.
+  const chromeFixed = document.getElementById("chrome-fixed");
+  const mainEl = document.querySelector("main");
+  function syncChromeOffset() {
+    if (chromeFixed && mainEl) mainEl.style.paddingTop = chromeFixed.offsetHeight + "px";
+  }
+  window.addEventListener("resize", syncChromeOffset);
+  syncChromeOffset();
+
   function setActiveNav(view) {
     navLinks.forEach((a) => {
       const active = a.dataset.view === view;
@@ -537,8 +703,23 @@ tailwind.config = {
   function showPage(view) {
     pages.forEach((p) => p.classList.toggle("hidden", p.dataset.page !== view));
     setActiveNav(view);
+    syncChromeOffset();
     window.scrollTo({ top: 0, behavior: "smooth" });
+
+    // Keep the ClaimReady overlay's content in step with which page it's shown on:
+    // hidden on the mock form (Page 2, which has its own inline (i) help instead),
+    // "after"-mode on Page 3, and the default route-finder everywhere else. setContext()
+    // resets the widget's in-progress state, so only call it when the context actually
+    // changes — otherwise switching between Home/Resources/FAQs (all "route" mode) would
+    // wipe out whatever the visitor had already typed into the widget.
+    const nextContext = view === "prefiling-form" ? "hidden" : view === "after-filing" ? "after" : "route";
+    if (window.ClaimReadyOverlay && nextContext !== lastOverlayContext) {
+      window.ClaimReadyOverlay.setContext(nextContext);
+      lastOverlayContext = nextContext;
+    }
+    if (view === "after-filing") renderAfterFilingRef();
   }
+  let lastOverlayContext = "route"; // matches the widget's own default mode on load
 
   navLinks.forEach((a) => {
     a.addEventListener("click", (e) => {
@@ -547,6 +728,10 @@ tailwind.config = {
     });
   });
   setActiveNav("assessment");
+
+  // The ClaimReady widget (claimready-overlay.js) dispatches this once its mocked
+  // "approximate my route" flow finishes, handing off navigation to the host page.
+  window.addEventListener("claimready:route-complete", () => showPage("prefiling-form"));
 
   // Populate FAQ accordion.
   const faqList = document.getElementById("faq-list");
@@ -583,12 +768,12 @@ tailwind.config = {
         '<tr class="border-b border-outline-variant/40"><td class="py-space-2xs">Up to $10,000</td><td class="py-space-2xs">$10</td></tr>' +
         '<tr class="border-b border-outline-variant/40"><td class="py-space-2xs">$10,001 – $20,000</td><td class="py-space-2xs">$20</td></tr>' +
         '<tr><td class="py-space-2xs">$20,001 – $30,000 (with consent)</td><td class="py-space-2xs">$40</td></tr>' +
-        '</tbody></table><p class="mt-space-sm text-body-sm">Figures are illustrative for this demo. Confirm current fees on the official CJTS portal before filing.</p>'
+        '</tbody></table><p class="mt-space-sm text-body-sm">Figures are illustrative for this demo. Confirm current fees on the official judiciary e-filing portal before filing.</p>'
     },
     privacy: { title: "Privacy Policy (Demo)", body: "<p>This is a non-production demonstration page. No personal data submitted here is stored, transmitted, or retained — all form state lives only in your browser tab and clears on reload.</p>" },
     terms: { title: "Terms of Service (Demo)", body: "<p>This interface is an illustrative prototype for evaluating layout and interaction design. It is not connected to any court system and creates no legal record.</p>" },
     vulnerability: { title: "Vulnerability Disclosure (Demo)", body: "<p>This is a static local demo with no live backend, authentication, or data store, so there is no production attack surface to report against.</p>" },
-    singpass: { title: "Singpass Login — Demo Mode", body: "<p>Authentication is intentionally out of scope for this frontend build. In production this button would hand off to the Singpass OIDC login flow; here it simply shows this notice so the control is never a silent dead end.</p>" },
+    singpass: { title: "Login — Non-Functional Placeholder", body: "<p>This button is a visual placeholder only. It is <strong>not</strong> connected to Singpass or any real government authentication service, and no real login occurs. In a production build, this control would need to hand off to the actual Singpass OIDC flow — that integration is intentionally out of scope for this frontend prototype.</p>" },
     account: { title: "Account — Demo Mode", body: "<p>No account/session backend is wired up in this demo. This is a placeholder for the signed-in user menu (profile, saved assessments, sign out).</p>" }
   };
 
@@ -856,6 +1041,147 @@ tailwind.config = {
 
       document.getElementById("checklist-body").scrollIntoView({ behavior: "smooth", block: "center" });
     }, 900);
+  });
+
+  /* ------------------------------------------------------------------
+   * Pre-filing form (Page 2): mocked per-field "document help" popups.
+   * FIELD_HELP stands in for a real document-analysis backend that would
+   * pull excerpts/citations from the files the user attached on Page 1.
+   * ------------------------------------------------------------------ */
+  const FIELD_HELP = {
+    claimantName: {
+      label: "Your full name (Claimant)",
+      excerpt: "“This Agreement is made between John Tan Wei Ming (the ‘Buyer’) and Bright Home Furnishings Pte Ltd…”",
+      citation: "Sale Agreement.pdf, page 1",
+      suggestion: "John Tan Wei Ming"
+    },
+    claimantId: {
+      label: "Your NRIC / FIN",
+      excerpt: "“Buyer NRIC: S8712345A”",
+      citation: "Sale Agreement.pdf, page 1",
+      suggestion: "S8712345A"
+    },
+    respondentName: {
+      label: "Respondent's full name or business name",
+      excerpt: "“…supplied by Bright Home Furnishings Pte Ltd (UEN 201812345K)…”",
+      citation: "Sale Agreement.pdf, page 1",
+      suggestion: "Bright Home Furnishings Pte Ltd"
+    },
+    respondentAddress: {
+      label: "Respondent's address for service",
+      excerpt: "“Registered office: 88 Jurong Industrial Road, #03-12, Singapore 619123”",
+      citation: "Demand Letter.pdf, page 1",
+      suggestion: "88 Jurong Industrial Road, #03-12, Singapore 619123"
+    },
+    claimNature: {
+      label: "Nature of claim",
+      excerpt: "“…the Buyer paid in full for a custom sofa set which was never delivered…”",
+      citation: "Sale Agreement.pdf, page 2",
+      suggestion: "Contract for Sale of Goods"
+    },
+    claimAmount: {
+      label: "Amount claimed (SGD)",
+      excerpt: "“Total amount paid: $4,500.00, received in full on 12 Jan 2025”",
+      citation: "Payment Receipt.jpg",
+      suggestion: "4500"
+    },
+    claimDate: {
+      label: "Date the dispute arose",
+      excerpt: "“Agreed delivery date: 26 Jan 2025. As of this letter, no delivery has been made.”",
+      citation: "Demand Letter.pdf, page 1",
+      suggestion: "2025-01-26"
+    },
+    claimStatement: {
+      label: "Brief statement of claim",
+      excerpt: "“Despite full payment on 12 Jan 2025, the Respondent has failed to deliver the goods or provide a refund after repeated requests.”",
+      citation: "Demand Letter.pdf, page 1",
+      suggestion: "I paid Bright Home Furnishings Pte Ltd $4,500 in full on 12 Jan 2025 for a custom sofa set. The agreed delivery date of 26 Jan 2025 passed with no delivery, and the respondent has not refunded my payment despite my demand letter dated 2 Feb 2025."
+    }
+  };
+
+  function openFieldHelp(fieldKey) {
+    const help = FIELD_HELP[fieldKey];
+    if (!help) return;
+    modalTitle.textContent = "Help: " + help.label;
+    modalBody.innerHTML =
+      '<div class="space-y-space-sm">' +
+      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">From your uploaded documents (mocked)</span>' +
+      '<p class="font-body-md text-body-md text-on-surface italic mt-space-2xs">' + help.excerpt + '</p></div>' +
+      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Citation</span>' +
+      '<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + help.citation + '</p></div>' +
+      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Suggested value</span>' +
+      '<p class="font-body-md text-body-md text-primary font-semibold mt-space-2xs">' + help.suggestion + '</p></div>' +
+      '<button type="button" class="w-full mt-space-xs px-space-md py-space-xs bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors" id="pf-use-suggestion" data-field="' + fieldKey + '">Use this suggestion</button>' +
+      '<p class="font-body-sm text-body-sm text-secondary">Mocked output — always fact-check against your real documents and the official form instructions before relying on it.</p>' +
+      '</div>';
+    lastFocused = document.activeElement;
+    backdrop.classList.remove("hidden");
+    document.getElementById("modal-close").focus();
+  }
+
+  document.querySelectorAll(".field-info-btn").forEach((btn) => {
+    btn.addEventListener("click", () => openFieldHelp(btn.dataset.field));
+  });
+
+  modalBody.addEventListener("click", (e) => {
+    const useBtn = e.target.closest("#pf-use-suggestion");
+    if (!useBtn) return;
+    const field = document.getElementById("field-" + useBtn.dataset.field);
+    const help = FIELD_HELP[useBtn.dataset.field];
+    if (field && help) {
+      field.value = help.suggestion;
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    closeModal();
+  });
+
+  /* ------------------------------------------------------------------
+   * Pre-filing form (Page 2): progress tracking + submit.
+   * "Complete" is judged by best-guess validation for a prototype: every
+   * field must simply be non-empty (no format/regex checks).
+   * ------------------------------------------------------------------ */
+  const pfFields = document.querySelectorAll(".pf-field");
+  const pfProgress = document.getElementById("pf-progress");
+  const pfSubmitBtn = document.getElementById("pf-submit-btn");
+
+  function updatePfProgress() {
+    const total = pfFields.length;
+    const done = Array.from(pfFields).filter((f) => f.value.trim() !== "").length;
+    pfProgress.textContent = done + " of " + total + " fields completed";
+    const complete = done === total;
+    pfSubmitBtn.classList.toggle("hidden", !complete);
+    pfSubmitBtn.disabled = !complete;
+  }
+  pfFields.forEach((f) => {
+    f.addEventListener("input", updatePfProgress);
+    f.addEventListener("change", updatePfProgress);
+  });
+  updatePfProgress();
+
+  pfSubmitBtn.addEventListener("click", () => {
+    const label = document.getElementById("pf-submit-btn-label");
+    const icon = document.getElementById("pf-submit-btn-icon");
+    pfSubmitBtn.disabled = true;
+    label.textContent = "Submitting…";
+    icon.textContent = "progress_activity";
+    icon.classList.add("animate-spin");
+    // Mocked latency only — no real submission happens; a production build
+    // would POST the form here and only navigate on a successful response.
+    window.setTimeout(() => showPage("after-filing"), 900);
+  });
+
+  /* ------------------------------------------------------------------
+   * After-filing view (Page 3): mocked reference number + reopen widget.
+   * ------------------------------------------------------------------ */
+  let afRefRendered = false;
+  function renderAfterFilingRef() {
+    if (afRefRendered) return;
+    afRefRendered = true;
+    const refNum = Math.floor(1000 + Math.random() * 9000);
+    document.getElementById("af-ref-number").textContent = "CLAIMREADY-DEMO-" + refNum;
+  }
+  document.getElementById("af-open-guide-btn").addEventListener("click", () => {
+    if (window.ClaimReadyOverlay) window.ClaimReadyOverlay.open();
   });
 
   /* Initial state */
