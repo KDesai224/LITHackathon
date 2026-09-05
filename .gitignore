@@ -1,7 +1,14 @@
 __pycache__/
 *.py[cod]
 .venv/
+.coverage
 .env
 .env.*
 !.env.example
 .kilo/
+
+# Local ML model artifacts (never commit downloaded weights)
+models/
+*.safetensors
+.cache/huggingface/
+.huggingface/
