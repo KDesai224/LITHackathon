@@ -313,8 +313,19 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
 .cr-check:last-of-type { border-bottom: none; }
 .cr-check input { width: 18px; height: 18px; flex: none; margin: 2px 0; accent-color: var(--cr-primary); }
 
-.cr-list { padding-left: 20px; margin: 0 0 12px; color: var(--cr-on-surface-variant); }
-.cr-list li { margin: 6px 0; }
+.cr-list { list-style: none; padding: 0; margin: 0 0 12px; color: var(--cr-on-surface-variant); }
+.cr-list li {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 6px 0; border-bottom: 1px solid var(--cr-outline);
+}
+.cr-list li:last-child { border-bottom: none; }
+.cr-list li span { overflow-wrap: anywhere; }
+.cr-file-remove {
+  flex: none; border: none; background: transparent; color: var(--cr-on-surface-variant);
+  width: 22px; height: 22px; border-radius: 50%; font-size: 16px; line-height: 1; cursor: pointer;
+}
+.cr-file-remove:hover { background: var(--cr-error-bg); color: var(--cr-error); }
+.cr-file-remove:focus-visible { outline: 2px solid var(--cr-primary-deep); outline-offset: 2px; }
 
 .cr-status { font-size: 12px; color: var(--cr-secondary); margin-top: 8px; }
 
@@ -407,6 +418,11 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
       const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
       return map[ch];
     });
+
+  // One row in an attached-documents list, with a way to remove a
+  // mistakenly-attached file — see the "remove-file" click handler below.
+  const fileRow = (f) =>
+    `<li><span>${esc(f.name)}</span><button type="button" class="cr-file-remove" data-action="remove-file" data-file-id="${f.id}" aria-label="Remove ${esc(f.name)}">&times;</button></li>`;
 
   async function apiFetch(path, options) {
     let response;
@@ -594,7 +610,7 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
           16
         )}<span>Attach documents</span></button><input type="file" id="cr-file-input" multiple style="display:none"></div>` +
         (state.files.length
-          ? `<ul class="cr-list">${state.files.map((f) => `<li>${f.name}</li>`).join("")}</ul>`
+          ? `<ul class="cr-list">${state.files.map((f) => fileRow(f)).join("")}</ul>`
           : `<p class="cr-copy">No documents attached yet.</p>`) +
         (state.approxError
           ? `<p class="cr-status" style="color:var(--cr-error)">${esc(state.approxError)}</p>`
@@ -618,7 +634,7 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
               16
             )}<span>Attach documents</span></button><input type="file" id="cr-file-input" multiple style="display:none"></div>` +
             (state.files.length
-              ? `<ul class="cr-list">${state.files.map((f) => `<li>${f.name}</li>`).join("")}</ul>`
+              ? `<ul class="cr-list">${state.files.map((f) => fileRow(f)).join("")}</ul>`
               : "") +
             (state.approxError
               ? `<p class="cr-status" style="color:var(--cr-error)">${state.approxError}</p>`
@@ -749,6 +765,18 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
         state.step = "start";
         state.approxStatus = "idle";
         state.approxError = "";
+        render();
+        return;
+      }
+      if (action === "remove-file") {
+        // Lets someone undo a mistaken attachment. Also clears any cached
+        // analysis and marks state dirty, so the next continue/resume click
+        // re-runs extraction over the remaining files instead of handing the
+        // host page suggestions drawn from a document that's no longer attached.
+        const id = Number(button.dataset.fileId);
+        state.files = state.files.filter((f) => f.id !== id);
+        state.analysis = null;
+        state.dirty = true;
         render();
         return;
       }
