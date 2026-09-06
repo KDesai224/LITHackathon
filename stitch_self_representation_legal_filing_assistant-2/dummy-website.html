@@ -92,6 +92,14 @@ tailwind.config = {
           <span class="material-symbols-outlined text-[20px]">arrow_back</span>
           <span class="hidden md:inline font-label-md text-label-md">Back</span>
         </button>
+        <!-- Demo-only shortcut: jumps straight to the next page in the main flow without
+             needing to fill in or submit anything, so the flow can be demoed quickly.
+             Bypasses the same submit-gating the eligibility check and claim form's own
+             Submit buttons enforce — see FLOW_SEQUENCE/updateSkipButton() below. -->
+        <button class="hidden flex items-center gap-space-2xs px-space-xs py-space-2xs rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors flex-shrink-0" id="global-skip-btn" title="Skip ahead without filling anything in (demo shortcut)" type="button">
+          <span class="hidden md:inline font-label-md text-label-md">Skip Ahead</span>
+          <span class="material-symbols-outlined text-[20px]">fast_forward</span>
+        </button>
         <div class="flex flex-col">
           <span class="font-label-sm text-label-sm text-primary tracking-wider uppercase font-bold">Prototype</span>
           <span class="font-headline-md text-headline-md text-on-surface tracking-tight font-bold">CLAIMREADY DEMO</span>
@@ -226,12 +234,558 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- ============================== PRE-FILING FORM VIEW (Page 2) ==============================
+<!-- ============================== ELIGIBILITY CHECK VIEW (Page 1.5) ==============================
      Reached from the ClaimReady widget's "Let us approximate your route for you" flow
      (claimready-overlay.js dispatches "claimready:route-complete", handled below).
      Pre-filing form: each field has an (i) info button that opens a popup showing the
      suggestion the assistant extracted from the user's narrative/documents (field_help),
      or neutral guidance when no suggestion is available. -->
+     (claimready-overlay.js dispatches "claimready:route-complete", handled below), sitting between
+     Page 1 (the blank host shell) and Page 2 (the pre-filing claim form). Mirrors Singapore's real
+     CJTS eligibility screener: a flat list of Yes/No questions plus two data fields, grouped under
+     "Parties Details", "Nature of Dispute" and "Service" — no conditional skipping between questions,
+     since this is a frontend-only mock and a real backend would decide that later.
+     Each question shares the exact same mocked document-help mechanic as Page 2 (see FIELD_HELP,
+     openFieldHelp, and the shared modal further down the script — this page's fields just add more
+     entries to that same object), including question 8 ("Is the other party a bankrupt?"), which is
+     wired to the reusable "insufficient info" state for the demo, same idea as Page 2's claim-amount
+     question. -->
+<div class="hidden" data-page="eligibility-check">
+  <section class="w-full bg-surface-container-lowest shadow-sm">
+    <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop py-space-xl">
+      <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider font-semibold">Eligibility Check (Prototype)</span>
+      <h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Small Claims Tribunal — Eligibility Questions (Mock)</h1>
+      <p class="font-body-lg text-body-lg text-secondary mt-space-2xs">This imitates a real eligibility screener. Tap the <span class="material-symbols-outlined align-middle text-[16px]">info</span> icon next to any question to see a mocked suggestion drawn from documents you "uploaded" earlier.</p>
+    </div>
+  </section>
+
+  <div class="max-w-layout-content-max-width mx-auto w-full px-layout-margin-mobile md:px-layout-margin-desktop py-space-xl space-y-space-lg">
+    <div class="bg-primary-fixed/40 border border-primary-container/40 rounded-lg p-space-md flex items-start gap-space-sm">
+      <span class="material-symbols-outlined text-primary text-[20px] mt-0.5">warning</span>
+      <p class="font-body-sm text-body-sm text-on-surface">This is a mocked eligibility screener for the ClaimReady prototype. No data entered here is submitted anywhere or legally binding — always verify against the real court screener and your own documents.</p>
+    </div>
+
+    <section class="bg-surface-container-lowest rounded-lg shadow-sm p-space-lg md:p-space-xl space-y-space-lg">
+      <div class="flex items-center justify-between flex-wrap gap-space-xs">
+        <h2 class="font-headline-md text-headline-md text-on-surface">Eligibility Questions</h2>
+        <span class="font-label-sm text-label-sm text-secondary" id="elig-progress">0 of 23 questions completed</span>
+      </div>
+
+      <!-- Save & resume (frontend-only mock): identical mechanic to Page 2's save bar below —
+           "Save answers" snapshots the current field values into memory for this browser tab
+           only, and "Add more documents" opens the ClaimReady widget's own upload panel without
+           leaving this page or losing the answers here. -->
+      <div class="bg-surface-container-low rounded-lg p-space-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-sm">
+        <p class="font-body-sm text-body-sm text-secondary" id="elig-save-status">Not saved yet — your answers will be lost if you close this tab.</p>
+        <div class="flex items-center gap-space-xs flex-shrink-0">
+          <button class="flex items-center gap-space-xs px-space-md py-space-2xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg font-label-md text-label-md transition-colors" id="elig-save-btn" type="button">
+            <span class="material-symbols-outlined text-[16px]">save</span>
+            <span>Save answers</span>
+          </button>
+          <button class="hidden flex items-center gap-space-xs px-space-md py-space-2xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg font-label-md text-label-md transition-colors" id="elig-add-docs-btn" type="button">
+            <span class="material-symbols-outlined text-[16px]">upload_file</span>
+            <span>Add more documents</span>
+          </button>
+        </div>
+      </div>
+
+      <form class="space-y-space-lg" id="elig-form" novalidate>
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-causeOfActionDate">
+            <span>1. Date of Cause of Action</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="causeOfActionDate" type="button" aria-label="Help for date of cause of action"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <input class="elig-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-causeOfActionDate" type="date" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-roughClaimAmount">
+            <span>2. Claim Amount</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="roughClaimAmount" type="button" aria-label="Help for claim amount"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <input class="elig-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-roughClaimAmount" min="0" type="number" placeholder="e.g. 4500" />
+        </div>
+
+        <div class="bg-primary-fixed/40 border-l-4 border-primary rounded-r-lg px-space-md py-space-2xs">
+          <h3 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wide">Parties Details</h3>
+        </div>
+
+        <!-- The 21 Yes/No questions below all share one shape: a numbered label + (i) info
+             button (data-field keys into FIELD_HELP further down the script), a Yes/No
+             toggle-button pair (grouped by data-yesno, wired generically in the script), and a
+             hidden .elig-field input that actually stores the answer — used for progress
+             tracking, save/resume, and the "Use this suggestion" mechanic, same as Page 2's
+             visible .pf-field inputs. -->
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>3. Are you claiming as an individual?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimingAsIndividual" type="button" aria-label="Help for claiming as an individual"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="claimingAsIndividual">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-claimingAsIndividual" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>4. Are you a bankrupt?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimantBankrupt" type="button" aria-label="Help for are you a bankrupt"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="claimantBankrupt">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-claimantBankrupt" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>5. Do you have permission from the Official Assignee to file this claim?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="officialAssigneePermission" type="button" aria-label="Help for official assignee permission"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="officialAssigneePermission">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-officialAssigneePermission" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>6. Are you claiming against the correct party with whom you have a contractual obligation?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="correctPartyContractualObligation" type="button" aria-label="Help for correct party with contractual obligation"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="correctPartyContractualObligation">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-correctPartyContractualObligation" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>7. Is the other party an individual?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="otherPartyIndividual" type="button" aria-label="Help for is the other party an individual"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="otherPartyIndividual">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-otherPartyIndividual" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>8. Is the other party a bankrupt?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="otherPartyBankrupt" type="button" aria-label="Help for is the other party a bankrupt"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="otherPartyBankrupt">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-otherPartyBankrupt" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>9. Is there a mediation/arbitration clause in your agreement?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="mediationArbitrationClause" type="button" aria-label="Help for mediation or arbitration clause"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="mediationArbitrationClause">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-mediationArbitrationClause" type="hidden" />
+        </div>
+
+        <div class="bg-primary-fixed/40 border-l-4 border-primary rounded-r-lg px-space-md py-space-2xs">
+          <h3 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wide">Nature of Dispute</h3>
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>10. Does your claim relate to a contract for goods sold/bought?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="contractGoodsSoldBought" type="button" aria-label="Help for contract for goods sold or bought"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="contractGoodsSoldBought">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-contractGoodsSoldBought" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>11. Did the cause of action arise on or before 31 Oct 2018?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="causeBeforeOct2018" type="button" aria-label="Help for cause of action before 31 Oct 2018"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="causeBeforeOct2018">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-causeBeforeOct2018" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>12. Is your claim evidenced in writing?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimEvidencedInWriting" type="button" aria-label="Help for claim evidenced in writing"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="claimEvidencedInWriting">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-claimEvidencedInWriting" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>13. Are you splitting or dividing your invoice/contract to bring it within SCT's jurisdiction?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="splittingInvoiceForJurisdiction" type="button" aria-label="Help for splitting invoice for jurisdiction"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="splittingInvoiceForJurisdiction">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-splittingInvoiceForJurisdiction" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>14. Is your claim related to profit or commission sharing?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="profitCommissionSharing" type="button" aria-label="Help for profit or commission sharing"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="profitCommissionSharing">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-profitCommissionSharing" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>15. Does your claim relate to or arise out of consignment of goods?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="consignmentOfGoods" type="button" aria-label="Help for consignment of goods"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="consignmentOfGoods">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-consignmentOfGoods" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>16. Has the credit term or delivery date lapsed?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="creditTermLapsed" type="button" aria-label="Help for credit term or delivery date lapsed"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="creditTermLapsed">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-creditTermLapsed" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>17. Were the goods delivered?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="goodsDelivered" type="button" aria-label="Help for were the goods delivered"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="goodsDelivered">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-goodsDelivered" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>18. Were there damages or defects to the goods?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="damagesOrDefects" type="button" aria-label="Help for damages or defects to the goods"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="damagesOrDefects">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-damagesOrDefects" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>19. Did you inform the other party of the defects?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="informedOtherPartyOfDefects" type="button" aria-label="Help for informing the other party of defects"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="informedOtherPartyOfDefects">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-informedOtherPartyOfDefects" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>20. Did the damage or defects occur within 6 months from the Sale of the goods?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="defectsWithin6Months" type="button" aria-label="Help for defects within 6 months of sale"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="defectsWithin6Months">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-defectsWithin6Months" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>21. Are you seeking a Money Order, Work Order and/or an Order for delivering vacant possession?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="seekingMoneyWorkVacantOrder" type="button" aria-label="Help for money order work order or vacant possession order"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="seekingMoneyWorkVacantOrder">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-seekingMoneyWorkVacantOrder" type="hidden" />
+        </div>
+
+        <div class="bg-primary-fixed/40 border-l-4 border-primary rounded-r-lg px-space-md py-space-2xs">
+          <h3 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wide">Service</h3>
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>22. Is the party/company whom you are filing against residing/located in Singapore or have a registered address in Singapore?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="respondentInSingapore" type="button" aria-label="Help for respondent located in Singapore"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="respondentInSingapore">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-respondentInSingapore" type="hidden" />
+        </div>
+
+        <div class="space-y-space-2xs">
+          <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs">
+            <span>23. Are you able to locate and personally serve/bring the claim to the attention of the other party in Singapore?</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="ableToServeInSingapore" type="button" aria-label="Help for able to serve the other party in Singapore"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <div class="flex gap-space-xs" data-yesno="ableToServeInSingapore">
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="Yes" type="button">Yes</button>
+            <button class="elig-yn-btn px-space-lg py-space-2xs rounded-lg border border-outline bg-surface-container-low font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors" data-value="No" type="button">No</button>
+          </div>
+          <input class="elig-field hidden" id="field-ableToServeInSingapore" type="hidden" />
+        </div>
+
+        <div class="pt-space-xs">
+          <button class="hidden flex items-center gap-space-xs px-space-lg py-space-sm bg-primary-container text-on-primary font-label-md text-label-md rounded-lg hover:bg-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled id="elig-submit-btn" type="button">
+            <span id="elig-submit-btn-label">Submit</span>
+            <span class="material-symbols-outlined text-[16px]" id="elig-submit-btn-icon">arrow_forward</span>
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+</div>
+
+<!-- ============================== SCT PORTAL VIEW (Page 1.75) ==============================
+     Reached by submitting the eligibility check (Page 1.5) above. Mocks the real CJTS account
+     homepage you land on before actually reaching the claim form: a mostly-static dashboard
+     (Notifications/Active Cases panels, both empty) plus a left sidebar. Per request, the only
+     working control on this whole page is "Online Applications" — an accordion revealing
+     CDRT/ECT/PHC/SCT sub-links, of which only "SCT" is wired up. Clicking it swaps this page's
+     own content pane (dashboard <-> applications grid; not a showPage() view change, since both
+     live here) to the real "Online Applications - Small Claims Tribunals" grid of application
+     types, where again only one card, Claim Form, is wired up — handing off to the mock claim
+     form (Page 2) below via showPage(). Everything else here (other sidebar items, other
+     sub-links, other application cards, "Enter one-time reference number") is a non-functional
+     placeholder that opens the same "not wired up in this demo" modal as the header's
+     Singpass/account buttons — no dead "#" links.
+
+     Unlike the eligibility check/claim form either side of it, the ClaimReady widget reappears
+     here (window.ClaimReadyOverlay.setContext("dashboard", ...)) and auto-opens, acting as a
+     small "what's next" panel: the pre-filing assessment ID generated when the eligibility check
+     was submitted, an overall progress meter, and a "File a Claim" button that's a second,
+     one-tap way to reach the claim form (dispatches "claimready:go-to-claim-form", handled next
+     to the widget's other route-handoff listeners further down). -->
+<div class="hidden" data-page="sct-portal">
+  <div class="w-full bg-primary text-on-primary">
+    <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop py-space-sm flex items-center justify-between gap-space-md">
+      <div class="flex items-center gap-space-sm">
+        <span class="material-symbols-outlined text-[28px]">gavel</span>
+        <div class="flex flex-col leading-tight">
+          <span class="font-label-md text-label-md font-bold tracking-wide">STATE COURTS OF SINGAPORE</span>
+          <span class="font-body-sm text-body-sm text-on-primary/80">Community Justice and Tribunals System (Mock)</span>
+        </div>
+      </div>
+      <button class="flex items-center gap-space-2xs px-space-md py-space-2xs bg-on-primary/10 hover:bg-on-primary/20 rounded-lg font-label-md text-label-md transition-colors" data-modal="sctInert" type="button">
+        <span class="material-symbols-outlined text-[18px]">logout</span>
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <div class="bg-amber-50 border-b border-amber-200">
+    <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop py-space-sm flex flex-wrap items-center justify-between gap-space-sm">
+      <p class="font-body-sm text-body-sm text-amber-900">[Beta] This site is being progressively translated — some content may not yet be fully translated.</p>
+      <button class="flex-shrink-0 px-space-md py-space-2xs bg-white border border-amber-300 rounded-lg font-label-sm text-label-sm text-amber-900 hover:bg-amber-100 transition-colors" data-modal="sctInert" type="button">Enter one-time reference number</button>
+    </div>
+  </div>
+
+  <div class="max-w-layout-content-max-width mx-auto w-full px-layout-margin-mobile md:px-layout-margin-desktop py-space-lg flex flex-col md:flex-row gap-space-lg">
+    <!-- Sidebar -->
+    <aside class="w-full md:w-64 flex-shrink-0 bg-surface-container-lowest rounded-lg shadow-sm p-space-sm h-max">
+      <div class="flex items-center gap-space-sm p-space-sm border-b border-outline-variant/40 mb-space-xs">
+        <span class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-on-primary font-label-md text-label-md font-bold flex-shrink-0">U</span>
+        <span class="font-label-md text-label-md text-on-surface font-semibold truncate">Welcome, User</span>
+      </div>
+      <nav class="flex flex-col gap-space-2xs" id="sct-sidebar-nav">
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md bg-primary-container text-on-primary transition-colors" id="sct-home-link" type="button">
+          <span class="material-symbols-outlined text-[20px]">home</span>Home
+        </button>
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" data-modal="sctInert" type="button">
+          <span class="material-symbols-outlined text-[20px]">notifications</span>Notifications
+        </button>
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" data-modal="sctInert" type="button">
+          <span class="material-symbols-outlined text-[20px]">handshake</span>eNegotiation
+        </button>
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" data-modal="sctInert" type="button">
+          <span class="material-symbols-outlined text-[20px]">folder_open</span>My Filings
+        </button>
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" data-modal="sctInert" type="button">
+          <span class="material-symbols-outlined text-[20px]">history_edu</span>Settlement Agreements
+        </button>
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" data-modal="sctInert" type="button">
+          <span class="material-symbols-outlined text-[20px]">payments</span>Payment Details
+        </button>
+
+        <!-- Online Applications: the one working accordion on this page. Its sub-links sit in
+             normal document flow, so expanding it naturally pushes My Profile/Resources/Logout
+             down (matching one reference screenshot); collapsed, they sit right below it as
+             usual (matching the other). -->
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" aria-expanded="false" id="sct-oa-toggle" type="button">
+          <span class="material-symbols-outlined text-[20px]">apps</span>
+          <span class="flex-1 text-left">Online Applications</span>
+          <span class="material-symbols-outlined text-[18px]" id="sct-oa-chevron">expand_more</span>
+        </button>
+        <div class="hidden flex-col gap-space-2xs pl-space-lg" id="sct-oa-submenu">
+          <button class="px-space-sm py-space-2xs rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container transition-colors text-left" data-modal="sctInert" title="Community Disputes Resolution Tribunals" type="button">CDRT</button>
+          <button class="px-space-sm py-space-2xs rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container transition-colors text-left" data-modal="sctInert" title="Employment Claims Tribunals" type="button">ECT</button>
+          <button class="px-space-sm py-space-2xs rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container transition-colors text-left" data-modal="sctInert" title="Protection from Harassment Court" type="button">PHC</button>
+          <button class="px-space-sm py-space-2xs rounded-lg font-label-sm text-label-sm font-semibold text-primary hover:bg-primary-fixed/40 transition-colors text-left" id="sct-sct-link" title="Small Claims Tribunals" type="button">SCT</button>
+        </div>
+
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" data-modal="sctInert" type="button">
+          <span class="material-symbols-outlined text-[20px]">person</span>My Profile
+        </button>
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" data-modal="sctInert" type="button">
+          <span class="material-symbols-outlined text-[20px]">menu_book</span>Resources
+        </button>
+        <button class="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors" data-modal="sctInert" type="button">
+          <span class="material-symbols-outlined text-[20px]">logout</span>Logout
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Content -->
+    <div class="flex-1 min-w-0 flex flex-col gap-space-lg">
+      <div class="flex flex-col gap-space-lg" id="sct-dashboard-view">
+        <div class="bg-primary-fixed/40 border border-primary-container/40 rounded-lg p-space-md flex items-start gap-space-sm">
+          <span class="material-symbols-outlined text-primary text-[20px] mt-0.5">info</span>
+          <p class="font-body-sm text-body-sm text-on-surface">This is a mocked CJTS account homepage for the ClaimReady prototype — no real filings, notifications, or account data live here. Use the sidebar's <strong>Online Applications → SCT</strong> to reach the mock claim form.</p>
+        </div>
+
+        <section class="bg-surface-container-lowest rounded-lg shadow-sm">
+          <div class="px-space-lg py-space-sm border-b border-outline-variant/40 flex items-center justify-between">
+            <h2 class="font-label-lg text-label-lg text-on-surface font-semibold">Notifications</h2>
+            <button class="font-label-sm text-label-sm text-primary hover:underline" data-modal="sctInert" type="button">MORE &gt;&gt;</button>
+          </div>
+          <div class="p-space-lg overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="font-label-sm text-label-sm text-on-surface-variant border-b border-outline-variant/40">
+                  <th class="pb-space-xs pr-space-md font-semibold">Date &amp; Time</th>
+                  <th class="pb-space-xs font-semibold">Subject</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="py-space-md font-body-sm text-body-sm text-on-surface-variant" colspan="2">No notifications.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="bg-surface-container-lowest rounded-lg shadow-sm">
+          <div class="px-space-lg py-space-sm border-b border-outline-variant/40">
+            <h2 class="font-label-lg text-label-lg text-on-surface font-semibold">Active Case(s) <span class="text-on-surface-variant font-normal">(0)</span></h2>
+          </div>
+          <div class="p-space-lg overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="font-label-sm text-label-sm text-on-surface-variant border-b border-outline-variant/40">
+                  <th class="pb-space-xs pr-space-md font-semibold">S/N</th>
+                  <th class="pb-space-xs pr-space-md font-semibold">Case No.</th>
+                  <th class="pb-space-xs pr-space-md font-semibold">Parties</th>
+                  <th class="pb-space-xs pr-space-md font-semibold">Next Court Date</th>
+                  <th class="pb-space-xs pr-space-md font-semibold">Status</th>
+                  <th class="pb-space-xs font-semibold">Remarks/Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="py-space-md font-body-sm text-body-sm text-on-surface-variant" colspan="6">No active cases.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <div class="hidden flex-col gap-space-lg" id="sct-applications-view">
+        <p class="font-body-sm text-body-sm text-on-surface-variant">
+          <button class="hover:underline text-primary" id="sct-breadcrumb-home" type="button">Home</button>
+          &gt; Online Applications &gt; Small Claims Tribunals
+        </p>
+        <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Online Applications - Small Claims Tribunals</h1>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-md">
+          <button class="flex flex-col items-center justify-center gap-space-sm p-space-lg rounded-lg bg-primary text-on-primary shadow-sm hover:bg-primary-container transition-colors text-center" id="sct-claimform-card" type="button">
+            <span class="material-symbols-outlined text-[36px]">description</span>
+            <span class="font-label-md text-label-md font-bold">CLAIM FORM</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-space-sm p-space-lg rounded-lg bg-surface-container-lowest shadow-sm hover:bg-surface-container transition-colors text-center" data-modal="sctInert" type="button">
+            <span class="material-symbols-outlined text-[36px] text-on-surface-variant">description</span>
+            <span class="font-label-md text-label-md text-on-surface">Counter Claim Form</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-space-sm p-space-lg rounded-lg bg-surface-container-lowest shadow-sm hover:bg-surface-container transition-colors text-center" data-modal="sctInert" type="button">
+            <span class="material-symbols-outlined text-[36px] text-on-surface-variant">person_add</span>
+            <span class="font-label-md text-label-md text-on-surface">Application for Representative</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-space-sm p-space-lg rounded-lg bg-surface-container-lowest shadow-sm hover:bg-surface-container transition-colors text-center" data-modal="sctInert" type="button">
+            <span class="material-symbols-outlined text-[36px] text-on-surface-variant">edit_note</span>
+            <span class="font-label-md text-label-md text-on-surface">Request for Amendments</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-space-sm p-space-lg rounded-lg bg-surface-container-lowest shadow-sm hover:bg-surface-container transition-colors text-center" data-modal="sctInert" type="button">
+            <span class="material-symbols-outlined text-[36px] text-on-surface-variant">event</span>
+            <span class="font-label-md text-label-md text-on-surface">Change of Court Date Application</span>
+          </button>
+          <button class="flex flex-col items-center justify-center gap-space-sm p-space-lg rounded-lg bg-surface-container-lowest shadow-sm hover:bg-surface-container transition-colors text-center" data-modal="sctInert" type="button">
+            <span class="material-symbols-outlined text-[36px] text-on-surface-variant">cancel</span>
+            <span class="font-label-md text-label-md text-on-surface">Withdrawal Application Form</span>
+          </button>
+        </div>
+        <p class="font-body-sm text-body-sm text-on-surface-variant italic">The real page has further application types below this row, cut off in the reference screenshots — omitted here since their exact labels weren't visible. Only "Claim Form" is wired up for this demo.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== PRE-FILING FORM VIEW (Page 2) ==============================
+     Reached by clicking "Claim Form" on the mock SCT portal above (Page 1.75), which itself
+     follows the eligibility check (Page 1.5). Mock pre-filing form: each field has an (i) info button that opens a popup showing a
+     mocked document excerpt, citation, and suggested value — standing in for a future
+     real document-analysis backend. Sectioned A–F to mirror the real CJTS claim form (see
+     screenshots this was built from): A/B are party details, C is Particulars of Claim
+     (with the Nature/Type of Dispute shown read-only, as they'd be carried over from the
+     eligibility check rather than re-entered here), D is the brief summary, E is a mocked
+     supporting-documents uploader (separate from the ClaimReady widget's own upload panel —
+     this one lives inline in the form, same as the real thing), and F is "Claiming for". -->
 <div class="hidden" data-page="prefiling-form">
   <section class="w-full bg-surface-container-lowest shadow-sm">
     <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop py-space-xl">
@@ -250,7 +804,11 @@ tailwind.config = {
     <section class="bg-surface-container-lowest rounded-lg shadow-sm p-space-lg md:p-space-xl space-y-space-lg">
       <div class="flex items-center justify-between flex-wrap gap-space-xs">
         <h2 class="font-headline-md text-headline-md text-on-surface">Claim Details</h2>
+
         <span class="font-label-sm text-label-sm text-secondary" id="pf-progress">0 of 9 fields completed</span>
+
+        <span class="font-label-sm text-label-sm text-secondary" id="pf-progress">0 of 10 fields completed</span>
+
       </div>
 
       <!-- Save & resume (frontend-only mock): "Save answers" snapshots the current field
@@ -273,6 +831,10 @@ tailwind.config = {
       </div>
 
       <form class="space-y-space-lg" id="pf-form" novalidate>
+        <div class="bg-primary-fixed/40 border-l-4 border-primary rounded-r-lg px-space-md py-space-2xs">
+          <h3 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wide">A. Claimant's Details</h3>
+        </div>
+
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimantName">
             <span>1. Your full name (Claimant)</span>
@@ -287,6 +849,10 @@ tailwind.config = {
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimantId" type="button" aria-label="Help for NRIC / FIN"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimantId" type="text" placeholder="e.g. S1234567A" />
+        </div>
+
+        <div class="bg-primary-fixed/40 border-l-4 border-primary rounded-r-lg px-space-md py-space-2xs">
+          <h3 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wide">B. Respondent's Details</h3>
         </div>
 
         <div class="space-y-space-2xs">
@@ -312,6 +878,7 @@ tailwind.config = {
           </label>
           <textarea class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" id="field-respondentAddress" placeholder="Where the respondent can be served with claim papers" rows="2"></textarea>
         </div>
+
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimNature">
@@ -344,20 +911,187 @@ tailwind.config = {
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimDate" type="button" aria-label="Help for date the dispute arose"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
           <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimDate" type="date" />
+
+        <!-- "Add another Address" (mock, frontend-only): appends a plain extra address block
+             into #pf-extra-addresses. Not tracked in progress — the base respondentAddress
+             above already covers the required case, this is just for a respondent with
+             more than one address for service, same as the real form. -->
+        <div class="space-y-space-xs" id="pf-extra-addresses"></div>
+        <div class="bg-surface-container-low rounded-lg p-space-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-sm">
+          <p class="font-body-sm text-body-sm text-secondary italic">Note: Click "Add another Address" if the same Respondent has an additional address for service.</p>
+          <button class="flex items-center gap-space-xs px-space-md py-space-2xs bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg font-label-md text-label-md transition-colors flex-shrink-0" id="pf-add-address-btn" type="button">
+            <span class="material-symbols-outlined text-[16px]">add</span>
+            <span>Add another Address</span>
+          </button>
+        </div>
+
+        <div class="bg-primary-fixed/40 border-l-4 border-primary rounded-r-lg px-space-md py-space-2xs">
+          <h3 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wide">C. Particulars of Claim</h3>
+        </div>
+
+        <!-- Nature/Type of Dispute are shown read-only here: in a real filing these carry over
+             from the eligibility check (Page 1.5) rather than being re-entered, so there's no
+             (i) button or .pf-field on them — this demo just hardcodes the same fictional
+             dispute used throughout FIELD_HELP. -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+          <div class="space-y-space-2xs">
+            <span class="font-label-md text-label-md text-on-surface block">Nature of Dispute</span>
+            <p class="font-body-md text-body-md text-on-surface-variant bg-surface-container-low rounded-lg p-space-sm">Contract for Sale of Goods</p>
+          </div>
+          <div class="space-y-space-2xs">
+            <span class="font-label-md text-label-md text-on-surface block">Type of Dispute</span>
+            <p class="font-body-md text-body-md text-on-surface-variant bg-surface-container-low rounded-lg p-space-sm">Defective Goods</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+          <div class="space-y-space-2xs">
+            <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-goodsOrServicesType">
+              <span>5. Type of Goods Sold or Services Provided</span>
+              <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="goodsOrServicesType" type="button" aria-label="Help for type of goods or services"><span class="material-symbols-outlined text-[14px]">info</span></button>
+            </label>
+            <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-goodsOrServicesType" type="text" placeholder="Enter name of the goods or services provided" />
+          </div>
+          <div class="space-y-space-2xs">
+            <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-invoiceNo">
+              <span>6. Invoice No</span>
+              <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="invoiceNo" type="button" aria-label="Help for invoice number"><span class="material-symbols-outlined text-[14px]">info</span></button>
+            </label>
+            <input class="w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-invoiceNo" type="text" placeholder="Enter invoice no. (if any)" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+          <div class="space-y-space-2xs">
+            <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimAmount">
+              <span>7. Contract Sum (SGD)</span>
+              <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimAmount" type="button" aria-label="Help for contract sum"><span class="material-symbols-outlined text-[14px]">info</span></button>
+            </label>
+            <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimAmount" min="0" step="0.01" type="number" placeholder="0.00" />
+          </div>
+          <div class="space-y-space-2xs">
+            <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-amountPaid">
+              <span>8. Paid (SGD)</span>
+              <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="amountPaid" type="button" aria-label="Help for amount paid"><span class="material-symbols-outlined text-[14px]">info</span></button>
+            </label>
+            <input class="w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-amountPaid" min="0" step="0.01" type="number" placeholder="0.00" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+          <div class="space-y-space-2xs">
+            <label class="font-label-md text-label-md text-on-surface" for="field-balanceSum">9. Balance Sum (SGD)</label>
+            <input class="w-full p-space-sm rounded-lg bg-surface-container font-body-md text-body-md text-on-surface-variant" id="field-balanceSum" readonly type="text" value="0.00" />
+            <p class="font-body-sm text-body-sm text-secondary">Calculated automatically as Contract Sum minus Paid.</p>
+          </div>
+          <div class="space-y-space-2xs">
+            <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-contractDate">
+              <span>10. Contract Date</span>
+              <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="contractDate" type="button" aria-label="Help for contract date"><span class="material-symbols-outlined text-[14px]">info</span></button>
+            </label>
+            <input class="w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-contractDate" type="date" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+          <div class="space-y-space-2xs">
+            <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-dateContractPerformed">
+              <span>11. Date Contract Performed</span>
+              <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="dateContractPerformed" type="button" aria-label="Help for date contract performed"><span class="material-symbols-outlined text-[14px]">info</span></button>
+            </label>
+            <input class="w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-dateContractPerformed" type="date" />
+          </div>
+          <div class="space-y-space-2xs">
+            <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimDate">
+              <span>12. Date Contract Defaulted</span>
+              <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimDate" type="button" aria-label="Help for date contract defaulted"><span class="material-symbols-outlined text-[14px]">info</span></button>
+            </label>
+            <input class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container" id="field-claimDate" type="date" />
+          </div>
+        </div>
+
+        <div class="bg-primary-fixed/40 border-l-4 border-primary rounded-r-lg px-space-md py-space-2xs">
+          <h3 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wide">D. Brief Summary of Claim</h3>
+
         </div>
 
         <div class="space-y-space-2xs">
           <label class="font-label-md text-label-md text-on-surface flex items-center gap-space-xs" for="field-claimStatement">
+
             <span>9. Brief statement of claim</span>
+
+            <span>13. Brief statement of claim</span>
+
             <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimStatement" type="button" aria-label="Help for statement of claim"><span class="material-symbols-outlined text-[14px]">info</span></button>
           </label>
-          <textarea class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" id="field-claimStatement" placeholder="What happened, and what you are asking the tribunal to order" rows="4"></textarea>
+          <textarea class="pf-field w-full p-space-sm rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" id="field-claimStatement" maxlength="500" placeholder="What happened, and what you are asking the tribunal to order" rows="4"></textarea>
+          <p class="font-body-sm text-body-sm text-success" id="pf-statement-remaining">remaining 500 / 500</p>
         </div>
 
-        <div class="pt-space-xs">
-          <button class="hidden flex items-center gap-space-xs px-space-lg py-space-sm bg-primary-container text-on-primary font-label-md text-label-md rounded-lg hover:bg-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled id="pf-submit-btn" type="button">
+        <div class="bg-primary-fixed/40 border-l-4 border-primary rounded-r-lg px-space-md py-space-2xs flex items-center justify-between gap-space-sm flex-wrap">
+          <h3 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wide">E. Supporting Documents</h3>
+          <button class="flex items-center gap-space-xs px-space-md py-space-2xs bg-surface-container-lowest hover:bg-surface-container-high text-on-surface rounded-lg font-label-md text-label-md transition-colors flex-shrink-0" id="pf-add-document-btn" type="button">
+            <span class="material-symbols-outlined text-[16px]">add</span>
+            <span>Add another Document</span>
+          </button>
+        </div>
+
+        <!-- Rows are built by addDocumentRow() further down the script (one is added on
+             load, matching the real form's default single row); "Upload" is mocked — it just
+             disables the row and flips its label, there's no real file transfer here. -->
+        <div class="space-y-space-sm" id="pf-documents-list"></div>
+        <input class="pf-field hidden" id="field-supportingDocuments" type="hidden" />
+
+        <div class="bg-surface-container-low rounded-lg p-space-md space-y-space-2xs">
+          <p class="font-body-sm text-body-sm text-secondary italic">Note: All documents should be in PDF format. Select the document type, add a short description, then click Upload. If you have no documents to attach, you may leave this section and proceed.</p>
+          <p class="font-body-sm text-body-sm text-secondary italic">The latest ACRA Business Profile of the Claimant(s) and/or Respondent(s) who is a non-individual must be uploaded. The ACRA Business Profile can be purchased at <a class="text-primary underline" href="https://www.acra.gov.sg" rel="noopener" target="_blank">www.acra.gov.sg</a>.</p>
+        </div>
+
+        <div class="bg-primary-fixed/40 border-l-4 border-primary rounded-r-lg px-space-md py-space-2xs">
+          <h3 class="font-label-lg text-label-lg text-on-surface uppercase tracking-wide">F. Claiming for</h3>
+        </div>
+
+        <!-- Checkboxes are purely presentational, same convention as the eligibility check's
+             Yes/No toggles: a hidden .pf-field (field-claimingFor) is what progress tracking,
+             save/resume, and submit gating actually read, kept in sync by
+             updateClaimingForField() further down the script. -->
+        <div class="space-y-space-xs">
+          <label class="flex items-center gap-space-sm font-body-md text-body-md text-on-surface">
+            <input class="pf-claiming-for w-5 h-5 rounded border-outline text-primary focus:ring-primary-container" data-label="Money Order" type="checkbox" />
+            <span>Money Order</span>
+          </label>
+          <label class="flex items-center gap-space-sm font-body-md text-body-md text-on-surface">
+            <input class="pf-claiming-for w-5 h-5 rounded border-outline text-primary focus:ring-primary-container" data-label="Work Order" type="checkbox" />
+            <span>Work Order</span>
+          </label>
+          <label class="flex items-center gap-space-sm font-body-md text-body-md text-on-surface">
+            <input class="pf-claiming-for w-5 h-5 rounded border-outline text-primary focus:ring-primary-container" data-label="Vacant Possession Orders" type="checkbox" />
+            <span>Vacant Possession Orders</span>
+          </label>
+          <label class="flex items-center gap-space-sm font-body-md text-body-md text-on-surface">
+            <input class="pf-claiming-for w-5 h-5 rounded border-outline text-primary focus:ring-primary-container" data-label="Costs" type="checkbox" />
+            <span>Costs</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimCosts" type="button" aria-label="Help for costs"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <label class="flex items-center gap-space-sm font-body-md text-body-md text-on-surface">
+            <input class="pf-claiming-for w-5 h-5 rounded border-outline text-primary focus:ring-primary-container" data-label="Disbursements" type="checkbox" />
+            <span>Disbursements</span>
+            <button class="field-info-btn w-5 h-5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary flex items-center justify-center" data-field="claimDisbursements" type="button" aria-label="Help for disbursements"><span class="material-symbols-outlined text-[14px]">info</span></button>
+          </label>
+          <input class="pf-field hidden" id="field-claimingFor" type="hidden" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-space-sm pt-space-xs">
+          <button class="flex items-center gap-space-xs px-space-lg py-space-sm bg-primary-container text-on-primary font-label-md text-label-md rounded-lg hover:bg-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled id="pf-submit-btn" type="button">
             <span id="pf-submit-btn-label">Submit</span>
             <span class="material-symbols-outlined text-[16px]" id="pf-submit-btn-icon">arrow_forward</span>
+          </button>
+          <button class="flex items-center gap-space-xs px-space-lg py-space-sm bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md rounded-lg transition-colors" id="pf-save-draft-btn" type="button">
+            <span class="material-symbols-outlined text-[16px]">save</span>
+            <span>Save As Draft</span>
+          </button>
+          <button class="flex items-center gap-space-xs px-space-lg py-space-sm bg-surface-container-low hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md rounded-lg transition-colors" id="pf-cancel-btn" type="button">
+            <span>Cancel</span>
           </button>
         </div>
 
@@ -500,6 +1234,22 @@ tailwind.config = {
     backBtn.classList.toggle("hidden", viewHistory.length <= 1);
   }
 
+  // "Skip Ahead" (demo shortcut): a fixed linear ordering of the main flow, independent
+  // of viewHistory (which can be walked backwards/forwards in any order). Only shown
+  // when the current page has a next step in this list — e.g. hidden on Resources/FAQs,
+  // which aren't part of the flow this demo is meant to be walked through.
+  const FLOW_SEQUENCE = ["assessment", "eligibility-check", "sct-portal", "prefiling-form", "after-filing"];
+  const skipBtn = document.getElementById("global-skip-btn");
+
+  function updateSkipButton() {
+    const idx = FLOW_SEQUENCE.indexOf(viewHistory[viewHistory.length - 1]);
+    skipBtn.classList.toggle("hidden", idx === -1 || idx >= FLOW_SEQUENCE.length - 1);
+  }
+  skipBtn.addEventListener("click", () => {
+    const idx = FLOW_SEQUENCE.indexOf(viewHistory[viewHistory.length - 1]);
+    if (idx !== -1 && idx < FLOW_SEQUENCE.length - 1) showPage(FLOW_SEQUENCE[idx + 1]);
+  });
+
   function showPage(view, opts) {
     opts = opts || {};
     pages.forEach((p) => p.classList.toggle("hidden", p.dataset.page !== view));
@@ -511,21 +1261,53 @@ tailwind.config = {
       viewHistory.push(view);
     }
     updateBackButton();
+    updateSkipButton();
 
     // Keep the ClaimReady overlay's content in step with which page it's shown on:
-    // hidden on the mock form (Page 2, which has its own inline (i) help instead),
+    // hidden on the mock claim form (Page 2, which has its own inline (i) help instead)
+    // and the eligibility check, "dashboard"-mode on the SCT portal (Page 1.75),
     // "after"-mode on Page 3, and the default route-finder everywhere else. setContext()
     // resets the widget's in-progress state, so only call it when the context actually
     // changes — otherwise switching between Home/Resources/FAQs (all "route" mode) would
     // wipe out whatever the visitor had already typed into the widget.
-    const nextContext = view === "prefiling-form" ? "hidden" : view === "after-filing" ? "after" : "route";
+    const nextContext =
+      view === "prefiling-form" || view === "eligibility-check"
+        ? "hidden"
+        : view === "sct-portal"
+        ? "dashboard"
+        : view === "after-filing"
+        ? "after"
+        : "route";
     if (window.ClaimReadyOverlay && nextContext !== lastOverlayContext) {
-      window.ClaimReadyOverlay.setContext(nextContext);
+      // "dashboard"/"after" are the only contexts the widget can't fully render on its
+      // own — it has no way to know the assessment ID or how far along the flow the
+      // visitor is, so the host page computes that here. progressStep/claimFiled are
+      // recomputed fresh on every call (not cached in the data object below) so that
+      // e.g. going Back into the SCT portal after already filing still shows 2 of 3,
+      // not the stale 1 of 3 from the visitor's first time through.
+      const contextData =
+        nextContext === "dashboard"
+          ? {
+              assessmentId: assessmentId,
+              progressStep: claimFiled ? 2 : 1,
+              progressTotal: 3,
+              progressLabel: claimFiled ? "Claim filed — 2 of 3 steps complete" : "Pre-filing assessment complete",
+            }
+          : nextContext === "after"
+          ? { progressStep: 2, progressTotal: 3, progressLabel: "Claim filed — 2 of 3 steps complete" }
+          : undefined;
+      window.ClaimReadyOverlay.setContext(nextContext, contextData);
       lastOverlayContext = nextContext;
     }
     if (view === "after-filing") renderAfterFilingRef();
   }
   let lastOverlayContext = "route"; // matches the widget's own default mode on load
+
+  // Cross-page state the ClaimReady widget has no way to derive on its own — see the
+  // "dashboard"/"after" contextData above. assessmentId is generated once the
+  // eligibility check is submitted; claimFiled flips true once the claim form is.
+  let assessmentId = null;
+  let claimFiled = false;
 
   function goBack() {
     if (viewHistory.length <= 1) return;
@@ -542,6 +1324,8 @@ tailwind.config = {
     });
   });
   setActiveNav("assessment");
+  updateSkipButton(); // show "Skip Ahead" from the very first page load, not just after showPage() first runs
+
 
   // The ClaimReady widget dispatches this once its real "approximate my route"
   // flow finishes, carrying extracted field_help/documents to prefill the form.
@@ -550,6 +1334,16 @@ tailwind.config = {
     prefillFromPayload();
     showPage("prefiling-form");
   });
+
+  // The ClaimReady widget (claimready-overlay.js) dispatches this once its mocked
+  // "approximate my route" flow finishes, handing off navigation to the host page.
+  window.addEventListener("claimready:route-complete", () => showPage("eligibility-check"));
+
+  // Dispatched by the widget's "dashboard" mode (SCT portal) when the visitor taps
+  // "File a Claim" — a second, one-tap way to reach the claim form alongside the
+  // portal's own Online Applications > SCT > Claim Form click-path.
+  window.addEventListener("claimready:go-to-claim-form", () => showPage("prefiling-form"));
+
 
   // Populate FAQ accordion.
   const faqList = document.getElementById("faq-list");
@@ -576,7 +1370,8 @@ tailwind.config = {
     terms: { title: "Terms of Service (Demo)", body: "<p>This interface is a non-production prototype. The suggested routes, values, and the generated PDF are for demonstration only — they are not connected to any court system and create no legal record.</p>" },
     vulnerability: { title: "Vulnerability Disclosure (Demo)", body: "<p>This demo runs a local FastAPI service with no authentication or data store, so there is no production attack surface to report against. Do not deploy it with real personal data.</p>" },
     singpass: { title: "Login — Non-Functional Placeholder", body: "<p>This button is a visual placeholder only. It is <strong>not</strong> connected to Singpass or any real government authentication service, and no real login occurs. In a production build, this control would need to hand off to the actual Singpass OIDC flow — that integration is intentionally out of scope for this frontend prototype.</p>" },
-    account: { title: "Account — Demo Mode", body: "<p>No account/session backend is wired up in this demo. This is a placeholder for the signed-in user menu (profile, saved assessments, sign out).</p>" }
+    account: { title: "Account — Demo Mode", body: "<p>No account/session backend is wired up in this demo. This is a placeholder for the signed-in user menu (profile, saved assessments, sign out).</p>" },
+    sctInert: { title: "Not Wired Up — Demo Mode", body: "<p>This control is a static placeholder in this prototype. Per the requested scope for this mock SCT portal page, only <strong>Online Applications → SCT → Claim Form</strong> is wired up — everything else here (the other sidebar items, the other tribunal sub-links, the other application-type cards, the one-time reference number field) is visual only.</p>" }
   };
 
   const backdrop = document.getElementById("modal-backdrop");
@@ -608,6 +1403,7 @@ tailwind.config = {
   document.getElementById("account-btn").addEventListener("click", () => openModal("account"));
 
   /* ------------------------------------------------------------------
+
    * Pre-filing form (Page 2): live per-field "document help" popups.
    * Suggestions come from the ClaimReady widget's analysis payload
    * (field_help returned by POST /api/extract-fields or /api/extract-document).
@@ -624,6 +1420,306 @@ tailwind.config = {
     claimAmount: "Amount claimed (SGD)",
     claimDate: "Date the dispute arose",
     claimStatement: "Brief statement of claim"
+  };
+
+  /* ------------------------------------------------------------------
+   * SCT portal (Page 1.75): the "Online Applications" accordion, and the
+   * dashboard <-> applications-grid content swap it leads to. Both live inside
+   * this one data-page, so they're plain local toggles rather than showPage()
+   * calls — only the grid's "Claim Form" card actually calls showPage().
+   * ------------------------------------------------------------------ */
+  const sctOaToggle = document.getElementById("sct-oa-toggle");
+  const sctOaSubmenu = document.getElementById("sct-oa-submenu");
+  const sctOaChevron = document.getElementById("sct-oa-chevron");
+  sctOaToggle.addEventListener("click", () => {
+    const expanded = sctOaToggle.getAttribute("aria-expanded") === "true";
+    sctOaToggle.setAttribute("aria-expanded", String(!expanded));
+    sctOaSubmenu.classList.toggle("hidden", expanded);
+    sctOaSubmenu.classList.toggle("flex", !expanded);
+    sctOaChevron.textContent = expanded ? "expand_more" : "expand_less";
+  });
+
+  const sctDashboardView = document.getElementById("sct-dashboard-view");
+  const sctApplicationsView = document.getElementById("sct-applications-view");
+  const sctHomeLink = document.getElementById("sct-home-link");
+  function showSctView(view) {
+    sctDashboardView.classList.toggle("hidden", view !== "dashboard");
+    sctApplicationsView.classList.toggle("hidden", view !== "applications");
+    sctApplicationsView.classList.toggle("flex", view === "applications");
+    sctHomeLink.classList.toggle("bg-primary-container", view === "dashboard");
+    sctHomeLink.classList.toggle("text-on-primary", view === "dashboard");
+    sctHomeLink.classList.toggle("text-on-surface-variant", view !== "dashboard");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  sctHomeLink.addEventListener("click", () => showSctView("dashboard"));
+  document.getElementById("sct-breadcrumb-home").addEventListener("click", () => showSctView("dashboard"));
+  document.getElementById("sct-sct-link").addEventListener("click", () => showSctView("applications"));
+  document.getElementById("sct-claimform-card").addEventListener("click", () => showPage("prefiling-form"));
+
+  /* ------------------------------------------------------------------
+   * Per-field "document help" popups, shared by the eligibility check
+   * (Page 1.5) and the pre-filing form (Page 2). FIELD_HELP stands in for
+   * a real document-analysis backend that would pull excerpts/citations
+   * from the files the user attached earlier via the ClaimReady widget.
+   * hasInsufficientInfo is a reusable flag any entry can set (wired up for
+   * claimAmount below, and for the eligibility check's otherPartyBankrupt
+   * question further down this object) — openFieldHelp() branches on that
+   * flag generically, not on the field key. inputType: "yesno" marks the
+   * eligibility check's Yes/No questions, whose "Use this suggestion"
+   * button selects a Yes/No toggle instead of filling a value (see
+   * setYesNoAnswer() further down the script).
+   * ------------------------------------------------------------------ */
+  const FIELD_HELP = {
+    claimantName: {
+      label: "Your full name (Claimant)",
+      excerpt: "“This Agreement is made between John Tan Wei Ming (the ‘Buyer’) and Bright Home Furnishings Pte Ltd…”",
+      citation: "Sale Agreement.pdf, page 1",
+      suggestion: "John Tan Wei Ming"
+    },
+    claimantId: {
+      label: "Your NRIC / FIN",
+      excerpt: "“Buyer NRIC: S8712345A”",
+      citation: "Sale Agreement.pdf, page 1",
+      suggestion: "S8712345A"
+    },
+    respondentName: {
+      label: "Respondent's full name or business name",
+      excerpt: "“…supplied by Bright Home Furnishings Pte Ltd (UEN 201812345K)…”",
+      citation: "Sale Agreement.pdf, page 1",
+      suggestion: "Bright Home Furnishings Pte Ltd"
+    },
+    respondentAddress: {
+      label: "Respondent's address for service",
+      excerpt: "“Registered office: 88 Jurong Industrial Road, #03-12, Singapore 619123”",
+      citation: "Demand Letter.pdf, page 1",
+      suggestion: "88 Jurong Industrial Road, #03-12, Singapore 619123"
+    },
+    claimAmount: {
+      label: "Contract Sum (SGD)",
+      // No excerpt/citation/suggestion here on purpose: hasInsufficientInfo is a
+      // reusable flag any question's entry could set, meaning the mocked
+      // document-analysis backend couldn't find enough information to suggest a
+      // value. Wired up only for this question for the demo; openFieldHelp()
+      // branches on this flag generically, not on the field key.
+      hasInsufficientInfo: true
+    },
+    claimDate: {
+      label: "Date Contract Defaulted",
+      excerpt: "“Agreed delivery date: 26 Jan 2025. As of this letter, no delivery has been made.”",
+      citation: "Demand Letter.pdf, page 1",
+      suggestion: "2025-01-26"
+    },
+    goodsOrServicesType: {
+      label: "Type of Goods Sold or Services Provided",
+      excerpt: "“…the Buyer paid in full for a custom sofa set which was never delivered…”",
+      citation: "Sale Agreement.pdf, page 2",
+      suggestion: "Custom sofa set"
+    },
+    invoiceNo: {
+      label: "Invoice No",
+      excerpt: "“Invoice No: INV-2025-0142”",
+      citation: "Invoice.pdf, page 1",
+      suggestion: "INV-2025-0142"
+    },
+    amountPaid: {
+      label: "Paid (SGD)",
+      excerpt: "“No part of the purchase price has been refunded to date.”",
+      citation: "Demand Letter.pdf, page 1",
+      suggestion: "0"
+    },
+    contractDate: {
+      label: "Contract Date",
+      excerpt: "“This Agreement is made on 2 December 2024 between John Tan Wei Ming…”",
+      citation: "Sale Agreement.pdf, page 1",
+      suggestion: "2024-12-02"
+    },
+    dateContractPerformed: {
+      label: "Date Contract Performed",
+      // Another natural fit for the reusable hasInsufficientInfo flag: the goods
+      // were reportedly never delivered, so there's no performance date to find.
+      hasInsufficientInfo: true
+    },
+    claimCosts: {
+      label: "Costs",
+      // A plain legal-term explainer, not a document-derived suggestion — the
+      // `definition` field is a third FIELD_HELP shape (alongside the normal
+      // excerpt/citation/suggestion and hasInsufficientInfo shapes) that
+      // openFieldHelp() renders as just a paragraph, no excerpt/citation/button.
+      definition: "Costs refer to the costs of bringing this claim (e.g. filing fees) that you are asking the Tribunal to order the other party to pay you, in addition to your claim amount."
+    },
+    claimDisbursements: {
+      label: "Disbursements",
+      definition: "Disbursements are out-of-pocket expenses you incurred in bringing this claim (e.g. service fees, transport, printing) that you are asking the Tribunal to order the other party to reimburse."
+    },
+    claimStatement: {
+      label: "Brief statement of claim",
+      excerpt: "“Despite full payment on 12 Jan 2025, the Respondent has failed to deliver the goods or provide a refund after repeated requests.”",
+      citation: "Demand Letter.pdf, page 1",
+      suggestion: "I paid Bright Home Furnishings Pte Ltd $4,500 in full on 12 Jan 2025 for a custom sofa set. The agreed delivery date of 26 Jan 2025 passed with no delivery, and the respondent has not refunded my payment despite my demand letter dated 2 Feb 2025."
+    },
+
+    // ---- Eligibility check (Page 1.5) — same fictional dispute as above ----
+    causeOfActionDate: {
+      label: "Date of Cause of Action",
+      excerpt: "“Agreed delivery date: 26 Jan 2025. As of this letter, no delivery has been made.”",
+      citation: "Demand Letter.pdf, page 1",
+      suggestion: "2025-01-26"
+    },
+    roughClaimAmount: {
+      label: "Claim Amount",
+      excerpt: "“…the Buyer paid in full for a custom sofa set which was never delivered…”",
+      citation: "Sale Agreement.pdf, page 2",
+      suggestion: "4500"
+    },
+    claimingAsIndividual: {
+      label: "Are you claiming as an individual?",
+      excerpt: "“This Agreement is made between John Tan Wei Ming (the ‘Buyer’) and Bright Home Furnishings Pte Ltd…”",
+      citation: "Sale Agreement.pdf, page 1",
+      suggestion: "Yes",
+      inputType: "yesno"
+    },
+    claimantBankrupt: {
+      label: "Are you a bankrupt?",
+      excerpt: "No bankruptcy order, discharge certificate, or Official Assignee correspondence appears among your uploaded documents.",
+      citation: "Document review (mocked)",
+      suggestion: "No",
+      inputType: "yesno"
+    },
+    officialAssigneePermission: {
+      label: "Do you have permission from the Official Assignee to file this claim?",
+      excerpt: "Not applicable — your documents don't indicate you're an undischarged bankrupt (see the previous question), so this permission wouldn't normally be needed.",
+      citation: "Document review (mocked)",
+      suggestion: "No",
+      inputType: "yesno"
+    },
+    correctPartyContractualObligation: {
+      label: "Are you claiming against the correct party with whom you have a contractual obligation?",
+      excerpt: "“…supplied by Bright Home Furnishings Pte Ltd (UEN 201812345K)…”",
+      citation: "Sale Agreement.pdf, page 1",
+      suggestion: "Yes",
+      inputType: "yesno"
+    },
+    otherPartyIndividual: {
+      label: "Is the other party an individual?",
+      excerpt: "“…Bright Home Furnishings Pte Ltd (UEN 201812345K)…”",
+      citation: "Sale Agreement.pdf, page 1",
+      suggestion: "No",
+      inputType: "yesno"
+    },
+    otherPartyBankrupt: {
+      label: "Is the other party a bankrupt?",
+      // No excerpt/citation/suggestion here on purpose — flagged for the demo per
+      // request, the same way claimAmount is above: openFieldHelp() branches on
+      // hasInsufficientInfo generically, not on the field key.
+      hasInsufficientInfo: true,
+      inputType: "yesno"
+    },
+    mediationArbitrationClause: {
+      label: "Is there a mediation/arbitration clause in your agreement?",
+      excerpt: "“This Agreement shall be governed by the laws of Singapore. Any dispute shall be resolved by the courts of Singapore.”",
+      citation: "Sale Agreement.pdf, page 3",
+      suggestion: "No",
+      inputType: "yesno"
+    },
+    contractGoodsSoldBought: {
+      label: "Does your claim relate to a contract for goods sold/bought?",
+      excerpt: "“…the Buyer paid in full for a custom sofa set which was never delivered…”",
+      citation: "Sale Agreement.pdf, page 2",
+      suggestion: "Yes",
+      inputType: "yesno"
+    },
+    causeBeforeOct2018: {
+      label: "Did the cause of action arise on or before 31 Oct 2018?",
+      excerpt: "“Agreed delivery date: 26 Jan 2025.”",
+      citation: "Demand Letter.pdf, page 1",
+      suggestion: "No",
+      inputType: "yesno"
+    },
+    claimEvidencedInWriting: {
+      label: "Is your claim evidenced in writing?",
+      excerpt: "“This Agreement is made between John Tan Wei Ming (the ‘Buyer’) and Bright Home Furnishings Pte Ltd…”",
+      citation: "Sale Agreement.pdf, page 1",
+      suggestion: "Yes",
+      inputType: "yesno"
+    },
+    splittingInvoiceForJurisdiction: {
+      label: "Are you splitting or dividing your invoice/contract to bring it within SCT's jurisdiction?",
+      excerpt: "Only one Sale Agreement and one invoice appear among your uploaded documents.",
+      citation: "Document review (mocked)",
+      suggestion: "No",
+      inputType: "yesno"
+    },
+    profitCommissionSharing: {
+      label: "Is your claim related to profit or commission sharing?",
+      excerpt: "The agreement describes a one-off sale of goods, not a profit or commission-sharing arrangement.",
+      citation: "Sale Agreement.pdf, page 1",
+      suggestion: "No",
+      inputType: "yesno"
+    },
+    consignmentOfGoods: {
+      label: "Does your claim relate to or arise out of consignment of goods?",
+      excerpt: "The agreement describes a direct sale, not a consignment arrangement.",
+      citation: "Sale Agreement.pdf, page 1",
+      suggestion: "No",
+      inputType: "yesno"
+    },
+    creditTermLapsed: {
+      label: "Has the credit term or delivery date lapsed?",
+      excerpt: "“Agreed delivery date: 26 Jan 2025. As of this letter, no delivery has been made.”",
+      citation: "Demand Letter.pdf, page 1",
+      suggestion: "Yes",
+      inputType: "yesno"
+    },
+    goodsDelivered: {
+      label: "Were the goods delivered?",
+      excerpt: "“…the agreed delivery date of 26 Jan 2025 passed with no delivery, and the respondent has not refunded my payment…”",
+      citation: "Demand Letter.pdf, page 1",
+      suggestion: "No",
+      inputType: "yesno"
+    },
+    damagesOrDefects: {
+      label: "Were there damages or defects to the goods?",
+      excerpt: "Not applicable — your documents indicate the goods were never delivered, so no defect could be assessed.",
+      citation: "Document review (mocked)",
+      suggestion: "No",
+      inputType: "yesno"
+    },
+    informedOtherPartyOfDefects: {
+      label: "Did you inform the other party of the defects?",
+      excerpt: "“Despite full payment…the Respondent has failed to deliver the goods or provide a refund after repeated requests.”",
+      citation: "Demand Letter.pdf, page 1",
+      suggestion: "Yes",
+      inputType: "yesno"
+    },
+    defectsWithin6Months: {
+      label: "Did the damage or defects occur within 6 months from the Sale of the goods?",
+      excerpt: "Not applicable in a non-delivery scenario — see the previous question.",
+      citation: "Document review (mocked)",
+      suggestion: "No",
+      inputType: "yesno"
+    },
+    seekingMoneyWorkVacantOrder: {
+      label: "Are you seeking a Money Order, Work Order and/or an Order for delivering vacant possession?",
+      excerpt: "“…the respondent has not refunded my payment despite my demand letter dated 2 Feb 2025.”",
+      citation: "Demand Letter.pdf, page 1",
+      suggestion: "Yes",
+      inputType: "yesno"
+    },
+    respondentInSingapore: {
+      label: "Is the party/company whom you are filing against residing/located in Singapore or have a registered address in Singapore?",
+      excerpt: "“Registered office: 88 Jurong Industrial Road, #03-12, Singapore 619123”",
+      citation: "Demand Letter.pdf, page 1",
+      suggestion: "Yes",
+      inputType: "yesno"
+    },
+    ableToServeInSingapore: {
+      label: "Are you able to locate and personally serve/bring the claim to the attention of the other party in Singapore?",
+      excerpt: "“Registered office: 88 Jurong Industrial Road, #03-12, Singapore 619123”",
+      citation: "Demand Letter.pdf, page 1",
+      suggestion: "Yes",
+      inputType: "yesno"
+    }
+
   };
 
   const API_BASE = (window.CLAIMREADY_API_BASE || "/api").replace(/\/+$/, "");
@@ -690,51 +1786,136 @@ tailwind.config = {
 
   function openFieldHelp(fieldKey) {
     const entry = (analysisPayload.field_help || {})[fieldKey];
-    const label = (entry && entry.label) || FIELD_LABELS[fieldKey] || fieldKey;
-    modalTitle.textContent = "Help: " + label;
-    if (!entry || !entry.available || !entry.suggestion) {
-      // Honest empty state: no fabricated excerpts or citations.
-      modalBody.innerHTML =
+    const help = FIELD_HELP[fieldKey];
+    const label = (entry && entry.label) || (help && help.label) || FIELD_LABELS[fieldKey] || fieldKey;
+
+    if (entry && entry.available && entry.suggestion) {
+      const explanation = esc(entry.explanation || entry.why_this_helps || "");
+      const source = esc(entry.source || "Suggested by the ClaimReady assistant");
+      const bodyHtml =
+        '<div class="space-y-space-sm">' +
+        (explanation ? '<p class="font-body-md text-body-md text-on-surface">' + explanation + '</p>' : "") +
+        '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Suggested value</span>' +
+        '<p class="font-body-md text-body-md text-primary font-semibold mt-space-2xs">' + esc(entry.suggestion) + '</p></div>' +
+        '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Source</span>' +
+        '<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + source + '</p></div>' +
+        '<button type="button" class="w-full mt-space-xs px-space-md py-space-xs bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors" id="pf-use-suggestion" data-field="' + fieldKey + '">Use this suggestion</button>' +
+        '<p class="font-body-sm text-body-sm text-secondary">Always fact-check against your real documents and the official form instructions before relying on it.</p>' +
+        '</div>';
+      showTextModal("Help: " + label, bodyHtml);
+      return;
+    }
+
+    if (!help) {
+      showTextModal(
+        "Help: " + label,
         '<div class="space-y-space-sm">' +
         '<div class="flex items-start gap-space-sm">' +
         '<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5">search_off</span>' +
         '<p class="font-body-md text-body-md text-on-surface">No suggestion is available for this question yet. Describe what happened or attach documents in the ClaimReady assistant to get a suggested value.</p>' +
         '</div>' +
         '<p class="font-body-md text-body-md text-on-surface-variant">You’re welcome to answer this one using your own knowledge of the situation.</p>' +
-        '</div>';
-      lastFocused = document.activeElement;
-      backdrop.classList.remove("hidden");
-      document.getElementById("modal-close").focus();
+        '</div>'
+      );
       return;
     }
 
-    const explanation = esc(entry.explanation || entry.why_this_helps || "");
-    const source = esc(entry.source || "Suggested by the ClaimReady assistant");
-    const bodyHtml =
+    if (help.definition) {
+      showTextModal(
+        "Help: " + help.label,
+        '<p class="font-body-md text-body-md text-on-surface">' + help.definition + '</p>'
+      );
+      return;
+    }
+
+    if (help.hasInsufficientInfo) {
+      showTextModal(
+        "Help: " + help.label,
+        '<div class="space-y-space-sm">' +
+        '<div class="flex items-start gap-space-sm">' +
+        '<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5">search_off</span>' +
+        '<p class="font-body-md text-body-md text-on-surface">No suggestion is available for this question yet. Describe what happened or attach documents in the ClaimReady assistant to get a suggested value.</p>' +
+        '</div>' +
+        '<p class="font-body-md text-body-md text-on-surface-variant">You’re welcome to answer this one using your own knowledge of the situation.</p>' +
+        '<p class="font-body-sm text-body-sm text-secondary">Mocked output — a real document-analysis backend may find this elsewhere; always double-check against your own records.</p>' +
+        '</div>'
+      );
+      return;
+    }
+
+    showTextModal(
+      "Help: " + help.label,
       '<div class="space-y-space-sm">' +
-      (explanation ? '<p class="font-body-md text-body-md text-on-surface">' + explanation + '</p>' : "") +
+      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">From your uploaded documents (mocked)</span>' +
+      '<p class="font-body-md text-body-md text-on-surface italic mt-space-2xs">' + help.excerpt + '</p></div>' +
+      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Citation</span>' +
+      '<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + help.citation + '</p></div>' +
       '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Suggested value</span>' +
-      '<p class="font-body-md text-body-md text-primary font-semibold mt-space-2xs">' + esc(entry.suggestion) + '</p></div>' +
-      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Source</span>' +
-      '<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + source + '</p></div>' +
-      '<button type="button" class="w-full mt-space-xs px-space-md py-space-xs bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors" id="pf-use-suggestion" data-field="' + fieldKey + '">Use this suggestion</button>' +
-      '<p class="font-body-sm text-body-sm text-secondary">Always fact-check against your real documents and the official form instructions before relying on it.</p>' +
-      '</div>';
-    showTextModal("Help: " + label, bodyHtml);
+      '<p class="font-body-md text-body-md text-primary font-semibold mt-space-2xs">' + help.suggestion + '</p></div>' +
+      '<button type="button" class="w-full mt-space-xs px-space-md py-space-xs bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors" id="field-use-suggestion" data-field="' + fieldKey + '">Use this suggestion</button>' +
+      '<p class="font-body-sm text-body-sm text-secondary">Mocked output — always fact-check against your real documents and the official form instructions before relying on it.</p>' +
+      '</div>'
+    );
   }
 
   document.querySelectorAll(".field-info-btn").forEach((btn) => {
     btn.addEventListener("click", () => openFieldHelp(btn.dataset.field));
   });
 
+  /* ------------------------------------------------------------------
+   * Eligibility check (Page 1.5): Yes/No toggle-button questions.
+   * Each question is a pair of plain buttons (grouped by [data-yesno]) plus
+   * a hidden .elig-field input that actually holds the answer — that's
+   * what progress tracking, save/resume, and "Use this suggestion" all
+   * read from, the same way Page 2's visible .pf-field inputs do.
+   * ------------------------------------------------------------------ */
+  function paintYesNoButtons(fieldKey, value) {
+    const group = document.querySelector('[data-yesno="' + fieldKey + '"]');
+    if (!group) return;
+    group.querySelectorAll(".elig-yn-btn").forEach((b) => {
+      const active = b.dataset.value === value;
+      b.classList.toggle("border-primary", active);
+      b.classList.toggle("bg-primary-container", active);
+      b.classList.toggle("text-on-primary", active);
+      b.classList.toggle("border-outline", !active);
+      b.classList.toggle("bg-surface-container-low", !active);
+      b.classList.toggle("text-on-surface", !active);
+    });
+  }
+  function setYesNoAnswer(fieldKey, value) {
+    const hidden = document.getElementById("field-" + fieldKey);
+    if (hidden) {
+      hidden.value = value;
+      hidden.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    paintYesNoButtons(fieldKey, value);
+  }
+  document.querySelectorAll(".elig-yn-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const group = btn.closest("[data-yesno]");
+      if (group) setYesNoAnswer(group.dataset.yesno, btn.dataset.value);
+    });
+  });
+
   modalBody.addEventListener("click", (e) => {
-    const useBtn = e.target.closest("#pf-use-suggestion");
+    const useBtn = e.target.closest("#pf-use-suggestion, #field-use-suggestion");
     if (!useBtn) return;
-    const field = document.getElementById("field-" + useBtn.dataset.field);
-    const entry = (analysisPayload.field_help || {})[useBtn.dataset.field];
-    if (field && entry && entry.available && entry.suggestion) {
-      field.value = entry.suggestion;
-      field.dispatchEvent(new Event("input", { bubbles: true }));
+    const fieldKey = useBtn.dataset.field;
+    const entry = (analysisPayload.field_help || {})[fieldKey];
+    const help = FIELD_HELP[fieldKey];
+    if (help && help.inputType === "yesno") {
+      setYesNoAnswer(fieldKey, help.suggestion);
+    } else {
+      const field = document.getElementById("field-" + fieldKey);
+      if (field) {
+        const suggestion =
+          (entry && entry.available && entry.suggestion) ||
+          (help && help.suggestion);
+        if (suggestion) {
+          field.value = suggestion;
+          field.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      }
     }
     closeModal();
   });
@@ -761,10 +1942,126 @@ tailwind.config = {
     const total = pfFields.length;
     const done = Array.from(pfFields).filter((f) => f.value.trim() !== "").length;
     pfProgress.textContent = done + " of " + total + " fields completed";
-    const complete = done === total;
-    pfSubmitBtn.classList.toggle("hidden", !complete);
-    pfSubmitBtn.disabled = !complete;
+    // Unlike the eligibility check, Submit here stays visible alongside Save As
+    // Draft/Cancel at all times (matching the real form) — only its disabled
+    // state toggles with completeness.
+    pfSubmitBtn.disabled = done !== total;
   }
+
+  /* ------------------------------------------------------------------
+   * Pre-filing form (Page 2), Section C: Balance Sum is derived, not typed —
+   * kept in sync with Contract Sum/Paid on every input. Not a .pf-field
+   * itself (it has nothing for the visitor to fill in), so it isn't part of
+   * progress tracking.
+   * ------------------------------------------------------------------ */
+  const pfContractSumField = document.getElementById("field-claimAmount");
+  const pfAmountPaidField = document.getElementById("field-amountPaid");
+  const pfBalanceSumField = document.getElementById("field-balanceSum");
+  function updatePfBalanceSum() {
+    const sum = parseFloat(pfContractSumField.value) || 0;
+    const paid = parseFloat(pfAmountPaidField.value) || 0;
+    pfBalanceSumField.value = (sum - paid).toFixed(2);
+  }
+  pfContractSumField.addEventListener("input", updatePfBalanceSum);
+  pfAmountPaidField.addEventListener("input", updatePfBalanceSum);
+
+  /* ------------------------------------------------------------------
+   * Pre-filing form (Page 2), Section D: live "remaining X / 500" counter
+   * under the brief statement of claim, matching the real form's character
+   * counter (its 500-char cap is mirrored by the textarea's maxlength).
+   * ------------------------------------------------------------------ */
+  const pfStatementField = document.getElementById("field-claimStatement");
+  const pfStatementRemaining = document.getElementById("pf-statement-remaining");
+  function updatePfStatementRemaining() {
+    pfStatementRemaining.textContent = "remaining " + (500 - pfStatementField.value.length) + " / 500";
+  }
+  pfStatementField.addEventListener("input", updatePfStatementRemaining);
+
+  /* ------------------------------------------------------------------
+   * Pre-filing form (Page 2), Section B: "Add another Address" (mock,
+   * frontend-only) appends a plain extra address block. These are optional
+   * extras on top of the required respondentAddress field above, so they
+   * aren't tracked in progress — same reasoning as the real form, which
+   * only requires one address for service.
+   * ------------------------------------------------------------------ */
+  let pfAddressCount = 0;
+  document.getElementById("pf-add-address-btn").addEventListener("click", () => {
+    pfAddressCount += 1;
+    const wrap = document.createElement("div");
+    wrap.className = "space-y-space-2xs bg-surface-container-low rounded-lg p-space-sm";
+    wrap.innerHTML =
+      '<div class="flex items-center justify-between gap-space-xs">' +
+      '<label class="font-label-md text-label-md text-on-surface">Additional address for service</label>' +
+      '<button class="pf-remove-address font-label-sm text-label-sm text-error hover:underline" type="button">Remove</button>' +
+      '</div>' +
+      '<textarea class="w-full p-space-sm rounded-lg bg-surface-container-lowest font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container resize-none" placeholder="Another address where the respondent can be served" rows="2"></textarea>';
+    document.getElementById("pf-extra-addresses").appendChild(wrap);
+    wrap.querySelector(".pf-remove-address").addEventListener("click", () => wrap.remove());
+  });
+
+  /* ------------------------------------------------------------------
+   * Pre-filing form (Page 2), Section E: mocked supporting-documents
+   * uploader. Rows are built entirely in JS (one added on load, matching
+   * the real form's default single row) so "Add another Document" and the
+   * initial row share the same markup. "Upload" is mocked — it just
+   * disables the row and flips its own label; there's no real file
+   * transfer here, that's for the real backend later. field-supportingDocuments
+   * is the hidden .pf-field progress tracking actually reads: non-empty once
+   * at least one row has a description filled in.
+   * ------------------------------------------------------------------ */
+  let pfDocRowCount = 0;
+  function addDocumentRow() {
+    pfDocRowCount += 1;
+    const row = document.createElement("div");
+    row.className = "flex flex-col md:flex-row items-stretch md:items-center gap-space-xs bg-surface-container-low rounded-lg p-space-sm";
+    row.id = "pf-doc-row-" + pfDocRowCount;
+    row.innerHTML =
+      '<input class="pf-doc-file flex-shrink-0 font-body-sm text-body-sm text-on-surface-variant" type="file" accept="application/pdf" />' +
+      '<select class="pf-doc-type p-space-xs rounded-lg bg-surface-container-lowest font-body-sm text-body-sm text-on-surface flex-shrink-0">' +
+      '<option value="">Select document type…</option>' +
+      '<option>Invoice</option><option>Sale Agreement / Contract</option><option>Demand Letter</option>' +
+      '<option>Receipt</option><option>ACRA Business Profile</option><option>Other</option>' +
+      '</select>' +
+      '<input class="pf-doc-description flex-1 p-space-xs rounded-lg bg-surface-container-lowest font-body-sm text-body-sm text-on-surface" placeholder="Document description" type="text" />' +
+      '<button class="pf-doc-upload px-space-md py-space-2xs bg-primary-container text-on-primary rounded-lg font-label-sm text-label-sm hover:bg-primary transition-colors flex-shrink-0" type="button">Upload</button>' +
+      '<button class="pf-doc-delete px-space-md py-space-2xs bg-surface-container-high text-on-surface rounded-lg font-label-sm text-label-sm hover:bg-error-container transition-colors flex-shrink-0" type="button">Delete</button>';
+    document.getElementById("pf-documents-list").appendChild(row);
+
+    row.querySelector(".pf-doc-description").addEventListener("input", updatePfDocumentsField);
+    row.querySelector(".pf-doc-upload").addEventListener("click", () => {
+      row.querySelectorAll("input, select").forEach((el) => { el.disabled = true; });
+      const uploadBtn = row.querySelector(".pf-doc-upload");
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = "Uploaded";
+    });
+    row.querySelector(".pf-doc-delete").addEventListener("click", () => {
+      row.remove();
+      updatePfDocumentsField();
+    });
+  }
+  function updatePfDocumentsField() {
+    const hasDoc = Array.from(document.querySelectorAll(".pf-doc-description")).some((el) => el.value.trim() !== "");
+    const field = document.getElementById("field-supportingDocuments");
+    field.value = hasDoc ? "yes" : "";
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  document.getElementById("pf-add-document-btn").addEventListener("click", addDocumentRow);
+  addDocumentRow(); // start with one row, matching the real form's default
+
+  /* ------------------------------------------------------------------
+   * Pre-filing form (Page 2), Section F: "Claiming for" checkboxes are
+   * purely presentational, same convention as the eligibility check's Yes/No
+   * toggles — field-claimingFor is the hidden .pf-field progress tracking
+   * actually reads, kept in sync here.
+   * ------------------------------------------------------------------ */
+  function updatePfClaimingForField() {
+    const checked = Array.from(document.querySelectorAll(".pf-claiming-for:checked")).map((el) => el.dataset.label);
+    const field = document.getElementById("field-claimingFor");
+    field.value = checked.join(", ");
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  document.querySelectorAll(".pf-claiming-for").forEach((cb) => cb.addEventListener("change", updatePfClaimingForField));
+
   pfFields.forEach((f) => {
     f.addEventListener("input", updatePfProgress);
     f.addEventListener("change", updatePfProgress);
@@ -964,6 +2261,15 @@ tailwind.config = {
     }
   });
 
+  // "Save As Draft" (bottom button row, matching the real form) reuses the exact
+  // same in-memory snapshot as the "Save answers" bar above rather than
+  // duplicating the logic. "Cancel" is a simple mocked confirm-then-go-back —
+  // there's no draft to discard server-side since nothing here is persisted.
+  document.getElementById("pf-save-draft-btn").addEventListener("click", () => pfSaveBtn.click());
+  document.getElementById("pf-cancel-btn").addEventListener("click", () => {
+    if (window.confirm("Discard your answers on this form and go back?")) goBack();
+  });
+
   // Dispatched by the widget's "upload" mode when the visitor taps "Continue
   // to questionnaire" — restores whatever was saved before they went to add
   // more documents, merges any fresh extraction payload, then hands the widget
@@ -1001,7 +2307,11 @@ tailwind.config = {
 })();
 </script>
 
-<!-- ClaimReady overlay: independent floating guide, drops onto any page. -->
-<script src="claimready-overlay.js" defer></script>
+<!-- ClaimReady overlay: independent floating guide, drops onto any page.
+     "?v=" is a cache-buster — bump it whenever claimready-overlay.js changes, so a
+     plain reload can't accidentally keep running an older copy of the widget already
+     sitting in the browser's cache (a stale copy falls back to its old default
+     "route" mode for any context string it doesn't recognize, e.g. "dashboard"). -->
+<script src="claimready-overlay.js?v=2" defer></script>
 </body>
 </html>
