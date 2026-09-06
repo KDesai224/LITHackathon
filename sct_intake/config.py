@@ -1,7 +1,9 @@
 """Centralised environment configuration for the SCT intake pipeline.
 
-``.env`` is loaded exactly once (idempotent). Every accessor builds a fresh
-:class:`Config` from ``os.environ`` so tests that monkeypatch environment
+``.env`` is loaded exactly once (idempotent) and takes precedence over any
+pre-set environment variables (``override=True``), so a stale machine/user-level
+``OPENAI_*`` value cannot shadow the repo's ``.env``. Every accessor builds a
+fresh :class:`Config` from ``os.environ`` so tests that monkeypatch environment
 variables keep working without process-global cache invalidation.
 
 Env names are unchanged from the pre-refactor flat modules for compatibility:
@@ -32,7 +34,7 @@ _dotenv_loaded = False
 def _load_dotenv_once() -> None:
     global _dotenv_loaded
     if not _dotenv_loaded:
-        load_dotenv()
+        load_dotenv(override=True)
         _dotenv_loaded = True
 
 
