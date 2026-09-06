@@ -29,11 +29,12 @@ ClaimBuddy (represented by the **ClaimReady** prototype) is an AI-assisted compa
 ## 🏗️ Architecture
 
 ```
-[ Frontend: dummy-website.html + claimready-overlay.js ]
+[ Frontend: frontend/claimready/dummy-website.html + claimready-overlay.js ]
           │  same origin, relative /api calls (no CORS needed)
           ▼
 [ FastAPI Application (app.py:8743) ]
   ├── GET  /api/health              -> Status & OpenAI key verification
+  ├── GET  /api                    -> Service and endpoint catalog
   ├── POST /api/extract-fields      -> SCT field extraction from typed text
   ├── POST /api/extract-document    -> PDF/scanned-image OCR + field extraction
   ├── POST /api/check-tone          -> Tone detection & factual rewrite engine
@@ -69,11 +70,11 @@ uv sync --dev
 ```
 
 ### 3. Configure the AI endpoint
-Create a `.env` file in the project root (copy `.env.example`). Example for DeepSeek:
+Create a `.env` file in the project root (copy `.env.example`). Example for OpenRouter:
 ```env
-OPENAI_BASE_URL=https://api.deepseek.com
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=deepseek-v4-flash
+OPENAI_BASE_URL=https://openrouter.ai/api/v1
+OPENAI_API_KEY=sk-or-v1-...
+OPENAI_MODEL=openai/gpt-4o-mini
 # Optional: comma-separated origins allowed when the frontend is hosted separately:
 # CORS_ORIGINS=http://localhost:3000
 ```
@@ -84,7 +85,7 @@ OPENAI_MODEL=deepseek-v4-flash
 ```bash
 uv run python app.py
 ```
-or double-click `stitch_self_representation_legal_filing_assistant-2/run-demo.command` (macOS).
+or double-click `frontend/claimready/run-demo.command` (macOS).
 
 Open your browser to:
 👉 **[http://127.0.0.1:8743/dummy-website.html](http://127.0.0.1:8743/dummy-website.html)**
@@ -173,5 +174,5 @@ uv run pytest -m slow    # embedding model + real-OCR integration tests (CI runs
 
 ## 📄 Key Documentation
 - [PRD.md](PRD.md) — Complete product requirements and statutory tribunal specifications.
-- [DESIGN.md](stitch_self_representation_legal_filing_assistant-2/DESIGN.md) — Civic Justice Portal design system tokens, typography, and component specifications.
+- [DESIGN.md](frontend/claimready/DESIGN.md) — Civic Justice Portal design system tokens, typography, and component specifications.
 - [scripts/manual-acceptance.md](scripts/manual-acceptance.md) — step-by-step demo click-path and curl smoke tests.

@@ -236,6 +236,11 @@
 .cr-warning { background: var(--cr-error-bg); color: var(--cr-on-error-container); border-left: 4px solid var(--cr-error); }
 .cr-warning strong { display: block; margin-bottom: 4px; }
 .cr-note strong { display: block; margin-bottom: 4px; color: var(--cr-on-surface); }
+.cr-suggestion-block { padding: 18px 18px; margin: 16px 0; }
+.cr-suggestion-block strong { font-size: 15px; }
+.cr-suggestion-block p { font-size: 15px; line-height: 24px; }
+.cr-double-check { padding: 8px 10px; margin: 8px 0; font-size: 11px; line-height: 17px; }
+.cr-double-check strong { margin-bottom: 2px; font-size: 12px; }
 
 /* "Dashboard"/"after" modes only: pre-filing assessment ID + overall progress meter. */
 .cr-id-badge {
@@ -313,19 +318,12 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
 .cr-check:last-of-type { border-bottom: none; }
 .cr-check input { width: 18px; height: 18px; flex: none; margin: 2px 0; accent-color: var(--cr-primary); }
 
-.cr-list { list-style: none; padding: 0; margin: 0 0 12px; color: var(--cr-on-surface-variant); }
-.cr-list li {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 6px 0; border-bottom: 1px solid var(--cr-outline);
-}
-.cr-list li:last-child { border-bottom: none; }
-.cr-list li span { overflow-wrap: anywhere; }
-.cr-file-remove {
-  flex: none; border: none; background: transparent; color: var(--cr-on-surface-variant);
-  width: 22px; height: 22px; border-radius: 50%; font-size: 16px; line-height: 1; cursor: pointer;
-}
-.cr-file-remove:hover { background: var(--cr-error-bg); color: var(--cr-error); }
-.cr-file-remove:focus-visible { outline: 2px solid var(--cr-primary-deep); outline-offset: 2px; }
+.cr-list { padding-left: 20px; margin: 0 0 12px; color: var(--cr-on-surface-variant); }
+.cr-list li { margin: 6px 0; }
+.cr-file-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cr-file-name { min-width: 0; overflow-wrap: anywhere; }
+.cr-file-delete { flex: none; border: 0; background: transparent; color: var(--cr-error); cursor: pointer; font-size: 12px; text-decoration: underline; }
+.cr-file-delete:hover { color: var(--cr-on-error-container); }
 
 .cr-status { font-size: 12px; color: var(--cr-secondary); margin-top: 8px; }
 
@@ -399,6 +397,16 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
   let state = defaultState();
   let nextFileId = 1;
 
+  function renderAttachedFiles() {
+    if (!state.files.length) return "";
+    return `<ul class="cr-list">${state.files
+      .map(
+        (f) =>
+          `<li class="cr-file-row"><span class="cr-file-name">${esc(f.name)}</span><button type="button" class="cr-file-delete" data-file-id="${f.id}" aria-label="Delete ${esc(f.name)}">Delete</button></li>`
+      )
+      .join("")}</ul>`;
+  }
+
   /* ---------------------------------------------------------------------
    * Backend client
    * ------------------------------------------------------------------- */
@@ -418,11 +426,6 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
       const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
       return map[ch];
     });
-
-  // One row in an attached-documents list, with a way to remove a
-  // mistakenly-attached file — see the "remove-file" click handler below.
-  const fileRow = (f) =>
-    `<li><span>${esc(f.name)}</span><button type="button" class="cr-file-remove" data-action="remove-file" data-file-id="${f.id}" aria-label="Remove ${esc(f.name)}">&times;</button></li>`;
 
   async function apiFetch(path, options) {
     let response;
@@ -517,28 +520,14 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
     const fieldHelp = (state.analysis && state.analysis.field_help) || {};
     const entry = (key) => fieldHelp[key] || {};
     const nature = entry("claimNature").available ? entry("claimNature").suggestion : "";
-    const detected = [];
-    const addDetected = (key) => {
-      const e = entry(key);
-      if (e.available && e.suggestion) detected.push(esc(e.suggestion));
-    };
-    addDetected("claimantName");
-    addDetected("respondentName");
-    addDetected("claimAmount");
-    addDetected("claimDate");
-
     const readout = nature
       ? SCT_NATURES.has(nature)
         ? `Based on what you described, this may be a <strong>${esc(nature)}</strong> dispute, which is usually handled by the Small Claims Tribunal (SCT).`
         : `Based on what you described, this may be a <strong>${esc(nature)}</strong> dispute. Double-check whether it falls under the Small Claims Tribunal's jurisdiction.`
       : "We could not confidently identify a dispute category yet. You can still continue to the form and review the suggestions for each field.";
-    const spotted = detected.length
-      ? `<p class="cr-copy">We also spotted: ${detected.join(" · ")}.</p>`
-      : "";
-
     return (
-      `<div class="cr-note"><strong>Suggestion</strong><p>${readout}</p>${spotted}</div>` +
-      `<div class="cr-warning"><strong>Always double-check this.</strong><p>This is only a suggestion, not a legal determination. Verify it against the official eligibility rules and your own documents before relying on it.</p>${link(
+      `<div class="cr-note cr-suggestion-block"><strong>Suggestion</strong><p>${readout}</p></div>` +
+      `<div class="cr-warning cr-double-check"><strong>Always double-check this.</strong><p>This is only a suggestion, not a legal determination. Verify it against the official eligibility rules and your own documents before relying on it.</p>${link(
         "eligibility",
         "Check official eligibility rules"
       )}</div>` +
@@ -609,9 +598,7 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
           "upload",
           16
         )}<span>Attach documents</span></button><input type="file" id="cr-file-input" multiple style="display:none"></div>` +
-        (state.files.length
-          ? `<ul class="cr-list">${state.files.map((f) => fileRow(f)).join("")}</ul>`
-          : `<p class="cr-copy">No documents attached yet.</p>`) +
+        (state.files.length ? renderAttachedFiles() : `<p class="cr-copy">No documents attached yet.</p>`) +
         (state.approxError
           ? `<p class="cr-status" style="color:var(--cr-error)">${esc(state.approxError)}</p>`
           : "") +
@@ -625,17 +612,14 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
           "Describe the situation in your own words and attach any documents you have. This goes to an assistant that suggests a possible starting point."
         ) +
         (showForm
-          ? `<div class="cr-warning"><strong>This is only a suggestion.</strong><p>Always double-check any suggested route against your actual claim and the official eligibility rules before relying on it.</p></div>` +
-            `<label class="cr-field">Brief incident overview<textarea id="cr-incident-text" rows="4" placeholder="e.g. I paid a deposit for goods that were never delivered...">${
+          ? `<label class="cr-field">Brief incident overview<textarea id="cr-incident-text" rows="4" placeholder="e.g. I paid a deposit for goods that were never delivered...">${
               state.incidentText
             }</textarea></label>` +
             `<div class="cr-upload-row"><button type="button" class="cr-btn" id="cr-attach-btn">${svg(
               "upload",
               16
             )}<span>Attach documents</span></button><input type="file" id="cr-file-input" multiple style="display:none"></div>` +
-            (state.files.length
-              ? `<ul class="cr-list">${state.files.map((f) => fileRow(f)).join("")}</ul>`
-              : "") +
+            renderAttachedFiles() +
             (state.approxError
               ? `<p class="cr-status" style="color:var(--cr-error)">${state.approxError}</p>`
               : "") +
@@ -669,6 +653,17 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
   }
 
   function wireDynamicControls() {
+    screen.querySelectorAll(".cr-file-delete").forEach((button) => {
+      button.addEventListener("click", () => {
+        const fileId = Number(button.dataset.fileId);
+        state.files = state.files.filter((entry) => entry.id !== fileId);
+        state.analysis = null;
+        state.approxStatus = "idle";
+        state.approxError = "";
+        state.dirty = true;
+        render();
+      });
+    });
     const textarea = screen.querySelector("#cr-incident-text");
     if (textarea) {
       textarea.addEventListener("input", () => {
@@ -765,18 +760,6 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
         state.step = "start";
         state.approxStatus = "idle";
         state.approxError = "";
-        render();
-        return;
-      }
-      if (action === "remove-file") {
-        // Lets someone undo a mistaken attachment. Also clears any cached
-        // analysis and marks state dirty, so the next continue/resume click
-        // re-runs extraction over the remaining files instead of handing the
-        // host page suggestions drawn from a document that's no longer attached.
-        const id = Number(button.dataset.fileId);
-        state.files = state.files.filter((f) => f.id !== id);
-        state.analysis = null;
-        state.dirty = true;
         render();
         return;
       }

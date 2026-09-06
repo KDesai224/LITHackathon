@@ -43,6 +43,15 @@ def test_run_intake_short_corpus_no_embeddings() -> None:
     assert case.claimant_name == "Alicia Tan"
 
 
+def test_run_intake_returns_document_source() -> None:
+    case = run_intake(
+        ["Alicia Tan vs Beng Motors, $2,500.00 refund claim."],
+        extractor=stub_extractor,
+        document_names=["repair-invoice.pdf"],
+    )
+    assert case.source == "repair-invoice.pdf"
+
+
 def test_run_intake_rejects_empty_documents() -> None:
     with pytest.raises(ValueError):
         run_intake([], extractor=stub_extractor)
