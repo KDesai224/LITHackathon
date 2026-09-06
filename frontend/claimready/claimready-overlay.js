@@ -236,6 +236,11 @@
 .cr-warning { background: var(--cr-error-bg); color: var(--cr-on-error-container); border-left: 4px solid var(--cr-error); }
 .cr-warning strong { display: block; margin-bottom: 4px; }
 .cr-note strong { display: block; margin-bottom: 4px; color: var(--cr-on-surface); }
+.cr-suggestion-block { padding: 18px 18px; margin: 16px 0; }
+.cr-suggestion-block strong { font-size: 15px; }
+.cr-suggestion-block p { font-size: 15px; line-height: 24px; }
+.cr-double-check { padding: 8px 10px; margin: 8px 0; font-size: 11px; line-height: 17px; }
+.cr-double-check strong { margin-bottom: 2px; font-size: 12px; }
 
 /* "Dashboard"/"after" modes only: pre-filing assessment ID + overall progress meter. */
 .cr-id-badge {
@@ -315,6 +320,10 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
 
 .cr-list { padding-left: 20px; margin: 0 0 12px; color: var(--cr-on-surface-variant); }
 .cr-list li { margin: 6px 0; }
+.cr-file-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cr-file-name { min-width: 0; overflow-wrap: anywhere; }
+.cr-file-delete { flex: none; border: 0; background: transparent; color: var(--cr-error); cursor: pointer; font-size: 12px; text-decoration: underline; }
+.cr-file-delete:hover { color: var(--cr-on-error-container); }
 
 .cr-status { font-size: 12px; color: var(--cr-secondary); margin-top: 8px; }
 
@@ -387,6 +396,16 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
   }
   let state = defaultState();
   let nextFileId = 1;
+
+  function renderAttachedFiles() {
+    if (!state.files.length) return "";
+    return `<ul class="cr-list">${state.files
+      .map(
+        (f) =>
+          `<li class="cr-file-row"><span class="cr-file-name">${esc(f.name)}</span><button type="button" class="cr-file-delete" data-file-id="${f.id}" aria-label="Delete ${esc(f.name)}">Delete</button></li>`
+      )
+      .join("")}</ul>`;
+  }
 
   /* ---------------------------------------------------------------------
    * Backend client
@@ -521,8 +540,8 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
       : "";
 
     return (
-      `<div class="cr-note"><strong>Suggestion</strong><p>${readout}</p>${spotted}</div>` +
-      `<div class="cr-warning"><strong>Always double-check this.</strong><p>This is only a suggestion, not a legal determination. Verify it against the official eligibility rules and your own documents before relying on it.</p>${link(
+      `<div class="cr-note cr-suggestion-block"><strong>Suggestion</strong><p>${readout}</p>${spotted}</div>` +
+      `<div class="cr-warning cr-double-check"><strong>Always double-check this.</strong><p>This is only a suggestion, not a legal determination. Verify it against the official eligibility rules and your own documents before relying on it.</p>${link(
         "eligibility",
         "Check official eligibility rules"
       )}</div>` +
@@ -593,9 +612,7 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
           "upload",
           16
         )}<span>Attach documents</span></button><input type="file" id="cr-file-input" multiple style="display:none"></div>` +
-        (state.files.length
-          ? `<ul class="cr-list">${state.files.map((f) => `<li>${f.name}</li>`).join("")}</ul>`
-          : `<p class="cr-copy">No documents attached yet.</p>`) +
+        (state.files.length ? renderAttachedFiles() : `<p class="cr-copy">No documents attached yet.</p>`) +
         (state.approxError
           ? `<p class="cr-status" style="color:var(--cr-error)">${esc(state.approxError)}</p>`
           : "") +
@@ -617,9 +634,7 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
               "upload",
               16
             )}<span>Attach documents</span></button><input type="file" id="cr-file-input" multiple style="display:none"></div>` +
-            (state.files.length
-              ? `<ul class="cr-list">${state.files.map((f) => `<li>${f.name}</li>`).join("")}</ul>`
-              : "") +
+            renderAttachedFiles() +
             (state.approxError
               ? `<p class="cr-status" style="color:var(--cr-error)">${state.approxError}</p>`
               : "") +
@@ -653,6 +668,17 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
   }
 
   function wireDynamicControls() {
+    screen.querySelectorAll(".cr-file-delete").forEach((button) => {
+      button.addEventListener("click", () => {
+        const fileId = Number(button.dataset.fileId);
+        state.files = state.files.filter((entry) => entry.id !== fileId);
+        state.analysis = null;
+        state.approxStatus = "idle";
+        state.approxError = "";
+        state.dirty = true;
+        render();
+      });
+    });
     const textarea = screen.querySelector("#cr-incident-text");
     if (textarea) {
       textarea.addEventListener("input", () => {

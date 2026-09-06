@@ -64,8 +64,29 @@ NRIC_PATTERN = re.compile(r"^[STFGMstfgm]\d{7}[A-Za-z]$")
 EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
 
-def build_field_help(answers: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    """Translate extractor fields into the UI's tooltip field IDs."""
+def _find_evidence(value: str, passages: list[dict[str, Any]]) -> tuple[str | None, str | None]:
+    """Find a short, exact evidence quote and its document/page citation."""
+    value = value.strip()
+    if not value:
+        return None, None
+    for passage in passages:
+        text = str(passage.get("text") or "")
+        match = re.search(re.escape(value), text, flags=re.IGNORECASE)
+        if match:
+            start = max(0, match.start() - 100)
+            end = min(len(text), match.end() + 100)
+            quote = " ".join(text[start:end].split())
+            document = passage.get("document")
+            page = passage.get("page")
+            citation = f"{document}, page {page}" if document and page else str(document or "")
+            return quote, citation or None
+    return None, None
+
+
+def build_field_help(
+    answers: dict[str, Any], *, passages: list[dict[str, Any]] | None = None
+) -> dict[str, dict[str, Any]]:
+    """Translate extractor fields into UI help fields with grounded evidence."""
     source = str(
         answers.get("source")
         or "Claim narrative provided by the user (no document-page citation available)"
@@ -77,12 +98,14 @@ def build_field_help(answers: dict[str, Any]) -> dict[str, dict[str, Any]]:
             suggestion = _UI_NATURES.get(suggestion, suggestion)
         if field_id == "claimDate" and suggestion:
             suggestion = suggestion[:10]
+        quote, citation = _find_evidence(suggestion, passages or [])
         result[field_id] = {
             "label": title,
             "explanation": explanation,
             "suggestion": suggestion,
             "available": bool(suggestion),
-            "quote": None,
+            "quote": quote,
+            "citation": citation,
             "source": source,
             "why_this_helps": explanation,
             "requires_confirmation": True,
@@ -257,13 +280,23 @@ def api_catalog() -> dict[str, Any]:
     }
 
 
-def _field_help_from_text(text: str, *, source: str | None = None) -> dict[str, dict[str, Any]]:
+def _field_help_from_text(
+    text: str,
+    *,
+    source: str | None = None,
+    passages: list[dict[str, Any]] | None = None,
+) -> dict[str, dict[str, Any]]:
     """Run field extraction over a claim narrative and map to UI help fields."""
     case = SCTCase.from_text(text, extractor=extract_fields, source=source)
-    return build_field_help(case.to_dict())
+    return build_field_help(case.to_dict(), passages=passages or [{"text": text}])
 
 
-def _field_help_or_http_raise(text: str, *, source: str | None = None) -> dict[str, dict[str, Any]]:
+def _field_help_or_http_raise(
+    text: str,
+    *,
+    source: str | None = None,
+    passages: list[dict[str, Any]] | None = None,
+) -> dict[str, dict[str, Any]]:
     """Run extraction, translating known failures into HTTP errors."""
     text = text.strip()
     if not text:
@@ -272,7 +305,7 @@ def _field_help_or_http_raise(text: str, *, source: str | None = None) -> dict[s
             detail="A non-empty claim narrative is required.",
         )
     try:
-        return _field_help_from_text(text, source=source)
+        return _field_help_from_text(text, source=source, passages=passages)
     except (ValueError, TypeError) as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except FieldExtractionError as exc:
@@ -362,6 +395,7 @@ def api_extract_document(
     from ocr_engine import OCRUnavailableError, extract_text_from_bytes
 
     documents = []
+    passages: list[dict[str, Any]] = []
     filenames: list[str] = []
     full_texts: list[str] = []
     for upload in files:
@@ -379,6 +413,11 @@ def api_extract_document(
         documents.append(_serialize_document_result(result))
         if result.full_text.strip():
             full_texts.append(result.full_text)
+        passages.extend(
+            {"document": filename, "page": page.page, "text": page.text}
+            for page in result.pages
+            if page.text.strip()
+        )
 
     if narrative:
         full_texts.append(narrative)
@@ -390,7 +429,10 @@ def api_extract_document(
         )
 
     source = ", ".join(filenames)
-    return {"field_help": _field_help_or_http_raise(combined, source=source), "documents": documents}
+    return {
+        "field_help": _field_help_or_http_raise(combined, source=source, passages=passages),
+        "documents": documents,
+    }
 
 
 @app.post("/api/check-tone")
