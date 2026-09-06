@@ -41,6 +41,15 @@ class TextChunk:
     text: str
 
 
+@dataclass(frozen=True)
+class ChunkHit:
+    """One ranked search result: a chunk plus its position and score."""
+
+    index: int
+    chunk: TextChunk
+    score: float
+
+
 # --------------------------------------------------------------------------- #
 # Chunking
 # --------------------------------------------------------------------------- #
@@ -219,3 +228,107 @@ def build_extraction_text(
     if len(joined) > max_chars:  # final guard for separator overhead
         joined = joined[:max_chars]
     return joined
+
+
+# --------------------------------------------------------------------------- #
+# Reusable document index (chunk + embed once, search many times)
+# --------------------------------------------------------------------------- #
+
+
+class DocumentIndex:
+    """A chunked, embedded corpus that supports repeated semantic search.
+
+    All chunk vectors are computed once at construction; each :meth:`search`
+    embeds only the query, and :meth:`seed` provides the same top-within-budget
+    context ``build_extraction_text`` assembles for an oversized corpus, so an
+    agentic extractor can start from today's seed and then refine with targeted
+    queries against previously-unseen chunks.
+    """
+
+    def __init__(
+        self,
+        documents: Sequence[str],
+        *,
+        embedder: EmbeddingModel,
+    ) -> None:
+        documents = [doc for doc in documents if doc.strip()]
+        if not documents:
+            raise ValueError("documents contained no non-blank content.")
+        self._chunks = _chunk_documents(documents)
+        if not self._chunks:
+            raise ValueError("documents produced no chunkable content.")
+
+        vectors = embedder.embed([chunk.text for chunk in self._chunks])
+        if len(vectors) != len(self._chunks):
+            raise EmbeddingError(
+                f"embedder returned {len(vectors)} vectors for "
+                f"{len(self._chunks)} chunks."
+            )
+        self._unit_vectors = [_normalize(vector) for vector in vectors]
+        self._embedder = embedder
+
+    @property
+    def chunks(self) -> list[TextChunk]:
+        """Every chunk in the index, in reading order."""
+        return list(self._chunks)
+
+    def search(
+        self,
+        query: str,
+        *,
+        k: int = 3,
+        seen: set[int] | None = None,
+    ) -> list[ChunkHit]:
+        """Return the top ``k`` chunks for ``query``, skipping any in ``seen``."""
+        if not query or not query.strip():
+            raise ValueError("query must be a non-empty string.")
+        if k <= 0:
+            return []
+        query_vectors = self._embedder.embed([query])
+        if not query_vectors:
+            raise EmbeddingError("embedder returned no vector for the search query.")
+        unit_query = _normalize(query_vectors[0])
+
+        excluded = set(seen) if seen else set()
+        scored: list[tuple[int, TextChunk, float]] = []
+        for index, (chunk, vector) in enumerate(
+            zip(self._chunks, self._unit_vectors)
+        ):
+            if index in excluded:
+                continue
+            scored.append(
+                (index, chunk, _cosine_similarity(vector, unit_query))
+            )
+        scored.sort(key=lambda triple: triple[2], reverse=True)
+        return [
+            ChunkHit(index, chunk, score)
+            for index, chunk, score in scored[:k]
+        ]
+
+    def seed(self, max_chars: int = MAX_CONTEXT_CHARS) -> tuple[list[int], str]:
+        """Return ``(chunk indices, joined text)`` for the best chunks within
+        ``max_chars`` using the pinned SCT retrieval query."""
+        query_vectors = self._embedder.embed([_build_retrieval_query()])
+        if not query_vectors:
+            raise EmbeddingError("embedder returned no vector for the retrieval query.")
+        unit_query = _normalize(query_vectors[0])
+
+        scored: list[tuple[TextChunk, float]] = []
+        for chunk, vector in zip(self._chunks, self._unit_vectors):
+            scored.append((chunk, _cosine_similarity(vector, unit_query)))
+        scored.sort(key=lambda pair: pair[1], reverse=True)
+
+        selected = _select_top_chunks_within_budget(scored, max_chars)
+        by_start = {
+            (chunk.document_index, chunk.start): index
+            for index, chunk in enumerate(self._chunks)
+        }
+        indices: list[int] = []
+        for chunk in selected:
+            position = by_start[(chunk.document_index, chunk.start)]
+            if position not in indices:
+                indices.append(position)
+        joined = _join_chunks_in_reading_order(selected)
+        if len(joined) > max_chars:  # final guard for separator overhead
+            joined = joined[:max_chars]
+        return indices, joined

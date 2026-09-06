@@ -27,6 +27,8 @@
   #main-nav { gap: 4px; padding: 4px; border: 1px solid #ddbfc3; border-radius: 8px; background: #f0f3ff; }
   #main-nav .nav-link { min-width: 112px; text-align: center; }
   #global-skip-btn { display: none !important; }
+  #chrome-fixed [class~="md:flex"] { display: none; }
+  #prototype-banner { display: none; }
 </style>
 <script src="https://cdn.tailwindcss.com"></script>
 <script id="tailwind-config">
@@ -251,8 +253,7 @@ tailwind.config = {
      Pre-filing form: each field has an (i) info button that opens a popup showing the
      suggestion the assistant extracted from the user's narrative/documents (field_help),
      or neutral guidance when no suggestion is available. -->
-     The eligibility questions are answered by the user and are not pre-filled
-     unless the current API analysis provides supporting evidence. -->
+     <!-- Eligibility responses are entered by the user. -->
 <div class="hidden" data-page="eligibility-check">
   <section class="w-full bg-surface-container-lowest shadow-sm">
     <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop py-space-xl">
@@ -1740,6 +1741,13 @@ tailwind.config = {
 
   let analysisPayload = { field_help: {}, documents: [] };
 
+  // Eligibility labels use different DOM field IDs from the API's canonical
+  // intake field IDs. Keep the lookup grounded in the same real response.
+  const ANALYSIS_FIELD_ALIASES = {
+    causeOfActionDate: "claimDate",
+    roughClaimAmount: "claimAmount",
+  };
+
   function storeAnalysis(payload) {
     const p = payload || {};
     analysisPayload = {
@@ -1792,14 +1800,10 @@ tailwind.config = {
     document.getElementById("modal-close").focus();
   }
 
-  function openFieldHelp(fieldKey) {
-
+  /* The previous implementation contained a merge-conflicted legacy help
+   * renderer. It is kept inert below; this real-data renderer is authoritative. */
+  /* function openFieldHelp(fieldKey) {
     const entry = (analysisPayload.field_help || {})[fieldKey];
-    const label = (entry && entry.label) || FIELD_LABELS[fieldKey] || fieldKey;
-    modalTitle.textContent = "Help: " + label;
-    if (!entry || !entry.available || !entry.suggestion) {
-      // Honest empty state: no fabricated excerpts or citations.
-
     const help = FIELD_HELP[fieldKey];
     if (!help) {
       modalBody.innerHTML =
@@ -1831,8 +1835,28 @@ tailwind.config = {
       // styling/icon and no "Use this suggestion" button — this is a normal,
       // expected outcome, not a failure, and the user is free to answer from
       // their own knowledge.
+    const label = (entry && entry.label) || (help && help.label) || FIELD_LABELS[fieldKey] || fieldKey;
 
-      modalBody.innerHTML =
+    if (entry && entry.available && entry.suggestion) {
+      const explanation = esc(entry.explanation || entry.why_this_helps || "");
+      const source = esc(entry.source || "Suggested by the ClaimReady assistant");
+      const bodyHtml =
+        '<div class="space-y-space-sm">' +
+        (explanation ? '<p class="font-body-md text-body-md text-on-surface">' + explanation + '</p>' : "") +
+        '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Suggested value</span>' +
+        '<p class="font-body-md text-body-md text-primary font-semibold mt-space-2xs">' + esc(entry.suggestion) + '</p></div>' +
+        '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Source</span>' +
+        '<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + source + '</p></div>' +
+        '<button type="button" class="w-full mt-space-xs px-space-md py-space-xs bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors" id="pf-use-suggestion" data-field="' + fieldKey + '">Use this suggestion</button>' +
+        '<p class="font-body-sm text-body-sm text-secondary">Always fact-check against your real documents and the official form instructions before relying on it.</p>' +
+        '</div>';
+      showTextModal("Help: " + label, bodyHtml);
+      return;
+    }
+
+    if (!help) {
+      showTextModal(
+        "Help: " + label,
         '<div class="space-y-space-sm">' +
         '<div class="flex items-start gap-space-sm">' +
         '<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5">search_off</span>' +
@@ -1872,8 +1896,41 @@ tailwind.config = {
     const quote = entry.quote ? '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Evidence</span><p class="font-body-sm text-body-sm text-on-surface-variant italic mt-space-2xs">&ldquo;' + esc(entry.quote) + '&rdquo;</p></div>' : "";
     const citation = entry.citation ? '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Citation</span><p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + esc(entry.citation) + '</p></div>' : "";
     const bodyHtml =
+        '</div>'
+      );
+      return;
+    }
+
+    if (help.definition) {
+      showTextModal(
+        "Help: " + help.label,
+        '<p class="font-body-md text-body-md text-on-surface">' + help.definition + '</p>'
+      );
+      return;
+    }
+
+    if (help.hasInsufficientInfo) {
+      showTextModal(
+        "Help: " + help.label,
+        '<div class="space-y-space-sm">' +
+        '<div class="flex items-start gap-space-sm">' +
+        '<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5">search_off</span>' +
+        '<p class="font-body-md text-body-md text-on-surface">No suggestion is available for this question yet. Describe what happened or attach documents in the ClaimReady assistant to get a suggested value.</p>' +
+        '</div>' +
+        '<p class="font-body-md text-body-md text-on-surface-variant">You’re welcome to answer this one using your own knowledge of the situation.</p>' +
+        '<p class="font-body-sm text-body-sm text-secondary">Mocked output — a real document-analysis backend may find this elsewhere; always double-check against your own records.</p>' +
+        '</div>'
+      );
+      return;
+    }
+
+    showTextModal(
+      "Help: " + help.label,
       '<div class="space-y-space-sm">' +
-      (explanation ? '<p class="font-body-md text-body-md text-on-surface">' + explanation + '</p>' : "") +
+      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">From your uploaded documents (mocked)</span>' +
+      '<p class="font-body-md text-body-md text-on-surface italic mt-space-2xs">' + help.excerpt + '</p></div>' +
+      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Citation</span>' +
+      '<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + help.citation + '</p></div>' +
       '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Suggested value</span>' +
       '<p class="font-body-md text-body-md text-primary font-semibold mt-space-2xs">' + esc(entry.suggestion) + '</p></div>' +
       quote + citation +
@@ -1881,6 +1938,44 @@ tailwind.config = {
       '<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + source + '</p></div>' +
       '<button type="button" class="w-full mt-space-xs px-space-md py-space-xs bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors" id="pf-use-suggestion" data-field="' + fieldKey + '">Use this suggestion</button>' +
       '<p class="font-body-sm text-body-sm text-secondary">Always fact-check against your real documents and the official form instructions before relying on it.</p>' +
+      '</div>';
+    showTextModal("Help: " + label, bodyHtml);
+      '<p class="font-body-md text-body-md text-primary font-semibold mt-space-2xs">' + help.suggestion + '</p></div>' +
+      '<button type="button" class="w-full mt-space-xs px-space-md py-space-xs bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors" id="field-use-suggestion" data-field="' + fieldKey + '">Use this suggestion</button>' +
+      '<p class="font-body-sm text-body-sm text-secondary">Mocked output — always fact-check against your real documents and the official form instructions before relying on it.</p>' +
+      '</div>'
+    );
+  }
+
+  } */
+
+  function openFieldHelp(fieldKey) {
+    const entry = (analysisPayload.field_help || {})[
+      ANALYSIS_FIELD_ALIASES[fieldKey] || fieldKey
+    ];
+    const label = (entry && entry.label) || FIELD_LABELS[fieldKey] || fieldKey;
+    if (!entry || !entry.available || !entry.suggestion) {
+      showTextModal(
+        "Help: " + label,
+        '<div class="space-y-space-sm"><p class="font-body-md text-body-md text-on-surface">No suggestion is available from the information provided. Add more detail or attach a document to get a grounded suggestion.</p><p class="font-body-md text-body-md text-on-surface-variant">You can answer this question using your own knowledge of the situation.</p></div>'
+      );
+      return;
+    }
+    const explanation = esc(entry.explanation || entry.why_this_helps || "");
+    const source = esc(entry.source || "Submitted narrative");
+    const quote = entry.quote
+      ? '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Evidence</span><p class="font-body-sm text-body-sm text-on-surface-variant italic mt-space-2xs">&ldquo;' + esc(entry.quote) + '&rdquo;</p></div>'
+      : "";
+    const citation = entry.citation
+      ? '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Citation</span><p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + esc(entry.citation) + '</p></div>'
+      : "";
+    const bodyHtml =
+      '<div class="space-y-space-sm">' +
+      (explanation ? '<p class="font-body-md text-body-md text-on-surface">' + explanation + '</p>' : "") +
+      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Suggested value</span><p class="font-body-md text-body-md text-primary font-semibold mt-space-2xs">' + esc(entry.suggestion) + '</p></div>' +
+      quote + citation +
+      '<div><span class="font-label-sm text-label-sm text-secondary uppercase">Source</span><p class="font-body-sm text-body-sm text-on-surface-variant mt-space-2xs">' + source + '</p></div>' +
+      '<button type="button" class="w-full mt-space-xs px-space-md py-space-xs bg-primary-container text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary transition-colors" id="pf-use-suggestion" data-field="' + fieldKey + '">Use this suggestion</button>' +
       '</div>';
     showTextModal("Help: " + label, bodyHtml);
   }
@@ -1925,7 +2020,7 @@ tailwind.config = {
   });
 
   modalBody.addEventListener("click", (e) => {
-    const useBtn = e.target.closest("#field-use-suggestion");
+    const useBtn = e.target.closest("#pf-use-suggestion, #field-use-suggestion");
     if (!useBtn) return;
     const fieldKey = useBtn.dataset.field;
     const entry = (analysisPayload.field_help || {})[fieldKey];
@@ -1940,9 +2035,14 @@ tailwind.config = {
       setYesNoAnswer(fieldKey, help.suggestion);
     } else {
       const field = document.getElementById("field-" + fieldKey);
-      if (field && help) {
-        field.value = help.suggestion;
-        field.dispatchEvent(new Event("input", { bubbles: true }));
+      if (field) {
+        const suggestion =
+          (entry && entry.available && entry.suggestion) ||
+          (help && help.suggestion);
+        if (suggestion) {
+          field.value = suggestion;
+          field.dispatchEvent(new Event("input", { bubbles: true }));
+        }
       }
     }
     closeModal();

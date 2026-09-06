@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import pytest
 
 from sct_intake import config as cfg
@@ -59,3 +61,39 @@ def test_config_maps_all_env_values(monkeypatch) -> None:
     assert config.embedding_api_key == "k"
     assert config.embedding_model == "provider-model"
     assert config.embedding_model_name == "local/model"
+
+
+def test_dotenv_overrides_preset_env_var(monkeypatch, tmp_path) -> None:
+    """The repo .env must win over a stale pre-set OPENAI_API_KEY.
+
+    Regression test: the app used to call ``load_dotenv()`` without
+    ``override=True``, so a machine/user-level OPENAI_API_KEY (e.g. a rotated
+    key lingering in the environment) shadowed the valid key in ``.env`` and
+    every live API call failed with HTTP 401 while ``integration_test.py``
+    (which loads with ``override=True``) kept passing.
+    """
+    dotenv_file = tmp_path / ".env"
+    dotenv_file.write_text(
+        "OPENAI_API_KEY=sk-from-dotenv\n"
+        "OPENAI_BASE_URL=https://dotenv.example/v1\n",
+        encoding="utf-8",
+    )
+
+    calls: dict[str, bool] = {}
+    real_load_dotenv = cfg.load_dotenv
+
+    def _patched_load(dotenv_path=None, **kwargs):
+        calls["override"] = kwargs.get("override", False)
+        return real_load_dotenv(dotenv_file, **kwargs)
+
+    monkeypatch.setattr(cfg, "_dotenv_loaded", False)
+    monkeypatch.setattr(cfg, "load_dotenv", _patched_load)
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-stale-env")
+    monkeypatch.setenv("OPENAI_BASE_URL", "https://stale.example/v1")
+
+    cfg._load_dotenv_once()
+
+    assert calls["override"] is True
+    assert os.environ["OPENAI_API_KEY"] == "sk-from-dotenv"
+    assert os.environ["OPENAI_BASE_URL"] == "https://dotenv.example/v1"
+    assert cfg.get_config().api_key == "sk-from-dotenv"

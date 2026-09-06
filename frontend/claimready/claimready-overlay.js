@@ -520,27 +520,13 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
     const fieldHelp = (state.analysis && state.analysis.field_help) || {};
     const entry = (key) => fieldHelp[key] || {};
     const nature = entry("claimNature").available ? entry("claimNature").suggestion : "";
-    const detected = [];
-    const addDetected = (key) => {
-      const e = entry(key);
-      if (e.available && e.suggestion) detected.push(esc(e.suggestion));
-    };
-    addDetected("claimantName");
-    addDetected("respondentName");
-    addDetected("claimAmount");
-    addDetected("claimDate");
-
     const readout = nature
       ? SCT_NATURES.has(nature)
         ? `Based on what you described, this may be a <strong>${esc(nature)}</strong> dispute, which is usually handled by the Small Claims Tribunal (SCT).`
         : `Based on what you described, this may be a <strong>${esc(nature)}</strong> dispute. Double-check whether it falls under the Small Claims Tribunal's jurisdiction.`
       : "We could not confidently identify a dispute category yet. You can still continue to the form and review the suggestions for each field.";
-    const spotted = detected.length
-      ? `<p class="cr-copy">We also spotted: ${detected.join(" · ")}.</p>`
-      : "";
-
     return (
-      `<div class="cr-note cr-suggestion-block"><strong>Suggestion</strong><p>${readout}</p>${spotted}</div>` +
+      `<div class="cr-note cr-suggestion-block"><strong>Suggestion</strong><p>${readout}</p></div>` +
       `<div class="cr-warning cr-double-check"><strong>Always double-check this.</strong><p>This is only a suggestion, not a legal determination. Verify it against the official eligibility rules and your own documents before relying on it.</p>${link(
         "eligibility",
         "Check official eligibility rules"
@@ -626,8 +612,7 @@ details p { margin: 8px 0 0; color: var(--cr-on-surface-variant); }
           "Describe the situation in your own words and attach any documents you have. This goes to an assistant that suggests a possible starting point."
         ) +
         (showForm
-          ? `<div class="cr-warning"><strong>This is only a suggestion.</strong><p>Always double-check any suggested route against your actual claim and the official eligibility rules before relying on it.</p></div>` +
-            `<label class="cr-field">Brief incident overview<textarea id="cr-incident-text" rows="4" placeholder="e.g. I paid a deposit for goods that were never delivered...">${
+          ? `<label class="cr-field">Brief incident overview<textarea id="cr-incident-text" rows="4" placeholder="e.g. I paid a deposit for goods that were never delivered...">${
               state.incidentText
             }</textarea></label>` +
             `<div class="cr-upload-row"><button type="button" class="cr-btn" id="cr-attach-btn">${svg(
