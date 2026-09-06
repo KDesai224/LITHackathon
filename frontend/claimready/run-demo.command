@@ -1,6 +1,6 @@
 #!/bin/bash
 # Double-click launcher: starts the full ClaimReady demo. The FastAPI app
-# (repo root app.py) serves both the /api endpoints and this static folder,
+# (repo root app.py) serves both the /api endpoints and the frontend folder,
 # so the widget's "approximate my route" / document upload flows work.
 set -e
 cd "$(dirname "$0")/.."

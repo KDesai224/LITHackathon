@@ -69,6 +69,7 @@ def test_extract_document_from_text_pdf(client: TestClient) -> None:
     assert response.status_code == 200, response.text
     body = response.json()
     assert body["field_help"]["claimantName"]["suggestion"] == "John Doe"
+    assert body["field_help"]["claimantName"]["source"] == "claim.pdf"
     documents = body["documents"]
     assert len(documents) == 1
     assert documents[0]["filename"] == "claim.pdf"

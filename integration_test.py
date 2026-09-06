@@ -12,7 +12,7 @@ Pipeline exercised (every module, real network call to the chat endpoint):
 Configuration comes from ``.env`` / environment (never committed; ``.env`` is
 gitignored):
 
-    OPENAI_BASE_URL   (default https://api.openai.com/v1)
+    OPENAI_BASE_URL   (default https://api.openai.com/v1; OpenRouter is supported)
     OPENAI_API_KEY    (required; if missing this test skips)
     OPENAI_MODEL      (default gpt-4o-mini)
 
@@ -72,7 +72,8 @@ def main() -> int:
         return 0
     # Debug harness: values in .env override any pre-exported machine vars.
     load_dotenv(env_path, override=True)
-    if not os.environ.get("OPENAI_API_KEY"):
+    api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+    if not api_key or api_key in {"sk-...", "your_real_key_here"}:
         print(
             "SKIP: OPENAI_API_KEY is not set in .env; add it (plus "
             "OPENAI_BASE_URL / OPENAI_MODEL) and rerun."
@@ -80,11 +81,12 @@ def main() -> int:
         return 0
 
     print("1. building extraction text from the uploaded documents...")
+    source_names = ["repair-invoice.txt", "service-correspondence.txt"]
     text = build_extraction_text([DOC_A, DOC_B])
     print(f"   assembled {len(text)} characters")
 
     print("2. extracting SCT fields with the live model...")
-    case = SCTCase.from_text(text, extractor=extract_fields)
+    case = SCTCase.from_text(text, extractor=extract_fields, source=", ".join(source_names))
     print("   extractor -> SCTCase OK")
     print(case.summary())
 
@@ -98,6 +100,8 @@ def main() -> int:
         "date_of_cause_of_action": case.date_of_cause_of_action,
         "contract_date": case.contract_date,
     }
+    checks["source"] = case.source
+    EXPECTED["source"] = ", ".join(source_names)
     failures: list[str] = []
     for field, expected in EXPECTED.items():
         actual = checks[field]

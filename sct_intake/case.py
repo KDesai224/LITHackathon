@@ -113,6 +113,7 @@ def _fetch_extractor_answers(extractor: FieldExtractor, text: str) -> dict[str, 
 class SCTCase:
     """A single SCT claim intake, populated by the external AI interface."""
 
+    source: str | None = None
     claimant_name: str | None = None
     claimant_nric: str | None = None
     respondent_name: str | None = None
@@ -127,13 +128,19 @@ class SCTCase:
     # ------------------------------------------------------------------ #
 
     @classmethod
-    def from_text(cls, text: str, extractor: FieldExtractor) -> SCTCase:
+    def from_text(
+        cls,
+        text: str,
+        extractor: FieldExtractor,
+        *,
+        source: str | None = None,
+    ) -> SCTCase:
         """Ingest uploaded *text* and delegate filling to ``extractor``."""
         if not text or not text.strip():
             raise ValueError("upload text contained no non-blank content")
 
         raw = _fetch_extractor_answers(extractor, text)
-        return cls._from_mapping(raw)
+        return cls._from_mapping(raw, source=source)
 
     @classmethod
     def from_upload_file(
@@ -141,13 +148,19 @@ class SCTCase:
         path: str | Path = DEFAULT_UPLOAD_PATH,
         *,
         extractor: FieldExtractor,
+        source: str | None = None,
     ) -> SCTCase:
         """Read ``path`` (default the bundled sample) and delegate to from_text."""
         text = Path(path).read_text(encoding="utf-8-sig")
-        return cls.from_text(text, extractor=extractor)
+        return cls.from_text(text, extractor=extractor, source=source or Path(path).name)
 
     @classmethod
-    def _from_mapping(cls, answers: dict[str, str]) -> SCTCase:
+    def _from_mapping(
+        cls,
+        answers: dict[str, str],
+        *,
+        source: str | None = None,
+    ) -> SCTCase:
         """Coerce the extractor's raw dict[str, str] onto typed fields."""
 
         def get(key: str) -> str | None:
@@ -186,6 +199,7 @@ class SCTCase:
         )
 
         return cls(
+            source=source,
             claimant_name=get("claimant_name"),
             claimant_nric=get("claimant_nric"),
             respondent_name=get("respondent_name"),
@@ -202,6 +216,7 @@ class SCTCase:
 
     def to_dict(self) -> dict[str, object]:
         return {
+            "source": self.source,
             "claimant_name": self.claimant_name,
             "claimant_nric": self.claimant_nric,
             "respondent_name": self.respondent_name,

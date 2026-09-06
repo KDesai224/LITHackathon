@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, Response, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
@@ -29,8 +30,11 @@ from backend.pdf_generator import generate_prefiling_pdf
 from backend.tone_detector import ToneCheckResult, check_tone
 from sct_intake import FieldExtractionError, SCTCase, extract_fields
 
+# Load local configuration before health checks or request handlers inspect it.
+load_dotenv()
+
 PORT = 8743
-STATIC_ROOT = Path(__file__).resolve().parent / "stitch_self_representation_legal_filing_assistant-2"
+STATIC_ROOT = Path(__file__).resolve().parent / "frontend" / "claimready"
 
 DOCUMENT_EXTENSIONS = {"pdf", "png", "jpg", "jpeg", "tif", "tiff", "bmp", "webp"}
 MAX_DOCUMENT_FILES = 10
@@ -62,6 +66,10 @@ EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
 def build_field_help(answers: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """Translate extractor fields into the UI's tooltip field IDs."""
+    source = str(
+        answers.get("source")
+        or "Claim narrative provided by the user (no document-page citation available)"
+    ).strip()
     result: dict[str, dict[str, Any]] = {}
     for field_id, (answer_key, title, explanation) in _FIELD_META.items():
         suggestion = str(answers.get(answer_key) or "").strip() if answer_key else ""
@@ -75,7 +83,7 @@ def build_field_help(answers: dict[str, Any]) -> dict[str, dict[str, Any]]:
             "suggestion": suggestion,
             "available": bool(suggestion),
             "quote": None,
-            "source": "Claim narrative provided by the user (no document-page citation available)",
+            "source": source,
             "why_this_helps": explanation,
             "requires_confirmation": True,
         }
@@ -220,17 +228,42 @@ if _cors_origins:
 def health_check() -> dict[str, Any]:
     return {
         "status": "ok",
+        "chat_base_url": os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+        "chat_model": os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+        "services": {
+            "intake": "registered",
+            "ocr": "registered",
+            "tone": "registered",
+            "pdf": "registered",
+        },
         "has_openai_key": bool(os.getenv("OPENAI_API_KEY", "").strip()),
     }
 
 
-def _field_help_from_text(text: str) -> dict[str, dict[str, Any]]:
+@app.get("/api")
+def api_catalog() -> dict[str, Any]:
+    """Return the local service catalog used by demos and API clients."""
+    return {
+        "service": "claimready-api",
+        "version": app.version,
+        "endpoints": {
+            "health": {"method": "GET", "path": "/api/health"},
+            "extract_fields": {"method": "POST", "path": "/api/extract-fields"},
+            "extract_document": {"method": "POST", "path": "/api/extract-document"},
+            "check_tone": {"method": "POST", "path": "/api/check-tone"},
+            "validate_claim": {"method": "POST", "path": "/api/validate-claim"},
+            "generate_pdf": {"method": "POST", "path": "/api/generate-pdf"},
+        },
+    }
+
+
+def _field_help_from_text(text: str, *, source: str | None = None) -> dict[str, dict[str, Any]]:
     """Run field extraction over a claim narrative and map to UI help fields."""
-    case = SCTCase.from_text(text, extractor=extract_fields)
+    case = SCTCase.from_text(text, extractor=extract_fields, source=source)
     return build_field_help(case.to_dict())
 
 
-def _field_help_or_http_raise(text: str) -> dict[str, dict[str, Any]]:
+def _field_help_or_http_raise(text: str, *, source: str | None = None) -> dict[str, dict[str, Any]]:
     """Run extraction, translating known failures into HTTP errors."""
     text = text.strip()
     if not text:
@@ -239,7 +272,7 @@ def _field_help_or_http_raise(text: str) -> dict[str, dict[str, Any]]:
             detail="A non-empty claim narrative is required.",
         )
     try:
-        return _field_help_from_text(text)
+        return _field_help_from_text(text, source=source)
     except (ValueError, TypeError) as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except FieldExtractionError as exc:
@@ -329,12 +362,15 @@ def api_extract_document(
     from ocr_engine import OCRUnavailableError, extract_text_from_bytes
 
     documents = []
+    filenames: list[str] = []
     full_texts: list[str] = []
     for upload in files:
+        filename = upload.filename or "document"
+        filenames.append(filename)
         _document_extension(upload.filename)
         content = _read_upload(upload)
         try:
-            result = extract_text_from_bytes(content, upload.filename or "document")
+            result = extract_text_from_bytes(content, filename)
         except OCRUnavailableError as exc:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -353,7 +389,8 @@ def api_extract_document(
             detail="No readable text was found in the uploaded document(s) or typed narrative.",
         )
 
-    return {"field_help": _field_help_or_http_raise(combined), "documents": documents}
+    source = ", ".join(filenames)
+    return {"field_help": _field_help_or_http_raise(combined, source=source), "documents": documents}
 
 
 @app.post("/api/check-tone")

@@ -123,7 +123,7 @@ Self-represented persons (SRPs) in the Small Claims Tribunals (SCT) increasingly
 
 | Layer | Implemented Component | Notes |
 |---|---|---|
-| Frontend | HTML5 + Tailwind CSS + Vanilla JS (`dummy-website.html` + `claimready-overlay.js`) | Replicates MinLaw/Judiciary Civic Portal with ClaimReady companion overlay |
+| Frontend | HTML5 + Tailwind CSS + Vanilla JS (`frontend/claimready/dummy-website.html` + `claimready-overlay.js`) | Replicates MinLaw/Judiciary Civic Portal with ClaimReady companion overlay |
 | Backend/API | **FastAPI** (`app.py`) on Python 3.11+ / Uvicorn | Async REST server serving static assets and AI API endpoints on port 8743 |
 | Hostile Language Detector | Two-Tier Engine (`backend/tone_detector.py` + frontend regex bank) | Tier 1 local regex rule bank + Tier 2 `gpt-4o-mini` LLM analyzer + mediation stats |
 | Data Validation Engine | Dual Frontend & Backend Validator (`app.py:validate_claim_data`) | Rejects letters in number boxes, future dates, >2yr expired dates, invalid NRIC/email |

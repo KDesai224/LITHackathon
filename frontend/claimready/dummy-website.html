@@ -786,7 +786,6 @@ tailwind.config = {
      eligibility check rather than re-entered here), D is the brief summary, E is a mocked
      supporting-documents uploader (separate from the ClaimReady widget's own upload panel —
      this one lives inline in the form, same as the real thing), and F is "Claiming for". -->
->>>>>>> frontend
 <div class="hidden" data-page="prefiling-form">
   <section class="w-full bg-surface-container-lowest shadow-sm">
     <div class="max-w-layout-content-max-width mx-auto px-layout-margin-mobile md:px-layout-margin-desktop py-space-xl">
@@ -1421,7 +1420,9 @@ tailwind.config = {
     claimAmount: "Amount claimed (SGD)",
     claimDate: "Date the dispute arose",
     claimStatement: "Brief statement of claim"
+  };
 
+  /* ------------------------------------------------------------------
    * SCT portal (Page 1.75): the "Online Applications" accordion, and the
    * dashboard <-> applications-grid content swap it leads to. Both live inside
    * this one data-page, so they're plain local toggles rather than showPage()
@@ -1799,6 +1800,10 @@ tailwind.config = {
       // document-derived suggestion, so no excerpt/citation/"Use this
       // suggestion" button, just the definition itself.
       modalBody.innerHTML = '<p class="font-body-md text-body-md text-on-surface">' + help.definition + '</p>';
+      lastFocused = document.activeElement;
+      backdrop.classList.remove("hidden");
+      document.getElementById("modal-close").focus();
+      return;
     } else if (help.hasInsufficientInfo) {
       // Reassuring alternate state: the mocked document-analysis backend has
       // nothing precise to offer for this question. Deliberately no error
@@ -1816,6 +1821,10 @@ tailwind.config = {
 
         '<p class="font-body-sm text-body-sm text-secondary">Mocked output — a real document-analysis backend may find this elsewhere; always double-check against your own records.</p>' +
         '</div>';
+      lastFocused = document.activeElement;
+      backdrop.classList.remove("hidden");
+      document.getElementById("modal-close").focus();
+      return;
     } else {
       modalBody.innerHTML =
         '<div class="space-y-space-sm">' +
@@ -1833,6 +1842,8 @@ tailwind.config = {
       backdrop.classList.remove("hidden");
       document.getElementById("modal-close").focus();
       return;
+    }
+
     }
 
     const explanation = esc(entry.explanation || entry.why_this_helps || "");
@@ -1892,16 +1903,16 @@ tailwind.config = {
   modalBody.addEventListener("click", (e) => {
     const useBtn = e.target.closest("#field-use-suggestion");
     if (!useBtn) return;
-
-    const field = document.getElementById("field-" + useBtn.dataset.field);
-    const entry = (analysisPayload.field_help || {})[useBtn.dataset.field];
-    if (field && entry && entry.available && entry.suggestion) {
-      field.value = entry.suggestion;
-      field.dispatchEvent(new Event("input", { bubbles: true }));
-
     const fieldKey = useBtn.dataset.field;
+    const entry = (analysisPayload.field_help || {})[fieldKey];
     const help = FIELD_HELP[fieldKey];
-    if (help && help.inputType === "yesno") {
+    if (entry && entry.available && entry.suggestion) {
+      const field = document.getElementById("field-" + fieldKey);
+      if (field) {
+        field.value = entry.suggestion;
+        field.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    } else if (help && help.inputType === "yesno") {
       setYesNoAnswer(fieldKey, help.suggestion);
     } else {
       const field = document.getElementById("field-" + fieldKey);
@@ -1909,7 +1920,6 @@ tailwind.config = {
         field.value = help.suggestion;
         field.dispatchEvent(new Event("input", { bubbles: true }));
       }
-
     }
     closeModal();
   });

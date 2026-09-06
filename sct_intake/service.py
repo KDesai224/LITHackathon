@@ -20,6 +20,7 @@ def run_intake(
     *,
     extractor: FieldExtractor | None = None,
     embedder: EmbeddingModel | None = None,
+    document_names: Sequence[str] | None = None,
     max_chars: int = MAX_CONTEXT_CHARS,
 ) -> SCTCase:
     """Run one full SCT intake over uploaded claim documents.
@@ -34,4 +35,9 @@ def run_intake(
         embedder=embedder if embedder is not None else default_embedding_model(),
         max_chars=max_chars,
     )
-    return SCTCase.from_text(text, extractor=extractor or extract_fields)
+    source = None
+    if document_names is not None:
+        names = [name.strip() for name in document_names if name and name.strip()]
+        if names:
+            source = ", ".join(names)
+    return SCTCase.from_text(text, extractor=extractor or extract_fields, source=source)
